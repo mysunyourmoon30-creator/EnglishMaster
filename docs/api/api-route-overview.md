@@ -14,6 +14,7 @@ All endpoint files live under `src/Backend/EnglishMaster.Api/Endpoints/` and are
 | --- | --- | --- | --- |
 | Word | `/api/v1/words` | `WordEndpoints.cs` | [word-api.md](word-api.md) |
 | Category | `/api/v1/categories` | `CategoryEndpoints.cs` | [category-api.md](category-api.md) |
+| Certificate | `/api/v1/admin/certificate-templates`, `/api/v1/me/certificates`, `/api/v1/public/certificates` | `CertificateEndpoints.cs` | [certificate-api.md](certificate-api.md) |
 | Tag | `/api/v1/tags` | `TagEndpoints.cs` | [tag-api.md](tag-api.md) |
 | Media | `/api/v1/media` | `MediaEndpoints.cs` | [media-api.md](media-api.md) |
 | Pronunciation | `/api/v1/pronunciations` | `PronunciationEndpoints.cs` | [pronunciation-api.md](pronunciation-api.md) |

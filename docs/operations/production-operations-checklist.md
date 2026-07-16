@@ -13,6 +13,7 @@
 - [ ] Failed publish jobs reviewed.
 - [ ] Failed email messages reviewed.
 - [ ] Email provider status checked.
+- [ ] Certificate templates active and public verification spot-check completed.
 - [ ] Failed imports reviewed.
 - [ ] Login/authentication issues reviewed.
 - [ ] Admin dashboard loads.
@@ -38,6 +39,7 @@
 - [ ] Confirm notifications page.
 - [ ] Confirm email provider status.
 - [ ] Send staging/production-approved email test if provider delivery changed.
+- [ ] Confirm certificate generation and public verification if certificate migrations changed.
 - [ ] Confirm public pages.
 - [ ] Watch logs for startup exceptions.
 
@@ -50,3 +52,4 @@
 - Publish jobs fail repeatedly.
 - Unexpected 500 errors increase.
 - Media or publishing files disappear.
+- Public certificate verification fails for valid issued certificates.

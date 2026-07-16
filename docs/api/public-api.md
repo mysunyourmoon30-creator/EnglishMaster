@@ -1,4 +1,4 @@
-# Public API v0.2.0
+# Public API
 
 ## Purpose
 
@@ -114,11 +114,12 @@ The public API does not yet cover:
 
 - Student progress.
 - Login-based learning.
-- Certificates.
 - AI tutor.
 - Personalized learning state.
 - Enrollments.
 - Full quiz attempt history.
+
+Certificate verification is covered by `GET /api/v1/public/certificates/{verificationCode}` and returns only public-safe verification fields.
 
 ## Next Recommended v0.2.0 Feature
 
