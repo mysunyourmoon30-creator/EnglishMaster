@@ -33,7 +33,7 @@ public sealed class MotivationEndpointsTests(EnglishMasterApiFactory factory) : 
         using var client = factory.CreateClient(new() { HandleCookies = true });
         await LoginAsync(client);
         await ResetMotivationAsync();
-        var today = DateTimeOffset.UtcNow;
+        var today = UtcNoonToday();
 
         await PostReadAsync<LearningActivityDto>(client, "/api/v1/me/motivation/activity", Activity("LessonCompleted", "One", today));
         await PostReadAsync<LearningActivityDto>(client, "/api/v1/me/motivation/activity", Activity("QuizAttempted", "Two", today.AddHours(1)));
@@ -217,4 +217,7 @@ public sealed class MotivationEndpointsTests(EnglishMasterApiFactory factory) : 
 
     private static string Unique(string prefix) =>
         $"{prefix}-{Guid.NewGuid():N}";
+
+    private static DateTimeOffset UtcNoonToday() =>
+        new(DateTime.UtcNow.Date.AddHours(12), TimeSpan.Zero);
 }
