@@ -17,4 +17,11 @@ public sealed class AnalyticsApiClient : IAnalyticsApiClient
         await ApiClientResponseHandler.EnsureSuccessAsync(response, cancellationToken);
         return await ApiClientResponseHandler.ReadRequiredAsync<AdminAnalyticsOverviewDto>(response, cancellationToken);
     }
+
+    public async Task<StudentAnalyticsOverviewDto> GetStudentOverviewAsync(CancellationToken cancellationToken)
+    {
+        var response = await httpClient.GetAsync("api/v1/me/analytics/overview", cancellationToken);
+        await ApiClientResponseHandler.EnsureSuccessAsync(response, cancellationToken);
+        return await ApiClientResponseHandler.ReadRequiredAsync<StudentAnalyticsOverviewDto>(response, cancellationToken);
+    }
 }

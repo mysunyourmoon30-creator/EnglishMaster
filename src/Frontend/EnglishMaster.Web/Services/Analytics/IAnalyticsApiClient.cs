@@ -5,4 +5,5 @@ namespace EnglishMaster.Web.Services.Analytics;
 public interface IAnalyticsApiClient
 {
     Task<AdminAnalyticsOverviewDto> GetAdminOverviewAsync(CancellationToken cancellationToken);
+    Task<StudentAnalyticsOverviewDto> GetStudentOverviewAsync(CancellationToken cancellationToken);
 }

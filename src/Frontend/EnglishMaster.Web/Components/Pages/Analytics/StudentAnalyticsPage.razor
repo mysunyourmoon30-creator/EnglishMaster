@@ -1,0 +1,103 @@
+@page "/learn/analytics"
+@rendermode InteractiveServer
+@inject IAnalyticsApiClient AnalyticsApiClient
+
+<PageTitle>My Analytics</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Learning</p>
+        <h1>My Analytics</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading analytics...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (overview is not null)
+{
+    <section class="stat-grid">
+        <div class="panel stat-card">
+            <span class="stat-label">Study minutes</span>
+            <span class="stat-value">@overview.StudyMinutes</span>
+        </div>
+        <div class="panel stat-card">
+            <span class="stat-label">Activities</span>
+            <span class="stat-value">@overview.LearningActivities</span>
+        </div>
+        <div class="panel stat-card">
+            <span class="stat-label">Current streak</span>
+            <span class="stat-value">@overview.CurrentStreakDays</span>
+        </div>
+        <div class="panel stat-card">
+            <span class="stat-label">Certificates</span>
+            <span class="stat-value">@overview.CertificatesEarned</span>
+        </div>
+    </section>
+
+    <section class="content-grid">
+        <article class="panel">
+            <h2>Progress</h2>
+            <dl class="metric-list">
+                <dt>Lessons completed</dt>
+                <dd>@overview.LessonsCompleted</dd>
+                <dt>Courses completed</dt>
+                <dd>@overview.CoursesCompleted</dd>
+                <dt>Books completed</dt>
+                <dd>@overview.BooksCompleted</dd>
+            </dl>
+        </article>
+
+        <article class="panel">
+            <h2>Practice And Quizzes</h2>
+            <dl class="metric-list">
+                <dt>Practice sessions</dt>
+                <dd>@overview.PracticeSessionsCompleted</dd>
+                <dt>Quiz attempts</dt>
+                <dd>@overview.QuizAttempts</dd>
+                <dt>Average quiz score</dt>
+                <dd>@overview.AverageQuizScore.ToString("0.##")</dd>
+            </dl>
+        </article>
+
+        <article class="panel">
+            <h2>Momentum</h2>
+            <dl class="metric-list">
+                <dt>Longest streak</dt>
+                <dd>@overview.LongestStreakDays</dd>
+                <dt>Minutes per activity</dt>
+                <dd>@MinutesPerActivity</dd>
+            </dl>
+        </article>
+    </section>
+}
+
+@code {
+    private StudentAnalyticsOverviewDto? overview;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    private string MinutesPerActivity =>
+        overview is null || overview.LearningActivities == 0 ? "0" : (overview.StudyMinutes / (decimal)overview.LearningActivities).ToString("0.##");
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            overview = await AnalyticsApiClient.GetStudentOverviewAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
