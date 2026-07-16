@@ -305,6 +305,8 @@ builder.Services.AddScoped<AchievementCommandHandler>();
 builder.Services.AddScoped<AchievementQueryHandler>();
 builder.Services.AddScoped<LearningReportCommandHandler>();
 builder.Services.AddScoped<LearningReportQueryHandler>();
+builder.Services.AddScoped<CertificateGenerationCommandHandler>();
+builder.Services.AddScoped<CertificateGenerationQueryHandler>();
 var defaultConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if ((builder.Environment.IsProduction() || builder.Environment.IsStaging()) &&
     string.IsNullOrWhiteSpace(defaultConnectionString))

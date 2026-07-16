@@ -86,6 +86,7 @@ public static class DependencyInjection
 
         services.AddScoped<ICategoryRepository, EfCategoryRepository>();
         services.AddScoped<ICertificateTemplateRepository, EfCertificateTemplateRepository>();
+        services.AddScoped<IIssuedCertificateRepository, EfIssuedCertificateRepository>();
         services.AddScoped<ITagRepository, EfTagRepository>();
         services.AddScoped<IMediaRepository, EfMediaRepository>();
         services.AddScoped<IMediaStorageService, LocalMediaStorageService>();

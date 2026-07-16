@@ -7,6 +7,8 @@ public sealed record CertificateTemplateDto(Guid Id, string Code, string Name, s
 
 public sealed record CertificateTemplateSearchResponse(IReadOnlyCollection<CertificateTemplateDto> Items, int PageNumber, int PageSize, int TotalCount, int TotalPages, bool HasPreviousPage, bool HasNextPage);
 
+public sealed record IssuedCertificateDto(Guid Id, Guid UserId, Guid CourseId, Guid TemplateId, string VerificationCode, string RecipientName, string CourseTitle, string TemplateCode, string RenderedBody, DateTimeOffset IssuedAt, bool IsRevoked);
+
 public interface ICertificateTemplateRepository
 {
     Task<CertificateTemplateDto> AddAsync(CertificateTemplate template, CancellationToken cancellationToken);
@@ -22,6 +24,22 @@ public sealed record UpdateCertificateTemplateCommand(Guid Id, string Name, stri
 public sealed record SetCertificateTemplateActiveCommand(Guid Id, bool IsActive);
 public sealed record GetCertificateTemplateByIdQuery(Guid Id);
 public sealed record SearchCertificateTemplatesQuery(string? Search, bool? IsActive, int? PageNumber, int? PageSize);
+public sealed record GenerateCourseCertificateCommand(Guid UserId, Guid CourseId, Guid? TemplateId);
+public sealed record GetMyCertificatesQuery(Guid UserId, int? Limit);
+
+public interface IIssuedCertificateRepository
+{
+    Task<IssuedCertificateDto?> GetByUserAndCourseAsync(Guid userId, Guid courseId, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<IssuedCertificateDto>> GetByUserAsync(Guid userId, int limit, CancellationToken cancellationToken);
+    Task<CertificateGenerationCourse?> GetCompletedCourseAsync(Guid userId, Guid courseId, CancellationToken cancellationToken);
+    Task<CertificateGenerationUser?> GetUserAsync(Guid userId, CancellationToken cancellationToken);
+    Task<CertificateTemplate?> GetActiveTemplateAsync(Guid? templateId, CancellationToken cancellationToken);
+    Task<IssuedCertificateDto> AddAsync(IssuedCertificate certificate, CancellationToken cancellationToken);
+}
+
+public sealed record CertificateGenerationCourse(Guid Id, string Title);
+
+public sealed record CertificateGenerationUser(Guid Id, string DisplayName, string Email);
 
 public sealed class CertificateTemplateCommandHandler
 {
@@ -108,6 +126,77 @@ public sealed class CertificateTemplateCommandHandler
         }
 
         return normalized;
+    }
+}
+
+public sealed class CertificateGenerationCommandHandler
+{
+    private readonly IIssuedCertificateRepository repository;
+    private readonly TimeProvider timeProvider;
+
+    public CertificateGenerationCommandHandler(IIssuedCertificateRepository repository, TimeProvider timeProvider)
+    {
+        this.repository = repository;
+        this.timeProvider = timeProvider;
+    }
+
+    public async Task<Result<IssuedCertificateDto>> GenerateAsync(GenerateCourseCertificateCommand command, CancellationToken cancellationToken)
+    {
+        var existing = await repository.GetByUserAndCourseAsync(command.UserId, command.CourseId, cancellationToken);
+        if (existing is not null)
+        {
+            return Result<IssuedCertificateDto>.Success(existing);
+        }
+
+        var course = await repository.GetCompletedCourseAsync(command.UserId, command.CourseId, cancellationToken);
+        if (course is null)
+        {
+            return Result<IssuedCertificateDto>.Validation(new ValidationError(nameof(command.CourseId), "Course must be completed before a certificate can be issued."));
+        }
+
+        var user = await repository.GetUserAsync(command.UserId, cancellationToken);
+        if (user is null)
+        {
+            return Result<IssuedCertificateDto>.NotFound(nameof(command.UserId), "User was not found.");
+        }
+
+        var template = await repository.GetActiveTemplateAsync(command.TemplateId, cancellationToken);
+        if (template is null)
+        {
+            return Result<IssuedCertificateDto>.Validation(new ValidationError(nameof(command.TemplateId), "An active certificate template is required."));
+        }
+
+        var now = timeProvider.GetUtcNow();
+        var renderedBody = RenderTemplate(template.BodyTemplate, user.DisplayName, course.Title, now);
+        var certificate = IssuedCertificate.Create(command.UserId, command.CourseId, template.Id, CreateVerificationCode(), user.DisplayName, course.Title, template.Code, renderedBody, now);
+        return Result<IssuedCertificateDto>.Success(await repository.AddAsync(certificate, cancellationToken));
+    }
+
+    private static string CreateVerificationCode() =>
+        $"cert-{Guid.NewGuid():N}";
+
+    private static string RenderTemplate(string bodyTemplate, string studentName, string courseTitle, DateTimeOffset issuedAt) =>
+        bodyTemplate
+            .Replace("{{student}}", studentName, StringComparison.OrdinalIgnoreCase)
+            .Replace("{{studentName}}", studentName, StringComparison.OrdinalIgnoreCase)
+            .Replace("{{course}}", courseTitle, StringComparison.OrdinalIgnoreCase)
+            .Replace("{{courseTitle}}", courseTitle, StringComparison.OrdinalIgnoreCase)
+            .Replace("{{issuedAt}}", issuedAt.ToString("yyyy-MM-dd"), StringComparison.OrdinalIgnoreCase);
+}
+
+public sealed class CertificateGenerationQueryHandler
+{
+    private readonly IIssuedCertificateRepository repository;
+
+    public CertificateGenerationQueryHandler(IIssuedCertificateRepository repository)
+    {
+        this.repository = repository;
+    }
+
+    public async Task<Result<IReadOnlyCollection<IssuedCertificateDto>>> GetMineAsync(GetMyCertificatesQuery query, CancellationToken cancellationToken)
+    {
+        var limit = Math.Clamp(query.Limit ?? 50, 1, 100);
+        return Result<IReadOnlyCollection<IssuedCertificateDto>>.Success(await repository.GetByUserAsync(query.UserId, limit, cancellationToken));
     }
 }
 

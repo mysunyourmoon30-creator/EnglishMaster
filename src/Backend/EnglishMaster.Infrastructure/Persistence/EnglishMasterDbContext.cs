@@ -38,6 +38,8 @@ public sealed class EnglishMasterDbContext : DbContext
 
     public DbSet<CertificateTemplate> CertificateTemplates => Set<CertificateTemplate>();
 
+    public DbSet<IssuedCertificate> IssuedCertificates => Set<IssuedCertificate>();
+
     public DbSet<Tag> Tags => Set<Tag>();
 
     public DbSet<MediaEntity> Media => Set<MediaEntity>();
