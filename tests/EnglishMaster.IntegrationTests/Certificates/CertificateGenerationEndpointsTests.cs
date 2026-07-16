@@ -164,6 +164,30 @@ public sealed class CertificateGenerationEndpointsTests(EnglishMasterApiFactory 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    [Fact]
+    public async Task PublicCertificateVerification_MarksRevokedCertificateInvalid()
+    {
+        var verificationCode = Unique("cert").ToLowerInvariant();
+        await SeedAsync(dbContext =>
+        {
+            var template = CertificateTemplate.Create(Unique("revoked-template").ToLowerInvariant(), "Course Completion", string.Empty, "Body", DateTimeOffset.UtcNow);
+            var course = Course.Create(Unique("Revoked Course"), "summary", "description", CefrLevel.A2, null, null, 30, 1, DateTimeOffset.UtcNow);
+            var certificate = IssuedCertificate.Create(Guid.NewGuid(), course.Id, template.Id, verificationCode, "Revoked Learner", course.Title, template.Code, "Body", DateTimeOffset.UtcNow);
+            certificate.Revoke(DateTimeOffset.UtcNow);
+            dbContext.CertificateTemplates.Add(template);
+            dbContext.Courses.Add(course);
+            dbContext.IssuedCertificates.Add(certificate);
+            return Task.CompletedTask;
+        });
+        using var client = factory.CreateClient(new() { HandleCookies = true });
+
+        var certificate = await client.GetFromJsonAsync<PublicCertificateVerificationDto>($"/api/v1/public/certificates/{verificationCode}");
+
+        Assert.NotNull(certificate);
+        Assert.True(certificate!.IsRevoked);
+        Assert.False(certificate.IsValid);
+    }
+
     private async Task<Guid> GetSuperAdminUserIdAsync()
     {
         using var scope = factory.Services.CreateScope();

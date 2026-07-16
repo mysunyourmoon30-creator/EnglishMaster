@@ -87,8 +87,14 @@ else if (certificate is not null)
             return;
         }
 
-        NavigationManager.NavigateTo($"/certificates/verify/{Uri.EscapeDataString(code)}");
-        await VerifyAsync(code);
+        var target = $"/certificates/verify/{Uri.EscapeDataString(code)}";
+        if (NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Equals(target.TrimStart('/'), StringComparison.OrdinalIgnoreCase))
+        {
+            await VerifyAsync(code);
+            return;
+        }
+
+        NavigationManager.NavigateTo(target);
     }
 
     private async Task VerifyAsync(string code)
