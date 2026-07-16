@@ -133,6 +133,22 @@ public sealed class NotificationEndpointsTests(EnglishMasterApiFactory factory) 
     }
 
     [Fact]
+    public async Task EmailProviderTestSend_ValidatesEmailAddress()
+    {
+        using var client = factory.CreateClient(new() { HandleCookies = true });
+        await LoginAsync(client);
+
+        var response = await client.PostAsJsonAsync("/api/v1/admin/email-provider/test-send", new SendTestEmailRequest(
+            "not-an-email",
+            string.Empty,
+            "Subject",
+            "Body",
+            IsHtml: false));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task EmailDeliveryProcess_SendsPendingMessages()
     {
         using var client = factory.CreateClient(new() { HandleCookies = true });

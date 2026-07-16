@@ -1,6 +1,7 @@
 using EnglishMaster.Application.Features.EmailMessages.Dtos;
 using EnglishMaster.Domain.Notifications;
 using EnglishMaster.Shared.Results;
+using System.Net.Mail;
 
 namespace EnglishMaster.Application.Features.EmailMessages.Commands;
 
@@ -70,7 +71,7 @@ public sealed class EmailMessageCommandHandler
         try
         {
             var request = new EmailSendRequest(
-                Required(command.ToEmail, nameof(command.ToEmail), 256),
+                EmailAddress(command.ToEmail, nameof(command.ToEmail)),
                 Optional(command.ToName, nameof(command.ToName), 256),
                 Required(command.Subject, nameof(command.Subject), 256),
                 Required(command.Body, nameof(command.Body), 8000),
@@ -153,6 +154,20 @@ public sealed class EmailMessageCommandHandler
         }
 
         return normalized;
+    }
+
+    private static string EmailAddress(string? value, string fieldName)
+    {
+        var normalized = Required(value, fieldName, 256);
+        try
+        {
+            _ = new MailAddress(normalized);
+            return normalized;
+        }
+        catch (FormatException)
+        {
+            throw new ArgumentException($"{fieldName} must be a valid email address.", fieldName);
+        }
     }
 
     private static string Optional(string? value, string fieldName, int maxLength)

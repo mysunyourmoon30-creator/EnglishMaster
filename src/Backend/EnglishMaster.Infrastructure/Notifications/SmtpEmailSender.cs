@@ -24,6 +24,25 @@ public sealed class SmtpEmailSender : IEmailSender
             throw new InvalidOperationException("SMTP email provider is not configured.");
         }
 
+        try
+        {
+            await SendCoreAsync(request, cancellationToken);
+            logger.LogInformation("SMTP email sent to {ToEmail} with subject {Subject}.", request.ToEmail, request.Subject);
+        }
+        catch (FormatException exception)
+        {
+            logger.LogWarning(exception, "SMTP email delivery failed because an address was invalid.");
+            throw new InvalidOperationException("Email provider configuration or recipient address is invalid.");
+        }
+        catch (SmtpException exception)
+        {
+            logger.LogWarning(exception, "SMTP email delivery failed for {ToEmail}.", request.ToEmail);
+            throw new InvalidOperationException("Email provider failed to send the message.");
+        }
+    }
+
+    private async Task SendCoreAsync(EmailSendRequest request, CancellationToken cancellationToken)
+    {
         using var message = new MailMessage
         {
             From = new MailAddress(options.FromEmail, options.FromName),
@@ -45,15 +64,6 @@ public sealed class SmtpEmailSender : IEmailSender
             client.Credentials = new NetworkCredential(options.Smtp.UserName, options.Smtp.Password);
         }
 
-        try
-        {
-            await client.SendMailAsync(message, cancellationToken);
-            logger.LogInformation("SMTP email sent to {ToEmail} with subject {Subject}.", request.ToEmail, request.Subject);
-        }
-        catch (SmtpException exception)
-        {
-            logger.LogWarning(exception, "SMTP email delivery failed for {ToEmail}.", request.ToEmail);
-            throw new InvalidOperationException("Email provider failed to send the message.");
-        }
+        await client.SendMailAsync(message, cancellationToken);
     }
 }
