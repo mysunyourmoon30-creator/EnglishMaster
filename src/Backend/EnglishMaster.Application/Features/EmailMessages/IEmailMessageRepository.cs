@@ -7,6 +7,8 @@ public interface IEmailMessageRepository
 {
     Task<EmailMessageDto> AddAsync(EmailMessage emailMessage, CancellationToken cancellationToken);
 
+    Task<EmailMessageDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+
     Task<IReadOnlyCollection<EmailMessageDto>> GetPendingAsync(int maxItems, CancellationToken cancellationToken);
 
     Task<EmailMessageSearchResponse> SearchAsync(string? status, string? toEmail, int pageNumber, int pageSize, CancellationToken cancellationToken);

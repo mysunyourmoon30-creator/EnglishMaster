@@ -14,6 +14,8 @@ public sealed record SendTestEmailCommand(string ToEmail, string? ToName, string
 
 public sealed record ProcessPendingEmailQueueCommand(int? MaxItems);
 
+public sealed record RetryFailedEmailCommand(Guid Id);
+
 public sealed class EmailMessageCommandHandler
 {
     private readonly IEmailMessageRepository repository;
@@ -112,6 +114,34 @@ public sealed class EmailMessageCommandHandler
         }
 
         return Result<EmailDeliveryQueueProcessResult>.Success(new EmailDeliveryQueueProcessResult(maxItems, pending.Count, sent, failed));
+    }
+
+    public async Task<Result<EmailMessageDto>> RetryFailedAsync(RetryFailedEmailCommand command, CancellationToken cancellationToken)
+    {
+        var email = await repository.GetByIdAsync(command.Id, cancellationToken);
+        if (email is null)
+        {
+            return Result<EmailMessageDto>.NotFound(nameof(command.Id), "Email message was not found.");
+        }
+
+        if (!string.Equals(email.Status, EmailMessageStatus.Failed.ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            return Result<EmailMessageDto>.Validation(new ValidationError(nameof(command.Id), "Only failed email messages can be retried."));
+        }
+
+        try
+        {
+            await emailSender.SendAsync(
+                new EmailSendRequest(email.ToEmail, email.ToName, email.Subject, email.Body, email.IsHtml),
+                cancellationToken);
+            var sent = await repository.MarkSentAsync(email.Id, timeProvider.GetUtcNow(), cancellationToken);
+            return Result<EmailMessageDto>.Success(sent!);
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or TimeoutException)
+        {
+            var failed = await repository.MarkFailedAsync(email.Id, SanitizeError(exception.Message), timeProvider.GetUtcNow(), cancellationToken);
+            return Result<EmailMessageDto>.Success(failed!);
+        }
     }
 
     private static string Required(string? value, string fieldName, int maxLength)

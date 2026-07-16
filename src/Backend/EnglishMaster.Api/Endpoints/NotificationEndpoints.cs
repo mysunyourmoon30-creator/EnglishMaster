@@ -41,6 +41,10 @@ public static class NotificationEndpoints
             .WithTags("Admin Email Delivery")
             .RequireAuthorization(Permissions.EmailManage);
 
+        endpoints.MapPost("/api/v1/admin/email-delivery/{id:guid}/retry", RetryEmailDeliveryAsync)
+            .WithTags("Admin Email Delivery")
+            .RequireAuthorization(Permissions.EmailManage);
+
         endpoints.MapPost("/api/v1/admin/email-messages", QueueEmailMessageAsync)
             .WithTags("Admin Email Messages")
             .RequireAuthorization(Permissions.EmailManage);
@@ -142,6 +146,12 @@ public static class NotificationEndpoints
                 result.Value.Failed))
             : ToHttpResult(result);
     }
+
+    private static async Task<IResult> RetryEmailDeliveryAsync(
+        Guid id,
+        EmailMessageCommandHandler handler,
+        CancellationToken cancellationToken) =>
+        ToHttpResult(await handler.RetryFailedAsync(new RetryFailedEmailCommand(id), cancellationToken));
 
     private static async Task<IResult> QueueEmailMessageAsync(
         QueueEmailMessageRequest request,

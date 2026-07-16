@@ -22,6 +22,14 @@ public sealed class EfEmailMessageRepository : IEmailMessageRepository
         return ToDto(emailMessage);
     }
 
+    public async Task<EmailMessageDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var email = await dbContext.EmailMessages.AsNoTracking()
+            .SingleOrDefaultAsync(email => email.Id == id, cancellationToken);
+
+        return email is null ? null : ToDto(email);
+    }
+
     public async Task<IReadOnlyCollection<EmailMessageDto>> GetPendingAsync(int maxItems, CancellationToken cancellationToken)
     {
         var emails = await dbContext.EmailMessages.AsNoTracking()

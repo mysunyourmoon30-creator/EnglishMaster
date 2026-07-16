@@ -3,6 +3,8 @@ using System.Net.Http.Json;
 using EnglishMaster.Contracts.EmailMessages;
 using EnglishMaster.Contracts.Notifications;
 using EnglishMaster.Contracts.Security;
+using EnglishMaster.Infrastructure.Persistence;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EnglishMaster.IntegrationTests.Notifications;
 
@@ -159,8 +161,45 @@ public sealed class NotificationEndpointsTests(EnglishMasterApiFactory factory) 
         Assert.Contains(search!.Items, email => email.Id == queued!.Id && email.Status == "Sent");
     }
 
+    [Fact]
+    public async Task EmailDeliveryRetry_SendsFailedMessage()
+    {
+        using var client = factory.CreateClient(new() { HandleCookies = true });
+        await LoginAsync(client);
+        var toEmail = $"retry-{Guid.NewGuid():N}@example.test";
+
+        var queueResponse = await client.PostAsJsonAsync("/api/v1/admin/email-messages", new QueueEmailMessageRequest(
+            toEmail,
+            "Retry Learner",
+            "Retry message",
+            "This should retry",
+            IsHtml: false));
+        queueResponse.EnsureSuccessStatusCode();
+        var queued = await queueResponse.Content.ReadFromJsonAsync<EmailMessageDto>();
+        await MarkEmailFailedAsync(queued!.Id);
+
+        var retryResponse = await client.PostAsync($"/api/v1/admin/email-delivery/{queued.Id}/retry", null);
+        retryResponse.EnsureSuccessStatusCode();
+        var retried = await retryResponse.Content.ReadFromJsonAsync<EmailMessageDto>();
+
+        Assert.NotNull(retried);
+        Assert.Equal("Sent", retried!.Status);
+        Assert.True(retried.SentAt.HasValue);
+        Assert.Empty(retried.ErrorMessage);
+    }
+
     private static Task<HttpResponseMessage> LoginAsync(HttpClient client) =>
         client.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(
             "superadmin@englishmaster.test",
             "TestPassword1"));
+
+    private async Task MarkEmailFailedAsync(Guid id)
+    {
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<EnglishMasterDbContext>();
+        var email = await dbContext.EmailMessages.FindAsync(id);
+        Assert.NotNull(email);
+        email!.MarkFailed("Simulated failure", DateTimeOffset.UtcNow);
+        await dbContext.SaveChangesAsync();
+    }
 }
