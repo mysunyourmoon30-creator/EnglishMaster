@@ -45,3 +45,11 @@ public sealed record SendTestEmailRequest(
     string Subject,
     string Body,
     bool IsHtml);
+
+public sealed record ProcessEmailQueueRequest(int? MaxItems);
+
+public sealed record EmailDeliveryQueueProcessResponse(
+    int Requested,
+    int Processed,
+    int Sent,
+    int Failed);

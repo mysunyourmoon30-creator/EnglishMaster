@@ -130,6 +130,35 @@ public sealed class NotificationEndpointsTests(EnglishMasterApiFactory factory) 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Fact]
+    public async Task EmailDeliveryProcess_SendsPendingMessages()
+    {
+        using var client = factory.CreateClient(new() { HandleCookies = true });
+        await LoginAsync(client);
+        var toEmail = $"queue-{Guid.NewGuid():N}@example.test";
+
+        var queueResponse = await client.PostAsJsonAsync("/api/v1/admin/email-messages", new QueueEmailMessageRequest(
+            toEmail,
+            "Queue Learner",
+            "Queued message",
+            "This should be processed",
+            IsHtml: false));
+        queueResponse.EnsureSuccessStatusCode();
+        var queued = await queueResponse.Content.ReadFromJsonAsync<EmailMessageDto>();
+
+        var processResponse = await client.PostAsJsonAsync("/api/v1/admin/email-delivery/process", new ProcessEmailQueueRequest(MaxItems: 5));
+        processResponse.EnsureSuccessStatusCode();
+        var result = await processResponse.Content.ReadFromJsonAsync<EmailDeliveryQueueProcessResponse>();
+
+        var search = await client.GetFromJsonAsync<EmailMessageSearchResponse>($"/api/v1/admin/email-messages?toEmail={Uri.EscapeDataString(toEmail)}");
+
+        Assert.NotNull(queued);
+        Assert.NotNull(result);
+        Assert.True(result!.Processed >= 1);
+        Assert.True(result.Sent >= 1);
+        Assert.Contains(search!.Items, email => email.Id == queued!.Id && email.Status == "Sent");
+    }
+
     private static Task<HttpResponseMessage> LoginAsync(HttpClient client) =>
         client.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(
             "superadmin@englishmaster.test",

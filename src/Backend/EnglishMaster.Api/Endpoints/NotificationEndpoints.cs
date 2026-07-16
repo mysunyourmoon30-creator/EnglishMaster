@@ -37,6 +37,10 @@ public static class NotificationEndpoints
             .WithTags("Admin Email Provider")
             .RequireAuthorization(Permissions.EmailManage);
 
+        endpoints.MapPost("/api/v1/admin/email-delivery/process", ProcessEmailDeliveryQueueAsync)
+            .WithTags("Admin Email Delivery")
+            .RequireAuthorization(Permissions.EmailManage);
+
         endpoints.MapPost("/api/v1/admin/email-messages", QueueEmailMessageAsync)
             .WithTags("Admin Email Messages")
             .RequireAuthorization(Permissions.EmailManage);
@@ -122,6 +126,21 @@ public static class NotificationEndpoints
             new SendTestEmailCommand(request.ToEmail, request.ToName, request.Subject, request.Body, request.IsHtml),
             cancellationToken);
         return ToHttpResult(result);
+    }
+
+    private static async Task<IResult> ProcessEmailDeliveryQueueAsync(
+        ProcessEmailQueueRequest request,
+        EmailMessageCommandHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.ProcessPendingQueueAsync(new ProcessPendingEmailQueueCommand(request.MaxItems), cancellationToken);
+        return result.Status == ResultStatus.Success
+            ? Results.Ok(new EmailDeliveryQueueProcessResponse(
+                result.Value!.Requested,
+                result.Value.Processed,
+                result.Value.Sent,
+                result.Value.Failed))
+            : ToHttpResult(result);
     }
 
     private static async Task<IResult> QueueEmailMessageAsync(

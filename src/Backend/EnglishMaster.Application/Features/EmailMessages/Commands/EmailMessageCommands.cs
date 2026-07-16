@@ -12,6 +12,8 @@ public sealed record MarkEmailAsFailedCommand(Guid Id, string ErrorMessage);
 
 public sealed record SendTestEmailCommand(string ToEmail, string? ToName, string Subject, string Body, bool IsHtml);
 
+public sealed record ProcessPendingEmailQueueCommand(int? MaxItems);
+
 public sealed class EmailMessageCommandHandler
 {
     private readonly IEmailMessageRepository repository;
@@ -85,6 +87,33 @@ public sealed class EmailMessageCommandHandler
         }
     }
 
+    public async Task<Result<EmailDeliveryQueueProcessResult>> ProcessPendingQueueAsync(ProcessPendingEmailQueueCommand command, CancellationToken cancellationToken)
+    {
+        var maxItems = Math.Clamp(command.MaxItems ?? 10, 1, 50);
+        var pending = await repository.GetPendingAsync(maxItems, cancellationToken);
+        var sent = 0;
+        var failed = 0;
+
+        foreach (var email in pending)
+        {
+            try
+            {
+                await emailSender.SendAsync(
+                    new EmailSendRequest(email.ToEmail, email.ToName, email.Subject, email.Body, email.IsHtml),
+                    cancellationToken);
+                await repository.MarkSentAsync(email.Id, timeProvider.GetUtcNow(), cancellationToken);
+                sent++;
+            }
+            catch (Exception exception) when (exception is InvalidOperationException or TimeoutException)
+            {
+                await repository.MarkFailedAsync(email.Id, SanitizeError(exception.Message), timeProvider.GetUtcNow(), cancellationToken);
+                failed++;
+            }
+        }
+
+        return Result<EmailDeliveryQueueProcessResult>.Success(new EmailDeliveryQueueProcessResult(maxItems, pending.Count, sent, failed));
+    }
+
     private static string Required(string? value, string fieldName, int maxLength)
     {
         var normalized = Optional(value, fieldName, maxLength);
@@ -105,5 +134,11 @@ public sealed class EmailMessageCommandHandler
         }
 
         return normalized;
+    }
+
+    private static string SanitizeError(string message)
+    {
+        var normalized = string.IsNullOrWhiteSpace(message) ? "Email delivery failed." : message.Trim();
+        return normalized.Length > 300 ? normalized[..300] : normalized;
     }
 }

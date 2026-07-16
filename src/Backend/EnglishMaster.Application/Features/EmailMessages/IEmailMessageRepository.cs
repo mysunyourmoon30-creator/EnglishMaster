@@ -7,6 +7,8 @@ public interface IEmailMessageRepository
 {
     Task<EmailMessageDto> AddAsync(EmailMessage emailMessage, CancellationToken cancellationToken);
 
+    Task<IReadOnlyCollection<EmailMessageDto>> GetPendingAsync(int maxItems, CancellationToken cancellationToken);
+
     Task<EmailMessageSearchResponse> SearchAsync(string? status, string? toEmail, int pageNumber, int pageSize, CancellationToken cancellationToken);
 
     Task<EmailMessageDto?> MarkSentAsync(Guid id, DateTimeOffset now, CancellationToken cancellationToken);
@@ -32,6 +34,12 @@ public sealed record EmailProviderStatusDto(
     string FromEmail,
     string FromName,
     bool SupportsTestSend);
+
+public sealed record EmailDeliveryQueueProcessResult(
+    int Requested,
+    int Processed,
+    int Sent,
+    int Failed);
 
 public interface IEmailProviderStatusService
 {
