@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using EnglishMaster.Web.Components;
+using EnglishMaster.Web.Services.Analytics;
 using EnglishMaster.Web.Services.Books;
 using EnglishMaster.Web.Services.BulkOperations;
 using EnglishMaster.Web.Services.Categories;
@@ -63,6 +64,7 @@ builder.Services.AddHttpClient("EnglishMaster.Api", client =>
 builder.Services.AddScoped(provider =>
     provider.GetRequiredService<IHttpClientFactory>().CreateClient("EnglishMaster.Api"));
 builder.Services.AddScoped<IWordsApiClient, WordsApiClient>();
+builder.Services.AddScoped<IAnalyticsApiClient, AnalyticsApiClient>();
 builder.Services.AddScoped<ICategoriesApiClient, CategoriesApiClient>();
 builder.Services.AddScoped<IContentQualityApiClient, ContentQualityApiClient>();
 builder.Services.AddScoped<IContentRevisionApiClient, ContentRevisionApiClient>();

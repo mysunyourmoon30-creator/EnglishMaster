@@ -159,6 +159,11 @@ public static class AdminRoutes
         public const string Index = "/admin/reports";
     }
 
+    public static class Analytics
+    {
+        public const string Index = "/admin/analytics";
+    }
+
     public static class Notifications
     {
         public const string Mine = "/learn/notifications";

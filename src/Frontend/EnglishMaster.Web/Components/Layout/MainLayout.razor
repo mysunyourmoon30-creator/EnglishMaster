@@ -31,6 +31,7 @@
             @if (HasPermission("reports.read"))
             {
                 <NavLink href="@AdminRoutes.Reports.Index">Reports</NavLink>
+                <NavLink href="@AdminRoutes.Analytics.Index">Analytics</NavLink>
             }
             @if (IsAuthenticated)
             {
