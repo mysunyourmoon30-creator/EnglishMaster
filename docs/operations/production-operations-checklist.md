@@ -12,6 +12,7 @@
 - [ ] Error logs have no new critical exceptions.
 - [ ] Failed publish jobs reviewed.
 - [ ] Failed email messages reviewed.
+- [ ] Email provider status checked.
 - [ ] Failed imports reviewed.
 - [ ] Login/authentication issues reviewed.
 - [ ] Admin dashboard loads.
@@ -35,6 +36,8 @@
 - [ ] Confirm admin content list.
 - [ ] Confirm reports page.
 - [ ] Confirm notifications page.
+- [ ] Confirm email provider status.
+- [ ] Send staging/production-approved email test if provider delivery changed.
 - [ ] Confirm public pages.
 - [ ] Watch logs for startup exceptions.
 
