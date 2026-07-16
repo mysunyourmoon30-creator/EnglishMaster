@@ -268,6 +268,7 @@ builder.Services.AddScoped<NotificationCommandHandler>();
 builder.Services.AddScoped<NotificationQueryHandler>();
 builder.Services.AddScoped<EmailMessageCommandHandler>();
 builder.Services.AddScoped<EmailMessageQueryHandler>();
+builder.Services.AddScoped<EmailProviderQueryHandler>();
 builder.Services.AddScoped<CreatePublishJobCommandHandler>();
 builder.Services.AddScoped<StartPublishJobCommandHandler>();
 builder.Services.AddScoped<CompletePublishJobCommandHandler>();
@@ -308,7 +309,7 @@ if ((builder.Environment.IsProduction() || builder.Environment.IsStaging()) &&
     throw new InvalidOperationException("ConnectionStrings:DefaultConnection must be configured for staging and production.");
 }
 
-builder.Services.AddInfrastructure(defaultConnectionString);
+builder.Services.AddInfrastructure(defaultConnectionString, builder.Configuration);
 builder.Services.AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])
     .AddCheck<DatabaseHealthCheck>("database", tags: ["ready"]);

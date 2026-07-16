@@ -29,6 +29,14 @@ public static class NotificationEndpoints
             .WithTags("Admin Email Messages")
             .RequireAuthorization(Permissions.EmailRead);
 
+        endpoints.MapGet("/api/v1/admin/email-provider/status", GetEmailProviderStatusAsync)
+            .WithTags("Admin Email Provider")
+            .RequireAuthorization(Permissions.EmailRead);
+
+        endpoints.MapPost("/api/v1/admin/email-provider/test-send", SendTestEmailAsync)
+            .WithTags("Admin Email Provider")
+            .RequireAuthorization(Permissions.EmailManage);
+
         endpoints.MapPost("/api/v1/admin/email-messages", QueueEmailMessageAsync)
             .WithTags("Admin Email Messages")
             .RequireAuthorization(Permissions.EmailManage);
@@ -99,6 +107,22 @@ public static class NotificationEndpoints
         int? pageSize,
         CancellationToken cancellationToken) =>
         ToHttpResult(await handler.SearchAsync(new SearchEmailMessagesQuery(status, toEmail, pageNumber, pageSize), cancellationToken));
+
+    private static async Task<IResult> GetEmailProviderStatusAsync(
+        EmailProviderQueryHandler handler,
+        CancellationToken cancellationToken) =>
+        ToHttpResult(await handler.GetStatusAsync(new GetEmailProviderStatusQuery(), cancellationToken));
+
+    private static async Task<IResult> SendTestEmailAsync(
+        SendTestEmailRequest request,
+        EmailMessageCommandHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.SendTestAsync(
+            new SendTestEmailCommand(request.ToEmail, request.ToName, request.Subject, request.Body, request.IsHtml),
+            cancellationToken);
+        return ToHttpResult(result);
+    }
 
     private static async Task<IResult> QueueEmailMessageAsync(
         QueueEmailMessageRequest request,

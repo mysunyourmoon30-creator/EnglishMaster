@@ -16,5 +16,24 @@ public interface IEmailMessageRepository
 
 public interface IEmailSender
 {
-    Task SendAsync(EmailMessageDto message, CancellationToken cancellationToken);
+    Task SendAsync(EmailSendRequest request, CancellationToken cancellationToken);
+}
+
+public sealed record EmailSendRequest(
+    string ToEmail,
+    string? ToName,
+    string Subject,
+    string Body,
+    bool IsHtml);
+
+public sealed record EmailProviderStatusDto(
+    string Provider,
+    bool IsConfigured,
+    string FromEmail,
+    string FromName,
+    bool SupportsTestSend);
+
+public interface IEmailProviderStatusService
+{
+    EmailProviderStatusDto GetStatus();
 }

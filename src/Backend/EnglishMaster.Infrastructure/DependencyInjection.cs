@@ -62,6 +62,7 @@ using EnglishMaster.Infrastructure.Security;
 using EnglishMaster.Infrastructure.Tags;
 using EnglishMaster.Infrastructure.Words;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EnglishMaster.Infrastructure;
@@ -73,7 +74,8 @@ public static class DependencyInjection
 
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
-        string? connectionString)
+        string? connectionString,
+        IConfiguration configuration)
     {
         services.AddDbContext<EnglishMasterDbContext>(options =>
             options.UseSqlServer(string.IsNullOrWhiteSpace(connectionString)
@@ -105,7 +107,11 @@ public static class DependencyInjection
         services.AddScoped<INotificationRepository, EfNotificationRepository>();
         services.AddScoped<INotificationService, EnglishMaster.Application.Features.Notifications.Commands.NotificationService>();
         services.AddScoped<IEmailMessageRepository, EfEmailMessageRepository>();
-        services.AddScoped<IEmailSender, DevelopmentEmailSender>();
+        services.Configure<EmailOptions>(configuration.GetSection("Email"));
+        services.AddScoped<DevelopmentEmailSender>();
+        services.AddScoped<SmtpEmailSender>();
+        services.AddScoped<IEmailSender, ConfiguredEmailSender>();
+        services.AddScoped<IEmailProviderStatusService, EmailProviderStatusService>();
         services.AddScoped<IContentQualityRepository, EfContentQualityRepository>();
         services.AddScoped<IContentQualityService, ContentQualityService>();
         services.AddScoped<IContentQualityRuleProvider, DefaultContentQualityRuleProvider>();

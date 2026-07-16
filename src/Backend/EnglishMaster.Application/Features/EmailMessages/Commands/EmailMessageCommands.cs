@@ -10,14 +10,18 @@ public sealed record MarkEmailAsSentCommand(Guid Id);
 
 public sealed record MarkEmailAsFailedCommand(Guid Id, string ErrorMessage);
 
+public sealed record SendTestEmailCommand(string ToEmail, string? ToName, string Subject, string Body, bool IsHtml);
+
 public sealed class EmailMessageCommandHandler
 {
     private readonly IEmailMessageRepository repository;
+    private readonly IEmailSender emailSender;
     private readonly TimeProvider timeProvider;
 
-    public EmailMessageCommandHandler(IEmailMessageRepository repository, TimeProvider timeProvider)
+    public EmailMessageCommandHandler(IEmailMessageRepository repository, IEmailSender emailSender, TimeProvider timeProvider)
     {
         this.repository = repository;
+        this.emailSender = emailSender;
         this.timeProvider = timeProvider;
     }
 
@@ -55,5 +59,51 @@ public sealed class EmailMessageCommandHandler
         {
             return Result<EmailMessageDto>.Validation(new ValidationError(exception.ParamName ?? nameof(command.ErrorMessage), exception.Message));
         }
+    }
+
+    public async Task<Result> SendTestAsync(SendTestEmailCommand command, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var request = new EmailSendRequest(
+                Required(command.ToEmail, nameof(command.ToEmail), 256),
+                Optional(command.ToName, nameof(command.ToName), 256),
+                Required(command.Subject, nameof(command.Subject), 256),
+                Required(command.Body, nameof(command.Body), 8000),
+                command.IsHtml);
+
+            await emailSender.SendAsync(request, cancellationToken);
+            return Result.Success();
+        }
+        catch (ArgumentException exception)
+        {
+            return Result.Validation(new ValidationError(exception.ParamName ?? "email", exception.Message));
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Result.Validation(new ValidationError("emailProvider", exception.Message));
+        }
+    }
+
+    private static string Required(string? value, string fieldName, int maxLength)
+    {
+        var normalized = Optional(value, fieldName, maxLength);
+        if (normalized.Length == 0)
+        {
+            throw new ArgumentException($"{fieldName} is required.", fieldName);
+        }
+
+        return normalized;
+    }
+
+    private static string Optional(string? value, string fieldName, int maxLength)
+    {
+        var normalized = value?.Trim() ?? string.Empty;
+        if (normalized.Length > maxLength)
+        {
+            throw new ArgumentException($"{fieldName} must be {maxLength} characters or fewer.", fieldName);
+        }
+
+        return normalized;
     }
 }

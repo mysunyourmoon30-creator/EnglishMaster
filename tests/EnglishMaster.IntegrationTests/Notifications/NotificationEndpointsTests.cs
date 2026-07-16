@@ -83,6 +83,53 @@ public sealed class NotificationEndpointsTests(EnglishMasterApiFactory factory) 
         Assert.Contains(search!.Items, email => email.Id == queued!.Id);
     }
 
+    [Fact]
+    public async Task EmailProviderStatus_ReturnsSafeConfigurationStatus()
+    {
+        using var client = factory.CreateClient(new() { HandleCookies = true });
+        await LoginAsync(client);
+
+        var status = await client.GetFromJsonAsync<EmailProviderStatusDto>("/api/v1/admin/email-provider/status");
+
+        Assert.NotNull(status);
+        Assert.Equal("Development", status!.Provider);
+        Assert.True(status.IsConfigured);
+        Assert.True(status.SupportsTestSend);
+        Assert.DoesNotContain("password", status.ToString(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task EmailProviderTestSend_UsesConfiguredSender()
+    {
+        using var client = factory.CreateClient(new() { HandleCookies = true });
+        await LoginAsync(client);
+
+        var response = await client.PostAsJsonAsync("/api/v1/admin/email-provider/test-send", new SendTestEmailRequest(
+            "learner@example.test",
+            "Learner",
+            "Provider test",
+            "Hello from the configured provider",
+            IsHtml: false));
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task EmailProviderTestSend_ValidatesRequiredFields()
+    {
+        using var client = factory.CreateClient(new() { HandleCookies = true });
+        await LoginAsync(client);
+
+        var response = await client.PostAsJsonAsync("/api/v1/admin/email-provider/test-send", new SendTestEmailRequest(
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            IsHtml: false));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     private static Task<HttpResponseMessage> LoginAsync(HttpClient client) =>
         client.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(
             "superadmin@englishmaster.test",
