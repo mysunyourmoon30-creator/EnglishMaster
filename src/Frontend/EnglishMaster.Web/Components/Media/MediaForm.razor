@@ -1,0 +1,120 @@
+@using EnglishMaster.Web.Services.Media
+
+<EditForm Model="Model" OnValidSubmit="SubmitAsync" class="word-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    @if (ValidationErrors.Count > 0)
+    {
+        <div class="alert error">
+            <ul>
+                @foreach (var error in ValidationErrors.SelectMany(item => item.Value))
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="form-grid">
+        <label>
+            <span>File Name</span>
+            <InputText class="input" @bind-Value="Model.FileName" />
+            <ValidationMessage For="@(() => Model.FileName)" />
+        </label>
+
+        <label>
+            <span>Original File Name</span>
+            <InputText class="input" @bind-Value="Model.OriginalFileName" />
+            <ValidationMessage For="@(() => Model.OriginalFileName)" />
+        </label>
+
+        <label>
+            <span>Extension</span>
+            <InputText class="input" @bind-Value="Model.FileExtension" />
+            <ValidationMessage For="@(() => Model.FileExtension)" />
+        </label>
+
+        <label>
+            <span>Content Type</span>
+            <InputText class="input" @bind-Value="Model.ContentType" />
+            <ValidationMessage For="@(() => Model.ContentType)" />
+        </label>
+
+        <label>
+            <span>File Size</span>
+            <InputNumber class="input" @bind-Value="Model.FileSize" />
+            <ValidationMessage For="@(() => Model.FileSize)" />
+        </label>
+
+        <label>
+            <span>Media Type</span>
+            <InputSelect class="input" @bind-Value="Model.MediaType">
+                @foreach (var option in MediaTypeOptions)
+                {
+                    <option value="@option">@option</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => Model.MediaType)" />
+        </label>
+
+        <label class="span-2">
+            <span>Public URL</span>
+            <InputText class="input" @bind-Value="Model.PublicUrl" />
+            <ValidationMessage For="@(() => Model.PublicUrl)" />
+        </label>
+
+        <label class="span-2">
+            <span>Alt Text</span>
+            <InputText class="input" @bind-Value="Model.AltText" />
+            <ValidationMessage For="@(() => Model.AltText)" />
+        </label>
+
+        <label class="span-2">
+            <span>Description</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.Description" />
+            <ValidationMessage For="@(() => Model.Description)" />
+        </label>
+
+        @if (ShowActiveToggle)
+        {
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="Model.IsActive" />
+                <span>Active</span>
+            </label>
+        }
+    </div>
+
+    <div class="actions">
+        <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
+        <a class="button" href="@AdminRoutes.Media.Index">Cancel</a>
+    </div>
+</EditForm>
+
+@code {
+    private static readonly string[] MediaTypeOptions = ["Image", "Audio", "Video", "Document", "Other"];
+
+    [Parameter, EditorRequired]
+    public MediaFormModel Model { get; set; } = new();
+
+    [Parameter]
+    public IReadOnlyDictionary<string, string[]> ValidationErrors { get; set; } =
+        new Dictionary<string, string[]>();
+
+    [Parameter]
+    public bool IsSaving { get; set; }
+
+    [Parameter]
+    public bool ShowActiveToggle { get; set; }
+
+    [Parameter]
+    public string SubmitText { get; set; } = "Save";
+
+    [Parameter]
+    public EventCallback OnValidSubmit { get; set; }
+
+    private async Task SubmitAsync()
+    {
+        await OnValidSubmit.InvokeAsync();
+    }
+}

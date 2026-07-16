@@ -1,0 +1,79 @@
+@page "/admin/content-revisions"
+@rendermode InteractiveServer
+@inject IContentRevisionApiClient ContentRevisionApiClient
+
+<PageTitle>Content Revisions</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Content Revisions</h1>
+    </div>
+    <div class="actions">
+        <a class="button secondary" href="@AdminRoutes.ContentRevisions.Restores">Restore Requests</a>
+    </div>
+</section>
+
+<section class="panel filter-bar">
+    <InputText @bind-Value="contentType" placeholder="Content type" />
+    <InputText @bind-Value="eventType" placeholder="Event type" />
+    <button class="button" type="button" @onclick="SearchAsync">Search</button>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading revisions...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (revisions.Count == 0)
+{
+    <div class="panel">No revisions found.</div>
+}
+else
+{
+    <section class="content-list">
+        @foreach (var revision in revisions)
+        {
+            <article class="panel">
+                <div class="item-header">
+                    <div>
+                        <h2>@revision.ContentType #@revision.RevisionNumber</h2>
+                        <p class="muted">@revision.EventType · @revision.ChangedAt.LocalDateTime.ToString("g")</p>
+                    </div>
+                    <a class="button small" href="@AdminRoutes.ContentRevisions.Detail(revision.Id)">Open</a>
+                </div>
+            </article>
+        }
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<ContentRevisionDto> revisions = [];
+    private string? contentType;
+    private string? eventType;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await SearchAsync();
+
+    private async Task SearchAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            revisions = (await ContentRevisionApiClient.SearchRevisionsAsync(contentType, null, eventType, CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

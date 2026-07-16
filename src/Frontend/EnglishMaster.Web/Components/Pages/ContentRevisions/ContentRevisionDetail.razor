@@ -1,0 +1,53 @@
+@page "/admin/content-revisions/{Id:guid}"
+@rendermode InteractiveServer
+@inject IContentRevisionApiClient ContentRevisionApiClient
+
+<PageTitle>Content Revision</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Content Revision</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading revision...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (revision is not null)
+{
+    <section class="panel">
+        <h2>@revision.ContentType #@revision.RevisionNumber</h2>
+        <p>@revision.EventType · @revision.ChangedBy · @revision.ChangedAt.LocalDateTime.ToString("g")</p>
+        <p>@revision.ChangeReason</p>
+        <pre>@revision.SnapshotJson</pre>
+    </section>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private ContentRevisionDto? revision;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            revision = await ContentRevisionApiClient.GetRevisionAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

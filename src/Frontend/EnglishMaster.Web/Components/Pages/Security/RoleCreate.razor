@@ -1,0 +1,61 @@
+@page "/admin/roles/create"
+@rendermode InteractiveServer
+@inject ISecurityApiClient SecurityApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Role</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Create Role</h1>
+    </div>
+</section>
+
+<EditForm Model="model" OnValidSubmit="SaveAsync" class="word-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert error">@errorMessage</div>
+    }
+    <div class="form-grid">
+        <label><span>Name</span><InputText class="input" @bind-Value="model.Name" /></label>
+        <label class="span-2"><span>Description</span><InputTextArea class="input textarea" @bind-Value="model.Description" /></label>
+    </div>
+    <div class="actions">
+        <button class="button primary" type="submit" disabled="@isSaving">Create</button>
+        <a class="button" href="@AdminRoutes.Roles.Index">Cancel</a>
+    </div>
+</EditForm>
+
+@code {
+    private sealed class FormModel
+    {
+        [Required] public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+    }
+
+    private readonly FormModel model = new();
+    private bool isSaving;
+    private string? errorMessage;
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        try
+        {
+            var role = await SecurityApiClient.CreateRoleAsync(new(model.Name, model.Description), CancellationToken.None);
+            NavigationManager.NavigateTo(AdminRoutes.Roles.Detail(role.Id));
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

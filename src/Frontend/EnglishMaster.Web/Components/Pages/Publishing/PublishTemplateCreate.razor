@@ -1,0 +1,83 @@
+@page "/admin/publishing/templates/create"
+@rendermode InteractiveServer
+@inject IPublishingApiClient PublishingApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Publish Template</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Publishing</p>
+        <h1>Create Publish Template</h1>
+    </div>
+    <a class="button" href="@AdminRoutes.Publishing.Templates.Index">Back</a>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+<section class="panel">
+    <EditForm Model="model" OnValidSubmit="SubmitAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="form-grid">
+            <label>
+                <span>Name</span>
+                <InputText class="input" @bind-Value="model.Name" />
+            </label>
+            <label>
+                <span>Format</span>
+                <InputSelect class="input" @bind-Value="model.Format">
+                    @foreach (var item in Formats)
+                    {
+                        <option value="@item">@item</option>
+                    }
+                </InputSelect>
+            </label>
+            <label>
+                <span>Description</span>
+                <InputText class="input" @bind-Value="model.Description" />
+            </label>
+            <label>
+                <InputCheckbox @bind-Value="model.IsDefault" />
+                <span>Default template</span>
+            </label>
+        </div>
+        <label>
+            <span>Template Content</span>
+            <InputTextArea class="input" @bind-Value="model.TemplateContent" />
+        </label>
+        <div class="form-actions">
+            <button class="button primary" type="submit" disabled="@isSaving">@(isSaving ? "Saving..." : "Create")</button>
+        </div>
+    </EditForm>
+</section>
+
+@code {
+    private static readonly string[] Formats = ["Html", "Pdf", "Docx", "Markdown"];
+    private readonly PublishTemplateFormModel model = new();
+    private bool isSaving;
+    private string? errorMessage;
+
+    private async Task SubmitAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+
+        try
+        {
+            await PublishingApiClient.CreateTemplateAsync(model.ToCreateRequest(), CancellationToken.None);
+            NavigationManager.NavigateTo(AdminRoutes.Publishing.Templates.Index);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

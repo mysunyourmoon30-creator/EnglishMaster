@@ -1,0 +1,29 @@
+@page "/admin/achievement-definitions"
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Achievement Definitions</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Achievement Definitions</h1>
+        <p class="muted">Admin endpoint coverage for achievement definition management.</p>
+    </div>
+    <a class="button secondary" href="/learn/achievements">Learner Achievements</a>
+</section>
+
+@if (!HasPermission("achievements.manage"))
+{
+    <div class="alert error">You do not have permission to manage achievement definitions.</div>
+}
+else
+{
+    <section class="content-section">
+        <h2>Management</h2>
+        <p class="muted">Achievement definition management is available through the protected API. A full admin editing UI is deferred.</p>
+    </section>
+}
+
+@code {
+    private bool HasPermission(string permission) =>
+        HttpContextAccessor.HttpContext?.User.HasClaim("permission", permission) == true;
+}

@@ -1,0 +1,120 @@
+@page "/admin/pronunciations/{Id:guid}/edit"
+@rendermode InteractiveServer
+@inject IPronunciationsApiClient PronunciationsApiClient
+@inject IWordsApiClient WordsApiClient
+@inject IMediaApiClient MediaApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Pronunciation</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Pronunciation</p>
+        <h1>Edit Pronunciation</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <p class="muted">Loading pronunciation...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Pronunciation was not found.</p>
+        <a class="button" href="@AdminRoutes.Pronunciations.Index">Back to Pronunciations</a>
+    </section>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert error">@errorMessage</div>
+    }
+
+    <section class="panel">
+        <PronunciationForm Model="model"
+                           Words="words"
+                           AudioMedia="audioMedia"
+                           ImageMedia="imageMedia"
+                           ValidationErrors="validationErrors"
+                           IsSaving="isSaving"
+                           ShowActiveToggle="true"
+                           SubmitText="Save"
+                           OnValidSubmit="SaveAsync" />
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private PronunciationFormModel model = new();
+    private IReadOnlyCollection<WordDto> words = [];
+    private IReadOnlyCollection<MediaDto> audioMedia = [];
+    private IReadOnlyCollection<MediaDto> imageMedia = [];
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSaving;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            words = (await WordsApiClient.SearchAsync(
+                new WordSearchRequest(IsActive: true, PageSize: 100, SortBy: "Text", SortDirection: "Asc"),
+                CancellationToken.None)).Items;
+            audioMedia = (await MediaApiClient.SearchAsync(
+                new MediaSearchRequest(MediaType: "Audio", IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+            imageMedia = (await MediaApiClient.SearchAsync(
+                new MediaSearchRequest(MediaType: "Image", IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+
+            var pronunciation = await PronunciationsApiClient.GetAsync(Id, CancellationToken.None);
+            if (pronunciation is null)
+            {
+                notFound = true;
+                return;
+            }
+
+            model = PronunciationFormModel.FromDto(pronunciation);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            await PronunciationsApiClient.UpdateAsync(Id, model.ToUpdateRequest(), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.Pronunciations.Detail(Id));
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

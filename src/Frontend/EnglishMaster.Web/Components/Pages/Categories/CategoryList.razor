@@ -1,0 +1,138 @@
+@page "/admin/categories"
+@rendermode InteractiveServer
+@inject ICategoriesApiClient CategoriesApiClient
+
+<PageTitle>Categories</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Vocabulary</p>
+        <h1>Categories</h1>
+    </div>
+    <a class="button primary" href="@AdminRoutes.Categories.Create">New Category</a>
+</section>
+
+<section class="panel">
+    <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+        <label>
+            <span>Search</span>
+            <input class="input" @bind="search" @bind:event="oninput" />
+        </label>
+        <label>
+            <span>Status</span>
+            <select class="input" @bind="activeFilter">
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+            </select>
+        </label>
+        <button class="button" type="submit">Search</button>
+    </form>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading categories...</p>
+}
+else if (categories.Count == 0)
+{
+    <section class="panel">
+        <p class="muted">No categories found.</p>
+    </section>
+}
+else
+{
+    <section class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Slug</th>
+                    <th>Sort</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var category in categories)
+                {
+                    <tr>
+                        <td>
+                            <strong>@category.Name</strong>
+                            <span class="muted">@category.Description</span>
+                        </td>
+                        <td>@category.Slug</td>
+                        <td>@category.SortOrder</td>
+                        <td>@(category.IsActive ? "Active" : "Inactive")</td>
+                        <td class="row-actions">
+                            <a class="button small" href="@AdminRoutes.Categories.Detail(category.Id)">View</a>
+                            <a class="button small" href="@AdminRoutes.Categories.Edit(category.Id)">Edit</a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(category.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<CategoryDto> categories = [];
+    private string? search;
+    private string activeFilter = "true";
+    private string? errorMessage;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task SearchAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await CategoriesApiClient.SearchAsync(
+                search,
+                activeFilter == "false" ? false : true,
+                CancellationToken.None);
+            categories = result.Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            categories = [];
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        errorMessage = null;
+
+        try
+        {
+            await CategoriesApiClient.DeleteAsync(id, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+}

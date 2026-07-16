@@ -1,0 +1,60 @@
+@page "/learn/activity"
+@inject IMotivationApiClient MotivationApiClient
+
+<PageTitle>Learning Activity</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Learning Activity</h1>
+        <p class="muted">Recent study activity across lessons, quizzes, practice, and goals.</p>
+    </div>
+    <a class="button secondary" href="/learn/motivation">Motivation</a>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading activity...</p>
+}
+else if (activities.Count == 0)
+{
+    <p class="muted">No learning activity recorded yet.</p>
+}
+else
+{
+    <div class="card-grid">
+        @foreach (var activity in activities)
+        {
+            <article class="list-card">
+                <span class="pill">@activity.ActivityType</span>
+                <h3>@activity.Title</h3>
+                <p class="muted">@activity.MinutesSpent minutes - @activity.OccurredAt.ToString("yyyy-MM-dd")</p>
+            </article>
+        }
+    </div>
+}
+
+@code {
+    private IReadOnlyCollection<LearningActivityDto> activities = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            activities = await MotivationApiClient.GetActivityAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Learning activity is unavailable right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

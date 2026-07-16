@@ -1,0 +1,116 @@
+@page "/learn/study-plan"
+@inject IDailyStudyPlanApiClient StudyPlanApiClient
+
+<PageTitle>Study Plan</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Today's Study Plan</h1>
+        <p class="muted">A simple plan built from due practice, continue learning, and recommendations.</p>
+    </div>
+    <div class="actions">
+        <button class="button" type="button" @onclick="GenerateAsync">Generate today plan</button>
+        <a class="button secondary" href="/learn/study-plan/history">History</a>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading study plan...</p>
+}
+else if (plan is null)
+{
+    <p class="muted">No plan for today yet.</p>
+}
+else
+{
+    <section class="metrics-grid">
+        <article class="metric-card"><span>Target minutes</span><strong>@plan.TargetMinutes</strong></article>
+        <article class="metric-card"><span>Completed minutes</span><strong>@plan.CompletedMinutes</strong></article>
+        <article class="metric-card"><span>Items</span><strong>@plan.CompletedItems / @plan.TotalItems</strong></article>
+        <article class="metric-card"><span>Status</span><strong>@plan.Status</strong></article>
+    </section>
+
+    <section class="content-section">
+        <h2>Plan Items</h2>
+        @if (plan.Items.Count == 0)
+        {
+            <p class="muted">No plan items available yet.</p>
+        }
+        else
+        {
+            <div class="card-grid">
+                @foreach (var item in plan.Items.OrderBy(item => item.SortOrder))
+                {
+                    <article class="list-card">
+                        <span class="pill">@item.ItemType</span>
+                        <h3>@item.Title</h3>
+                        <p class="muted">@item.EstimatedMinutes minutes - @item.Status</p>
+                        <div class="actions">
+                            @if (!string.IsNullOrWhiteSpace(item.Url))
+                            {
+                                <a class="button secondary" href="@item.Url">Open</a>
+                            }
+                            <button class="button" type="button" @onclick="() => CompleteItemAsync(item.Id)">Complete</button>
+                            <button class="button secondary" type="button" @onclick="() => SkipItemAsync(item.Id)">Skip</button>
+                        </div>
+                    </article>
+                }
+            </div>
+            <button class="button" type="button" @onclick="CompletePlanAsync">Complete plan</button>
+        }
+    </section>
+}
+
+@code {
+    private DailyStudyPlanDto? plan;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            plan = await StudyPlanApiClient.GetTodayAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Study plan is unavailable right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task GenerateAsync()
+    {
+        plan = await StudyPlanApiClient.GenerateTodayAsync(CancellationToken.None);
+    }
+
+    private async Task CompleteItemAsync(Guid id)
+    {
+        await StudyPlanApiClient.CompleteItemAsync(id, CancellationToken.None);
+        await LoadAsync();
+    }
+
+    private async Task SkipItemAsync(Guid id)
+    {
+        await StudyPlanApiClient.SkipItemAsync(id, CancellationToken.None);
+        await LoadAsync();
+    }
+
+    private async Task CompletePlanAsync()
+    {
+        if (plan is not null)
+        {
+            plan = await StudyPlanApiClient.CompletePlanAsync(plan.Id, CancellationToken.None);
+        }
+    }
+}

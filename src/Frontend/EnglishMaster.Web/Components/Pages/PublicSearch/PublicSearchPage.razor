@@ -1,0 +1,202 @@
+@page "/search"
+@inject IPublicSearchApiClient SearchApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Search</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Search</h1>
+        <p class="muted">Find public lessons, words, grammar, books, courses, and quizzes.</p>
+    </div>
+</section>
+
+<form class="filters-grid" @onsubmit="SubmitSearchAsync" @onsubmit:preventDefault>
+    <label>
+        <span>Search</span>
+        <input class="input" @bind="query" @bind:event="oninput" />
+    </label>
+    <label>
+        <span>Type</span>
+        <select class="input" @bind="contentType">
+            <option value="">All</option>
+            @foreach (var type in filters.ContentTypes)
+            {
+                <option value="@type.Key">@type.Label</option>
+            }
+        </select>
+    </label>
+    <label>
+        <span>CEFR</span>
+        <select class="input" @bind="cefrLevel">
+            <option value="">All</option>
+            @foreach (var cefr in filters.CefrLevels)
+            {
+                <option value="@cefr.Key">@cefr.Label</option>
+            }
+        </select>
+    </label>
+    <label>
+        <span>Category</span>
+        <select class="input" @bind="categoryIdText">
+            <option value="">All</option>
+            @foreach (var category in filters.Categories)
+            {
+                <option value="@category.Key">@category.Label</option>
+            }
+        </select>
+    </label>
+    <label>
+        <span>Tag</span>
+        <select class="input" @bind="tagIdText">
+            <option value="">All</option>
+            @foreach (var tag in filters.Tags)
+            {
+                <option value="@tag.Key">@tag.Label</option>
+            }
+        </select>
+    </label>
+    <button class="button" type="submit">Search</button>
+</form>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading results...</p>
+}
+else if (results.Items.Count == 0)
+{
+    <section class="empty-state">
+        <h2>No results found</h2>
+        <p class="muted">Try a broader keyword or fewer filters.</p>
+    </section>
+}
+else
+{
+    <section class="content-list">
+        <div class="list-summary">
+            <span class="muted">Showing page @results.PageNumber of @Math.Max(results.TotalPages, 1) (@results.TotalCount results)</span>
+        </div>
+        @foreach (var item in results.Items)
+        {
+            <article class="list-card">
+                <div>
+                    <span class="pill">@item.ContentType</span>
+                    @if (!string.IsNullOrWhiteSpace(item.CefrLevel))
+                    {
+                        <span class="pill">@item.CefrLevel</span>
+                    }
+                </div>
+                <h2><a href="@item.Url">@item.Title</a></h2>
+                <p>@item.HighlightText</p>
+                <div class="meta-row">
+                    @if (!string.IsNullOrWhiteSpace(item.CategoryName))
+                    {
+                        <span>@item.CategoryName</span>
+                    }
+                    @foreach (var tag in item.Tags)
+                    {
+                        <span>@tag</span>
+                    }
+                </div>
+            </article>
+        }
+        <div class="pagination">
+            <button class="button small" type="button" disabled="@(!results.HasPreviousPage)" @onclick="PreviousPageAsync">Previous</button>
+            <span class="muted">Page @results.PageNumber</span>
+            <button class="button small" type="button" disabled="@(!results.HasNextPage)" @onclick="NextPageAsync">Next</button>
+        </div>
+    </section>
+}
+
+@code {
+    private PublicSearchFiltersResponse filters = new([], [], [], []);
+    private PublicSearchResponse results = EmptyResults();
+    private string? query;
+    private string? contentType;
+    private string? cefrLevel;
+    private string? categoryIdText;
+    private string? tagIdText;
+    private int pageNumber = 1;
+    private bool isLoading;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var queryParameters = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+        query = queryParameters.TryGetValue("q", out var q) ? q.ToString() : null;
+        contentType = queryParameters.TryGetValue("type", out var type) ? type.ToString() : null;
+        cefrLevel = queryParameters.TryGetValue("cefr", out var cefr) ? cefr.ToString() : null;
+        await LoadFiltersAsync();
+        await SearchAsync();
+    }
+
+    private async Task LoadFiltersAsync()
+    {
+        try
+        {
+            filters = await SearchApiClient.GetFiltersAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            filters = new([], [], [], []);
+        }
+    }
+
+    private async Task SearchAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            results = await SearchApiClient.SearchAsync(query, contentType, cefrLevel, ParseId(categoryIdText), ParseId(tagIdText), pageNumber, 10, CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            results = EmptyResults();
+            errorMessage = "Search is unavailable right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SubmitSearchAsync()
+    {
+        pageNumber = 1;
+        await SearchAsync();
+    }
+
+    private async Task PreviousPageAsync()
+    {
+        if (!results.HasPreviousPage)
+        {
+            return;
+        }
+
+        pageNumber--;
+        await SearchAsync();
+    }
+
+    private async Task NextPageAsync()
+    {
+        if (!results.HasNextPage)
+        {
+            return;
+        }
+
+        pageNumber++;
+        await SearchAsync();
+    }
+
+    private static Guid? ParseId(string? value) =>
+        Guid.TryParse(value, out var id) ? id : null;
+
+    private static PublicSearchResponse EmptyResults() =>
+        new([], 1, 10, 0, 0, false, false);
+}

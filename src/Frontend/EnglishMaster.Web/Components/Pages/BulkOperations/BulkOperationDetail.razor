@@ -1,0 +1,129 @@
+@page "/admin/bulk-operations/{Id:guid}"
+@rendermode InteractiveServer
+@inject IBulkOperationApiClient BulkOperationApiClient
+
+<PageTitle>Bulk Operation</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Bulk Operation</h1>
+    </div>
+    <a class="button secondary" href="@AdminRoutes.BulkOperations.Index">Back</a>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading bulk operation...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (operation is not null)
+{
+    <section class="panel">
+        <div class="detail-grid">
+            <div class="detail-item"><span class="muted">Operation</span><strong>@operation.OperationType</strong></div>
+            <div class="detail-item"><span class="muted">Content</span><strong>@operation.ContentType</strong></div>
+            <div class="detail-item"><span class="muted">Status</span><strong>@operation.Status</strong></div>
+            <div class="detail-item"><span class="muted">Succeeded</span><strong>@operation.SucceededItems / @operation.TotalItems</strong></div>
+            <div class="detail-item"><span class="muted">Failed</span><strong>@operation.FailedItems</strong></div>
+            <div class="detail-item full"><span class="muted">Error</span><strong>@(string.IsNullOrWhiteSpace(operation.ErrorMessage) ? "-" : operation.ErrorMessage)</strong></div>
+        </div>
+        <div class="form-actions">
+            @if (operation.Status == "Pending")
+            {
+                <button class="button primary" @onclick="RunAsync" disabled="@isSaving">Run</button>
+                <button class="button secondary" @onclick="CancelAsync" disabled="@isSaving">Cancel</button>
+            }
+        </div>
+    </section>
+
+    @if (items.Count == 0)
+    {
+        <div class="panel">No item results yet.</div>
+    }
+    else
+    {
+        <section class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Content Id</th>
+                        <th>Status</th>
+                        <th>Error</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in items)
+                    {
+                        <tr>
+                            <td>@item.ContentId</td>
+                            <td>@item.Status</td>
+                            <td>@item.ErrorMessage</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private BulkOperationDto? operation;
+    private IReadOnlyCollection<BulkOperationItemDto> items = [];
+    private bool isLoading = true;
+    private bool isSaving;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            operation = await BulkOperationApiClient.GetAsync(Id, CancellationToken.None);
+            items = await BulkOperationApiClient.GetItemsAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RunAsync() => await SaveAsync(() => BulkOperationApiClient.RunAsync(Id, CancellationToken.None));
+
+    private async Task CancelAsync() => await SaveAsync(() => BulkOperationApiClient.CancelAsync(Id, CancellationToken.None));
+
+    private async Task SaveAsync(Func<Task<BulkOperationDto>> action)
+    {
+        isSaving = true;
+        errorMessage = null;
+        try
+        {
+            operation = await action();
+            items = await BulkOperationApiClient.GetItemsAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

@@ -1,0 +1,84 @@
+@page "/admin/publishing/artifacts"
+@rendermode InteractiveServer
+@inject IPublishingApiClient PublishingApiClient
+
+<PageTitle>Published Artifacts</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Publishing</p>
+        <h1>Published Artifacts</h1>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading artifacts...</p>
+}
+else if (artifacts.Count == 0)
+{
+    <section class="panel">
+        <p class="muted">No published artifacts found.</p>
+    </section>
+}
+else
+{
+    <section class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th>Source</th>
+                    <th>Format</th>
+                    <th>Size</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var artifact in artifacts)
+                {
+                    <tr>
+                        <td><strong>@artifact.FileName</strong></td>
+                        <td>@artifact.SourceType</td>
+                        <td>@artifact.Format</td>
+                        <td>@artifact.FileSize</td>
+                        <td class="row-actions">
+                            @if (!string.IsNullOrWhiteSpace(artifact.PublicUrl))
+                            {
+                                <a class="button small" href="@artifact.PublicUrl" target="_blank">Open</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<PublishedArtifactDto> artifacts = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            artifacts = (await PublishingApiClient.SearchArtifactsAsync(null, null, null, null, 1, 100, CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            artifacts = [];
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

@@ -1,0 +1,105 @@
+@page "/admin/publishing/templates"
+@rendermode InteractiveServer
+@inject IPublishingApiClient PublishingApiClient
+
+<PageTitle>Publish Templates</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Publishing</p>
+        <h1>Publish Templates</h1>
+    </div>
+    <a class="button primary" href="@AdminRoutes.Publishing.Templates.Create">New Template</a>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading templates...</p>
+}
+else if (templates.Count == 0)
+{
+    <section class="panel">
+        <p class="muted">No publish templates found.</p>
+    </section>
+}
+else
+{
+    <section class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Format</th>
+                    <th>Default</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var template in templates)
+                {
+                    <tr>
+                        <td><strong>@template.Name</strong></td>
+                        <td>@template.Format</td>
+                        <td>@(template.IsDefault ? "Default" : "-")</td>
+                        <td>@(template.IsActive ? "Active" : "Inactive")</td>
+                        <td class="row-actions">
+                            <a class="button small" href="@AdminRoutes.Publishing.Templates.Edit(template.Id)">Edit</a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(template.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<PublishTemplateDto> templates = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override Task OnInitializedAsync()
+    {
+        return LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            templates = (await PublishingApiClient.SearchTemplatesAsync(null, null, null, 1, 100, CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            templates = [];
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        errorMessage = null;
+        try
+        {
+            await PublishingApiClient.DeleteTemplateAsync(id, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+}

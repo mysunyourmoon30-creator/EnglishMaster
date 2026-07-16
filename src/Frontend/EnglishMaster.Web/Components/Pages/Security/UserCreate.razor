@@ -1,0 +1,94 @@
+@page "/admin/users/create"
+@rendermode InteractiveServer
+@inject ISecurityApiClient SecurityApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create User</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Create User</h1>
+    </div>
+</section>
+
+<EditForm Model="model" OnValidSubmit="SaveAsync" class="word-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert error">@errorMessage</div>
+    }
+    <div class="form-grid">
+        <label><span>Email</span><InputText class="input" @bind-Value="model.Email" /></label>
+        <label><span>User Name</span><InputText class="input" @bind-Value="model.UserName" /></label>
+        <label><span>Display Name</span><InputText class="input" @bind-Value="model.DisplayName" /></label>
+        <label><span>Password</span><InputText class="input" type="password" @bind-Value="model.Password" /></label>
+        <label class="span-2">
+            <span>Roles</span>
+            <select class="input" multiple @onchange="SetRoles">
+                @foreach (var role in roles)
+                {
+                    <option value="@role.Id">@role.Name</option>
+                }
+            </select>
+        </label>
+    </div>
+    <div class="actions">
+        <button class="button primary" type="submit" disabled="@isSaving">Create</button>
+        <a class="button" href="@AdminRoutes.Users.Index">Cancel</a>
+    </div>
+</EditForm>
+
+@code {
+    private sealed class FormModel
+    {
+        [Required, EmailAddress] public string Email { get; set; } = string.Empty;
+        [Required] public string UserName { get; set; } = string.Empty;
+        [Required] public string DisplayName { get; set; } = string.Empty;
+        [Required, MinLength(8)] public string Password { get; set; } = string.Empty;
+        public List<Guid> RoleIds { get; set; } = [];
+    }
+
+    private readonly FormModel model = new();
+    private IReadOnlyCollection<RoleDto> roles = [];
+    private string? errorMessage;
+    private bool isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        roles = (await SecurityApiClient.SearchRolesAsync(null, true, 1, 100, CancellationToken.None)).Items;
+    }
+
+    private void SetRoles(ChangeEventArgs args)
+    {
+        model.RoleIds = args.Value switch
+        {
+            string[] values => values
+                .Where(value => Guid.TryParse(value, out _))
+                .Select(Guid.Parse)
+                .ToList(),
+            string value when Guid.TryParse(value, out var id) => [id],
+            _ => []
+        };
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        try
+        {
+            var user = await SecurityApiClient.CreateUserAsync(new(model.Email, model.UserName, model.DisplayName, model.Password, model.RoleIds), CancellationToken.None);
+            NavigationManager.NavigateTo(AdminRoutes.Users.Detail(user.Id));
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

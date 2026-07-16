@@ -1,0 +1,598 @@
+@page "/admin/lessons/{Id:guid}"
+@rendermode InteractiveServer
+@inject ILessonApiClient LessonApiClient
+@inject IWordsApiClient WordsApiClient
+@inject IGrammarApiClient GrammarApiClient
+@inject IMediaApiClient MediaApiClient
+
+<PageTitle>@(lesson is null ? "Lesson" : lesson.Title)</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Lessons</p>
+        <h1>@(lesson is null ? "Lesson" : lesson.Title)</h1>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.Lessons.Index">Back</a>
+        @if (lesson is not null)
+        {
+            <a class="button" href="@AdminRoutes.ContentRevisions.Timeline("Lesson", lesson.Id)">Revision History</a>
+            <a class="button primary" href="@AdminRoutes.Lessons.Edit(lesson.Id)">Edit</a>
+            <button class="button" type="button" @onclick="TogglePublishAsync">
+                @(lesson.IsPublished ? "Unpublish" : "Publish")
+            </button>
+        }
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading lesson...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Lesson was not found.</p>
+    </section>
+}
+else if (lesson is not null)
+{
+    <section class="panel">
+        @if (lesson.ThumbnailMedia is not null)
+        {
+            <img class="thumbnail" src="@lesson.ThumbnailMedia.PublicUrl" alt="@lesson.ThumbnailMedia.AltText" />
+        }
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Slug</span>
+                <strong>@lesson.Slug</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">CEFR</span>
+                <strong>@(lesson.CefrLevel ?? "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Category</span>
+                <strong>@(lesson.Category?.Name ?? "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Estimated Minutes</span>
+                <strong>@lesson.EstimatedMinutes</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Sort Order</span>
+                <strong>@lesson.SortOrder</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Published</span>
+                <strong>@(lesson.IsPublished ? "Published" : "Draft")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Status</span>
+                <strong>@(lesson.IsActive ? "Active" : "Inactive")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Summary</span>
+                <strong>@lesson.Summary</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Description</span>
+                <strong>@lesson.Description</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-header section-header">
+        <div>
+            <p class="eyebrow">Content</p>
+            <h1>Sections</h1>
+        </div>
+    </section>
+
+    @if (sections.Count == 0)
+    {
+        <section class="panel nested-table">
+            <p class="muted">No sections yet.</p>
+        </section>
+    }
+    else
+    {
+        <section class="table-wrap nested-table">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Sort</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var lessonSection in sections.OrderBy(item => item.SortOrder))
+                    {
+                        <tr>
+                            <td>
+                                <strong>@lessonSection.Title</strong>
+                            </td>
+                            <td>@lessonSection.SectionType</td>
+                            <td>@lessonSection.SortOrder</td>
+                            <td>@(lessonSection.IsActive ? "Active" : "Inactive")</td>
+                            <td class="row-actions">
+                                <button class="button small" type="button" @onclick="() => MoveSectionUpAsync(lessonSection.Id)">Up</button>
+                                <button class="button small" type="button" @onclick="() => MoveSectionDownAsync(lessonSection.Id)">Down</button>
+                                <button class="button small" type="button" @onclick="() => EditSection(lessonSection)">Edit</button>
+                                <button class="button small danger" type="button" @onclick="() => DeleteSectionAsync(lessonSection.Id)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+
+    <section class="panel pair-form-panel">
+        <h2>@(editingSectionId.HasValue ? "Edit Section" : "Add Section")</h2>
+        @if (!string.IsNullOrWhiteSpace(sectionErrorMessage))
+        {
+            <div class="alert error">@sectionErrorMessage</div>
+        }
+        <LessonSectionForm Model="sectionModel"
+                           MediaOptions="mediaOptions"
+                           ValidationErrors="sectionValidationErrors"
+                           IsSaving="isSectionSaving"
+                           ShowActiveToggle="@editingSectionId.HasValue"
+                           SubmitText="@(editingSectionId.HasValue ? "Save Section" : "Add Section")"
+                           OnValidSubmit="SaveSectionAsync"
+                           OnCancel="CancelSectionEditAsync" />
+    </section>
+
+    <section class="page-header section-header">
+        <div>
+            <p class="eyebrow">Vocabulary</p>
+            <h1>Related Words</h1>
+        </div>
+    </section>
+
+    <section class="panel">
+        @if (!string.IsNullOrWhiteSpace(relatedWordErrorMessage))
+        {
+            <div class="alert error">@relatedWordErrorMessage</div>
+        }
+
+        <div class="filters-grid">
+            <label>
+                <span>Word</span>
+                <InputSelect class="input" @bind-Value="selectedWordId">
+                    <option value="">Select word</option>
+                    @foreach (var word in AvailableWords())
+                    {
+                        <option value="@word.Id">@word.Text</option>
+                    }
+                </InputSelect>
+            </label>
+            <button class="button" type="button" @onclick="AddRelatedWordAsync">Add Word</button>
+        </div>
+    </section>
+
+    @if (lesson.Words.Count == 0)
+    {
+        <section class="panel nested-table">
+            <p class="muted">No related words yet.</p>
+        </section>
+    }
+    else
+    {
+        <section class="table-wrap nested-table">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Word</th>
+                        <th>Meaning TH</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var word in lesson.Words)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@word.Text</strong>
+                                <span class="muted">@word.Slug</span>
+                            </td>
+                            <td>@word.MeaningTh</td>
+                            <td class="row-actions">
+                                <a class="button small" href="@AdminRoutes.Words.Detail(word.Id)">View</a>
+                                <button class="button small danger" type="button" @onclick="() => RemoveRelatedWordAsync(word.Id)">Remove</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+
+    <section class="page-header section-header">
+        <div>
+            <p class="eyebrow">Grammar</p>
+            <h1>Related Grammar Rules</h1>
+        </div>
+    </section>
+
+    <section class="panel">
+        @if (!string.IsNullOrWhiteSpace(relatedGrammarRuleErrorMessage))
+        {
+            <div class="alert error">@relatedGrammarRuleErrorMessage</div>
+        }
+
+        <div class="filters-grid">
+            <label>
+                <span>Grammar Rule</span>
+                <InputSelect class="input" @bind-Value="selectedGrammarRuleId">
+                    <option value="">Select rule</option>
+                    @foreach (var rule in AvailableGrammarRules())
+                    {
+                        <option value="@rule.Id">@rule.Title</option>
+                    }
+                </InputSelect>
+            </label>
+            <button class="button" type="button" @onclick="AddRelatedGrammarRuleAsync">Add Rule</button>
+        </div>
+    </section>
+
+    @if (lesson.GrammarRules.Count == 0)
+    {
+        <section class="panel nested-table">
+            <p class="muted">No related grammar rules yet.</p>
+        </section>
+    }
+    else
+    {
+        <section class="table-wrap nested-table">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var rule in lesson.GrammarRules)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@rule.Title</strong>
+                                <span class="muted">@rule.Slug</span>
+                            </td>
+                            <td class="row-actions">
+                                <a class="button small" href="@AdminRoutes.GrammarRules.Detail(rule.Id)">View</a>
+                                <button class="button small danger" type="button" @onclick="() => RemoveRelatedGrammarRuleAsync(rule.Id)">Remove</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private LessonDto? lesson;
+    private IReadOnlyCollection<LessonSectionDto> sections = [];
+    private IReadOnlyCollection<WordDto> words = [];
+    private IReadOnlyCollection<GrammarRuleDto> grammarRules = [];
+    private IReadOnlyCollection<MediaDto> mediaOptions = [];
+    private LessonSectionFormModel sectionModel = new();
+    private Guid? editingSectionId;
+    private Guid? selectedWordId;
+    private Guid? selectedGrammarRuleId;
+    private IReadOnlyDictionary<string, string[]> sectionValidationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private string? sectionErrorMessage;
+    private string? relatedWordErrorMessage;
+    private string? relatedGrammarRuleErrorMessage;
+    private bool isLoading = true;
+    private bool isSectionSaving;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            words = (await WordsApiClient.SearchAsync(
+                new WordSearchRequest(IsActive: true, PageSize: 100, SortBy: "Text", SortDirection: "Asc"),
+                CancellationToken.None)).Items;
+            grammarRules = (await GrammarApiClient.SearchRulesAsync(
+                new GrammarRuleSearchRequest(IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+            mediaOptions = (await MediaApiClientSearchAsync()).Items;
+
+            lesson = await LessonApiClient.GetAsync(Id, CancellationToken.None);
+            if (lesson is null)
+            {
+                notFound = true;
+                return;
+            }
+
+            sections = await LessonApiClient.GetSectionsAsync(Id, CancellationToken.None);
+            if (!editingSectionId.HasValue)
+            {
+                ResetSectionForm();
+            }
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private Task<MediaSearchResponse> MediaApiClientSearchAsync()
+    {
+        return MediaApiClient.SearchAsync(new MediaSearchRequest(IsActive: true, PageSize: 100), CancellationToken.None);
+    }
+
+    private IEnumerable<WordDto> AvailableWords()
+    {
+        var relatedWordIds = lesson?.Words.Select(word => word.Id).ToHashSet() ?? [];
+        return words.Where(word => !relatedWordIds.Contains(word.Id));
+    }
+
+    private IEnumerable<GrammarRuleDto> AvailableGrammarRules()
+    {
+        var relatedRuleIds = lesson?.GrammarRules.Select(rule => rule.Id).ToHashSet() ?? [];
+        return grammarRules.Where(rule => !relatedRuleIds.Contains(rule.Id));
+    }
+
+    private async Task TogglePublishAsync()
+    {
+        if (lesson is null)
+        {
+            return;
+        }
+
+        errorMessage = null;
+
+        try
+        {
+            if (lesson.IsPublished)
+            {
+                await LessonApiClient.UnpublishAsync(lesson.Id, CancellationToken.None);
+            }
+            else
+            {
+                await LessonApiClient.PublishAsync(lesson.Id, CancellationToken.None);
+            }
+
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+
+    private async Task AddRelatedWordAsync()
+    {
+        if (lesson is null || !selectedWordId.HasValue)
+        {
+            return;
+        }
+
+        relatedWordErrorMessage = null;
+
+        try
+        {
+            await LessonApiClient.AddWordAsync(lesson.Id, selectedWordId.Value, lesson.Words.Count, CancellationToken.None);
+            selectedWordId = null;
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            relatedWordErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task RemoveRelatedWordAsync(Guid wordId)
+    {
+        if (lesson is null)
+        {
+            return;
+        }
+
+        relatedWordErrorMessage = null;
+
+        try
+        {
+            await LessonApiClient.RemoveWordAsync(lesson.Id, wordId, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            relatedWordErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task AddRelatedGrammarRuleAsync()
+    {
+        if (lesson is null || !selectedGrammarRuleId.HasValue)
+        {
+            return;
+        }
+
+        relatedGrammarRuleErrorMessage = null;
+
+        try
+        {
+            await LessonApiClient.AddGrammarRuleAsync(
+                lesson.Id,
+                selectedGrammarRuleId.Value,
+                lesson.GrammarRules.Count,
+                CancellationToken.None);
+            selectedGrammarRuleId = null;
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            relatedGrammarRuleErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task RemoveRelatedGrammarRuleAsync(Guid grammarRuleId)
+    {
+        if (lesson is null)
+        {
+            return;
+        }
+
+        relatedGrammarRuleErrorMessage = null;
+
+        try
+        {
+            await LessonApiClient.RemoveGrammarRuleAsync(lesson.Id, grammarRuleId, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            relatedGrammarRuleErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task SaveSectionAsync()
+    {
+        if (lesson is null)
+        {
+            return;
+        }
+
+        isSectionSaving = true;
+        sectionErrorMessage = null;
+        sectionValidationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            if (editingSectionId.HasValue)
+            {
+                await LessonApiClient.UpdateSectionAsync(
+                    editingSectionId.Value,
+                    sectionModel.ToUpdateRequest(),
+                    CancellationToken.None);
+            }
+            else
+            {
+                await LessonApiClient.AddSectionAsync(lesson.Id, sectionModel.ToCreateRequest(), CancellationToken.None);
+            }
+
+            editingSectionId = null;
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            sectionValidationErrors = exception.ValidationErrors;
+            sectionErrorMessage = sectionValidationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSectionSaving = false;
+        }
+    }
+
+    private void EditSection(LessonSectionDto section)
+    {
+        editingSectionId = section.Id;
+        sectionModel = LessonSectionFormModel.FromDto(section);
+        sectionErrorMessage = null;
+        sectionValidationErrors = new Dictionary<string, string[]>();
+    }
+
+    private async Task DeleteSectionAsync(Guid id)
+    {
+        sectionErrorMessage = null;
+
+        try
+        {
+            await LessonApiClient.DeleteSectionAsync(id, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            sectionErrorMessage = exception.Message;
+        }
+    }
+
+    private Task CancelSectionEditAsync()
+    {
+        editingSectionId = null;
+        ResetSectionForm();
+        return Task.CompletedTask;
+    }
+
+    private void ResetSectionForm()
+    {
+        sectionModel = new LessonSectionFormModel
+        {
+            SortOrder = sections.Count
+        };
+        sectionErrorMessage = null;
+        sectionValidationErrors = new Dictionary<string, string[]>();
+    }
+
+    private async Task MoveSectionUpAsync(Guid id)
+    {
+        await MoveSectionAsync(id, -1);
+    }
+
+    private async Task MoveSectionDownAsync(Guid id)
+    {
+        await MoveSectionAsync(id, 1);
+    }
+
+    private async Task MoveSectionAsync(Guid id, int offset)
+    {
+        if (lesson is null)
+        {
+            return;
+        }
+
+        var ordered = sections.OrderBy(item => item.SortOrder).Select(item => item.Id).ToList();
+        var index = ordered.IndexOf(id);
+        var newIndex = index + offset;
+        if (index < 0 || newIndex < 0 || newIndex >= ordered.Count)
+        {
+            return;
+        }
+
+        (ordered[index], ordered[newIndex]) = (ordered[newIndex], ordered[index]);
+        sectionErrorMessage = null;
+
+        try
+        {
+            await LessonApiClient.ReorderSectionsAsync(lesson.Id, ordered, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            sectionErrorMessage = exception.Message;
+        }
+    }
+}

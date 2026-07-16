@@ -1,0 +1,75 @@
+@page "/admin/content-quality/rules/{Id:guid}/edit"
+@rendermode InteractiveServer
+@inject IContentQualityApiClient ContentQualityApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Quality Rule</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Edit Quality Rule</h1>
+    </div>
+</section>
+
+<EditForm Model="model" OnValidSubmit="SaveAsync" class="panel form-grid">
+    <DataAnnotationsValidator />
+    <label><span>Code</span><InputText class="input" @bind-Value="model.Code" /></label>
+    <label><span>Name</span><InputText class="input" @bind-Value="model.Name" /></label>
+    <label><span>Content Type</span><InputText class="input" @bind-Value="model.ContentType" /></label>
+    <label><span>Severity</span><InputText class="input" @bind-Value="model.Severity" /></label>
+    <label><span>Description</span><InputTextArea class="input" @bind-Value="model.Description" /></label>
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert error">@errorMessage</div>
+    }
+    <button class="button" type="submit">Save</button>
+</EditForm>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private RuleModel model = new();
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var rules = await ContentQualityApiClient.SearchRulesAsync(null, null, null, CancellationToken.None);
+        var rule = rules.Items.FirstOrDefault(item => item.Id == Id);
+        if (rule is null)
+        {
+            return;
+        }
+
+        model = new RuleModel
+        {
+            Code = rule.Code,
+            Name = rule.Name,
+            Description = rule.Description,
+            ContentType = rule.ContentType,
+            Severity = rule.Severity
+        };
+    }
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            await ContentQualityApiClient.UpdateRuleAsync(Id, new(model.Code, model.Name, model.Description, model.ContentType, model.Severity), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.ContentQuality.Rules);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+
+    private sealed class RuleModel
+    {
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string ContentType { get; set; } = string.Empty;
+        public string Severity { get; set; } = string.Empty;
+    }
+}

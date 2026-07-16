@@ -1,0 +1,228 @@
+@using EnglishMaster.Web.Services.Words
+
+<EditForm Model="Model" OnValidSubmit="SubmitAsync" class="word-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    @if (ValidationErrors.Count > 0)
+    {
+        <div class="alert error">
+            <ul>
+                @foreach (var error in ValidationErrors.SelectMany(item => item.Value))
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="form-grid">
+        <label>
+            <span>Text</span>
+            <InputText class="input" @bind-Value="Model.Text" />
+            <ValidationMessage For="@(() => Model.Text)" />
+        </label>
+
+        <label>
+            <span>Part of Speech</span>
+            <InputSelect class="input" @bind-Value="Model.PartOfSpeech">
+                @foreach (var option in PartOfSpeechOptions)
+                {
+                    <option value="@option">@option</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => Model.PartOfSpeech)" />
+        </label>
+
+        <label>
+            <span>CEFR Level</span>
+            <InputSelect class="input" @bind-Value="Model.CefrLevel">
+                @foreach (var option in CefrLevelOptions)
+                {
+                    <option value="@option">@option</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => Model.CefrLevel)" />
+        </label>
+
+        <label>
+            <span>Category</span>
+            <InputSelect class="input" @bind-Value="Model.CategoryId">
+                <option value="">No category</option>
+                @foreach (var category in Categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </InputSelect>
+        </label>
+
+        <div class="span-2">
+            <span class="field-label">Tags</span>
+            @if (Tags.Count == 0)
+            {
+                <p class="muted">No tags available.</p>
+            }
+            else
+            {
+                <div class="checkbox-list">
+                    @foreach (var tag in Tags)
+                    {
+                        <label class="checkbox-row">
+                            <input type="checkbox"
+                                   checked="@Model.TagIds.Contains(tag.Id)"
+                                   @onchange="args => ToggleTag(tag.Id, args)" />
+                            <span>@tag.Name</span>
+                        </label>
+                    }
+                </div>
+            }
+        </div>
+
+        <label>
+            <span>Image</span>
+            <InputSelect class="input" @bind-Value="Model.ImageMediaId">
+                <option value="">No image</option>
+                @foreach (var media in ImageMediaOptions)
+                {
+                    <option value="@media.Id">@media.OriginalFileName</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>Audio</span>
+            <InputSelect class="input" @bind-Value="Model.AudioMediaId">
+                <option value="">No audio</option>
+                @foreach (var media in AudioMediaOptions)
+                {
+                    <option value="@media.Id">@media.OriginalFileName</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>IPA UK</span>
+            <InputText class="input" @bind-Value="Model.IpaUk" />
+            <ValidationMessage For="@(() => Model.IpaUk)" />
+        </label>
+
+        <label>
+            <span>IPA US</span>
+            <InputText class="input" @bind-Value="Model.IpaUs" />
+            <ValidationMessage For="@(() => Model.IpaUs)" />
+        </label>
+
+        <label>
+            <span>Thai Reading</span>
+            <InputText class="input" @bind-Value="Model.ThaiReading" />
+            <ValidationMessage For="@(() => Model.ThaiReading)" />
+        </label>
+
+        <label class="span-2">
+            <span>Meaning TH</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.MeaningTh" />
+            <ValidationMessage For="@(() => Model.MeaningTh)" />
+        </label>
+
+        <label class="span-2">
+            <span>Meaning EN</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.MeaningEn" />
+            <ValidationMessage For="@(() => Model.MeaningEn)" />
+        </label>
+
+        <label class="span-2">
+            <span>Example EN</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.ExampleEn" />
+            <ValidationMessage For="@(() => Model.ExampleEn)" />
+        </label>
+
+        <label class="span-2">
+            <span>Example TH</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.ExampleTh" />
+            <ValidationMessage For="@(() => Model.ExampleTh)" />
+        </label>
+
+        @if (ShowActiveToggle)
+        {
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="Model.IsActive" />
+                <span>Active</span>
+            </label>
+        }
+    </div>
+
+    <div class="actions">
+        <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
+        <a class="button" href="@AdminRoutes.Words.Index">Cancel</a>
+    </div>
+</EditForm>
+
+@code {
+    private static readonly string[] PartOfSpeechOptions =
+    [
+        "Noun",
+        "Pronoun",
+        "Verb",
+        "Adjective",
+        "Adverb",
+        "Preposition",
+        "Conjunction",
+        "Interjection",
+        "Determiner",
+        "Phrase",
+        "Other"
+    ];
+
+    private static readonly string[] CefrLevelOptions = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+    [Parameter, EditorRequired]
+    public WordFormModel Model { get; set; } = new();
+
+    [Parameter]
+    public IReadOnlyCollection<CategoryDto> Categories { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyCollection<TagDto> Tags { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyCollection<MediaDto> ImageMediaOptions { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyCollection<MediaDto> AudioMediaOptions { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyDictionary<string, string[]> ValidationErrors { get; set; } =
+        new Dictionary<string, string[]>();
+
+    [Parameter]
+    public bool IsSaving { get; set; }
+
+    [Parameter]
+    public bool ShowActiveToggle { get; set; }
+
+    [Parameter]
+    public string SubmitText { get; set; } = "Save";
+
+    [Parameter]
+    public EventCallback OnValidSubmit { get; set; }
+
+    private async Task SubmitAsync()
+    {
+        await OnValidSubmit.InvokeAsync();
+    }
+
+    private void ToggleTag(Guid tagId, ChangeEventArgs args)
+    {
+        var selected = args.Value is bool boolValue && boolValue;
+        if (selected && !Model.TagIds.Contains(tagId))
+        {
+            Model.TagIds.Add(tagId);
+            return;
+        }
+
+        if (!selected)
+        {
+            Model.TagIds.Remove(tagId);
+        }
+    }
+}

@@ -1,0 +1,42 @@
+name: Release Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release-build:
+    name: Release build and tests
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore
+        run: dotnet restore EnglishMaster.sln
+
+      - name: Build
+        run: dotnet build EnglishMaster.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test EnglishMaster.sln --configuration Release --no-build --verbosity normal
+
+      - name: Publish API
+        run: dotnet publish src/Backend/EnglishMaster.Api/EnglishMaster.Api.csproj --configuration Release --no-build --output artifacts/api
+
+      - name: Publish Web
+        run: dotnet publish src/Frontend/EnglishMaster.Web/EnglishMaster.Web.csproj --configuration Release --no-build --output artifacts/web
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: englishmaster-release-build
+          path: artifacts

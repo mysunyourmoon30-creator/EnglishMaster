@@ -1,0 +1,301 @@
+@page "/admin/books"
+@rendermode InteractiveServer
+@inject IBookApiClient BookApiClient
+@inject ICategoriesApiClient CategoriesApiClient
+@inject ICourseApiClient CourseApiClient
+
+<PageTitle>Books</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Books</p>
+        <h1>Books</h1>
+    </div>
+    <a class="button primary" href="@AdminRoutes.Books.Create">New Book</a>
+</section>
+
+<section class="panel">
+    <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+        <label>
+            <span>Search</span>
+            <input class="input" @bind="search" @bind:event="oninput" />
+        </label>
+        <label>
+            <span>CEFR</span>
+            <select class="input" @bind="cefrLevel">
+                <option value="">All</option>
+                @foreach (var level in CefrLevels)
+                {
+                    <option value="@level">@level</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Category</span>
+            <select class="input" @bind="categoryId">
+                <option value="">All</option>
+                @foreach (var category in categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Course</span>
+            <select class="input" @bind="courseId">
+                <option value="">All</option>
+                @foreach (var course in courses)
+                {
+                    <option value="@course.Id">@course.Title</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Published</span>
+            <select class="input" @bind="publishedFilter">
+                <option value="">All</option>
+                <option value="true">Published</option>
+                <option value="false">Draft</option>
+            </select>
+        </label>
+        <label>
+            <span>Status</span>
+            <select class="input" @bind="activeFilter">
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+                <option value="">All</option>
+            </select>
+        </label>
+        <label>
+            <span>Sort</span>
+            <select class="input" @bind="sortBy">
+                <option value="Title">Title</option>
+                <option value="CreatedAt">Created</option>
+            </select>
+        </label>
+        <label>
+            <span>Page Size</span>
+            <select class="input" @bind="pageSize">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </label>
+        <button class="button" type="submit">Search</button>
+    </form>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading books...</p>
+}
+else if (books.Count == 0)
+{
+    <section class="panel">
+        <p class="muted">No books found.</p>
+    </section>
+}
+else
+{
+    <section class="table-wrap">
+        <div class="pagination-summary">
+            <span class="muted">Showing page @searchResult.PageNumber of @searchResult.TotalPages (@searchResult.TotalCount books)</span>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>CEFR</th>
+                    <th>Category</th>
+                    <th>Course</th>
+                    <th>Chapters</th>
+                    <th>Published</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var book in books)
+                {
+                    <tr>
+                        <td>
+                            <strong>@book.Title</strong>
+                            <span class="muted">@book.Subtitle</span>
+                        </td>
+                        <td>@(book.CefrLevel ?? "-")</td>
+                        <td>@(book.Category?.Name ?? "-")</td>
+                        <td>@(book.Course?.Title ?? "-")</td>
+                        <td>@book.Chapters.Count</td>
+                        <td>@(book.IsPublished ? "Published" : "Draft")</td>
+                        <td>@(book.IsActive ? "Active" : "Inactive")</td>
+                        <td class="row-actions">
+                            <a class="button small" href="@AdminRoutes.Books.Detail(book.Id)">View</a>
+                            <a class="button small" href="@AdminRoutes.Books.Edit(book.Id)">Edit</a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(book.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="pagination-row">
+            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous</button>
+            <span class="muted">Page @searchResult.PageNumber</span>
+            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next</button>
+        </div>
+    </section>
+}
+
+@code {
+    private static readonly string[] CefrLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+    private IReadOnlyCollection<BookDto> books = [];
+    private IReadOnlyCollection<CategoryDto> categories = [];
+    private IReadOnlyCollection<CourseDto> courses = [];
+    private BookSearchResponse searchResult = EmptySearchResult();
+    private string? search;
+    private string? cefrLevel;
+    private string? categoryId;
+    private string? courseId;
+    private string publishedFilter = "";
+    private string activeFilter = "true";
+    private string sortBy = "Title";
+    private int pageNumber = 1;
+    private int pageSize = 10;
+    private string? errorMessage;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            categories = (await CategoriesApiClient.SearchAsync(search: null, isActive: true, CancellationToken.None)).Items;
+            courses = (await CourseApiClient.SearchAsync(
+                new CourseSearchRequest(IsActive: true, PageSize: 100, SortBy: "Title", SortDirection: "Asc"),
+                CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException)
+        {
+            categories = [];
+            courses = [];
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task SearchAsync()
+    {
+        pageNumber = 1;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            searchResult = await BookApiClient.SearchAsync(
+                new BookSearchRequest(
+                    search,
+                    string.IsNullOrWhiteSpace(cefrLevel) ? null : cefrLevel,
+                    ParseCategoryFilter(),
+                    ParseCourseFilter(),
+                    ParsePublishedFilter(),
+                    ParseActiveFilter(),
+                    pageNumber,
+                    pageSize,
+                    sortBy,
+                    "Asc"),
+                CancellationToken.None);
+            books = searchResult.Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            searchResult = EmptySearchResult();
+            books = [];
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task PreviousPageAsync()
+    {
+        if (!searchResult.HasPreviousPage)
+        {
+            return;
+        }
+
+        pageNumber--;
+        await LoadAsync();
+    }
+
+    private async Task NextPageAsync()
+    {
+        if (!searchResult.HasNextPage)
+        {
+            return;
+        }
+
+        pageNumber++;
+        await LoadAsync();
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        errorMessage = null;
+
+        try
+        {
+            await BookApiClient.DeleteAsync(id, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+
+    private Guid? ParseCategoryFilter()
+    {
+        return Guid.TryParse(categoryId, out var id) ? id : null;
+    }
+
+    private Guid? ParseCourseFilter()
+    {
+        return Guid.TryParse(courseId, out var id) ? id : null;
+    }
+
+    private bool? ParsePublishedFilter()
+    {
+        return publishedFilter switch
+        {
+            "true" => true,
+            "false" => false,
+            _ => null
+        };
+    }
+
+    private bool? ParseActiveFilter()
+    {
+        return activeFilter switch
+        {
+            "true" => true,
+            "false" => false,
+            _ => null
+        };
+    }
+
+    private static BookSearchResponse EmptySearchResult()
+    {
+        return new BookSearchResponse([], 1, 10, 0, 0, false, false);
+    }
+}

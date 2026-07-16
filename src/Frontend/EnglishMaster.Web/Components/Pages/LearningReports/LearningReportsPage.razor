@@ -1,0 +1,72 @@
+@page "/learn/reports"
+@inject ILearningReportApiClient LearningReportApiClient
+
+<PageTitle>Learning Reports</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Learning Reports</h1>
+        <p class="muted">Review weekly progress and insights.</p>
+    </div>
+    <div class="actions">
+        <a class="button" href="/learn/reports/current-week">Current Week</a>
+        <button class="button secondary" type="button" @onclick="GenerateAsync">Generate Current Week</button>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading reports...</p>
+}
+else if (reports.Count == 0)
+{
+    <p class="muted">No weekly reports yet.</p>
+}
+else
+{
+    <div class="card-grid">
+        @foreach (var report in reports)
+        {
+            <article class="list-card">
+                <span class="pill">@report.Status</span>
+                <h3>@report.WeekStartDate.ToString("yyyy-MM-dd") - @report.WeekEndDate.ToString("yyyy-MM-dd")</h3>
+                <p class="muted">@report.TotalStudyMinutes minutes - @report.ActiveStudyDays active days - @report.AverageQuizScore.ToString("0.#")% quiz average</p>
+                <a class="button secondary" href="/learn/reports/@report.Id">Open</a>
+            </article>
+        }
+    </div>
+}
+
+@code {
+    private IReadOnlyCollection<WeeklyLearningReportDto> reports = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            reports = await LearningReportApiClient.GetHistoryAsync(null, null, CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Learning reports are unavailable right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task GenerateAsync()
+    {
+        await LearningReportApiClient.GenerateCurrentWeekAsync(CancellationToken.None);
+        await LoadAsync();
+    }
+}

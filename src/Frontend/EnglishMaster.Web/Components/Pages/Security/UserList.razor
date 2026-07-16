@@ -1,0 +1,99 @@
+@page "/admin/users"
+@rendermode InteractiveServer
+@inject ISecurityApiClient SecurityApiClient
+
+<PageTitle>Users</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Users</h1>
+    </div>
+    <a class="button primary" href="@AdminRoutes.Users.Create">New User</a>
+</section>
+
+<section class="panel">
+    <form class="filters-grid" @onsubmit="LoadAsync" @onsubmit:preventDefault>
+        <label>
+            <span>Search</span>
+            <input class="input" @bind="search" @bind:event="oninput" />
+        </label>
+        <label>
+            <span>Status</span>
+            <select class="input" @bind="activeFilter">
+                <option value="">All</option>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+            </select>
+        </label>
+        <button class="button" type="submit">Search</button>
+    </form>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading users...</p>
+}
+else if (users.Count == 0)
+{
+    <section class="panel"><p class="muted">No users found.</p></section>
+}
+else
+{
+    <section class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>User</th><th>Roles</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var user in users)
+                {
+                    <tr>
+                        <td><strong>@user.DisplayName</strong><span class="muted">@user.Email</span></td>
+                        <td>@string.Join(", ", user.Roles.Select(role => role.Name))</td>
+                        <td>@(user.IsActive ? "Active" : "Inactive")</td>
+                        <td class="row-actions">
+                            <a class="button small" href="@AdminRoutes.Users.Detail(user.Id)">View</a>
+                            <a class="button small" href="@AdminRoutes.Users.Edit(user.Id)">Edit</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<UserDto> users = [];
+    private string? search;
+    private string activeFilter = "";
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            bool? isActive = activeFilter == "" ? null : bool.Parse(activeFilter);
+            users = (await SecurityApiClient.SearchUsersAsync(search, isActive, 1, 50, CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            users = [];
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

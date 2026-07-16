@@ -1,0 +1,100 @@
+@page "/admin/import-jobs/{Id:guid}"
+@rendermode InteractiveServer
+@inject IImportJobApiClient ImportJobApiClient
+
+<PageTitle>Import Job</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Import Job</h1>
+    </div>
+    <a class="button secondary" href="@AdminRoutes.ImportJobs.Index">Back</a>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading import job...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (job is not null)
+{
+    <section class="panel">
+        <div class="detail-grid">
+            <div class="detail-item"><span class="muted">Type</span><strong>@job.ImportType</strong></div>
+            <div class="detail-item"><span class="muted">Format</span><strong>@job.Format</strong></div>
+            <div class="detail-item"><span class="muted">Status</span><strong>@job.Status</strong></div>
+            <div class="detail-item"><span class="muted">Rows</span><strong>@job.TotalRows</strong></div>
+            <div class="detail-item"><span class="muted">Valid</span><strong>@job.ValidRows</strong></div>
+            <div class="detail-item"><span class="muted">Invalid</span><strong>@job.InvalidRows</strong></div>
+            <div class="detail-item"><span class="muted">Imported</span><strong>@job.ImportedRows</strong></div>
+            <div class="detail-item"><span class="muted">Failed</span><strong>@job.FailedRows</strong></div>
+        </div>
+        <div class="form-actions">
+            <button class="button" @onclick="ValidateAsync" disabled="@isSaving">Validate</button>
+            <button class="button" @onclick="ConfirmAsync" disabled="@isSaving">Confirm</button>
+            <button class="button primary" @onclick="RunAsync" disabled="@isSaving">Run</button>
+            <button class="button secondary" @onclick="CancelAsync" disabled="@isSaving">Cancel</button>
+            <button class="button secondary" @onclick="RollbackAsync" disabled="@isSaving">Rollback</button>
+            <a class="button secondary" href="@AdminRoutes.ImportJobs.Rows(job.Id)">Rows</a>
+            <a class="button secondary" href="@AdminRoutes.ImportJobs.Errors(job.Id)">Errors</a>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private ImportJobDto? job;
+    private bool isLoading = true;
+    private bool isSaving;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            job = await ImportJobApiClient.GetAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private Task ValidateAsync() => SaveAsync(() => ImportJobApiClient.ValidateAsync(Id, CancellationToken.None));
+    private Task ConfirmAsync() => SaveAsync(() => ImportJobApiClient.ConfirmAsync(Id, CancellationToken.None));
+    private Task RunAsync() => SaveAsync(() => ImportJobApiClient.RunAsync(Id, CancellationToken.None));
+    private Task CancelAsync() => SaveAsync(() => ImportJobApiClient.CancelAsync(Id, CancellationToken.None));
+    private Task RollbackAsync() => SaveAsync(() => ImportJobApiClient.RollbackAsync(Id, CancellationToken.None));
+
+    private async Task SaveAsync(Func<Task<ImportJobDto>> action)
+    {
+        isSaving = true;
+        errorMessage = null;
+        try
+        {
+            job = await action();
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

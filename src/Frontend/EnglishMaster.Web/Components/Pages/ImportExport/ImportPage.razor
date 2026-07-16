@@ -1,0 +1,166 @@
+@page "/admin/import"
+@rendermode InteractiveServer
+@inject IImportExportApiClient ImportExportApiClient
+
+<PageTitle>Import</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Content Operations</p>
+        <h1>Import</h1>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>Words</h2>
+    <div class="form-grid">
+        <label>
+            <span>CSV or JSON file</span>
+            <InputFile OnChange="OnFileSelected" accept=".csv,.json,text/csv,application/json" />
+        </label>
+    </div>
+    <div class="form-actions">
+        <button class="button primary" type="button" disabled="@(selectedFile is null || isImporting)" @onclick="ImportWordsAsync">
+            @(isImporting ? "Importing..." : "Import Words")
+        </button>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (importResult is not null)
+{
+    <section class="panel">
+        <h2>Import Result</h2>
+        <div class="stats-grid">
+            <div>
+                <span class="muted">Rows</span>
+                <strong>@importResult.TotalRows</strong>
+            </div>
+            <div>
+                <span class="muted">Imported</span>
+                <strong>@importResult.ImportedCount</strong>
+            </div>
+            <div>
+                <span class="muted">Failed</span>
+                <strong>@importResult.FailedCount</strong>
+            </div>
+        </div>
+
+        @if (importResult.Errors.Count > 0)
+        {
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Row</th>
+                        <th>Field</th>
+                        <th>Error</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var error in importResult.Errors)
+                    {
+                        <tr>
+                            <td>@error.RowNumber</td>
+                            <td>@error.Field</td>
+                            <td>@error.Message</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </section>
+}
+
+<section class="panel">
+    <h2>Format</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Column</th>
+                <th>Required</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var field in WordFields)
+            {
+                <tr>
+                    <td>@field.Name</td>
+                    <td>@(field.Required ? "Yes" : "No")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
+
+@code {
+    private const long MaximumFileSize = 1_048_576;
+
+    private static readonly IReadOnlyCollection<ImportField> WordFields =
+    [
+        new("Text", true),
+        new("MeaningTh", true),
+        new("PartOfSpeech", true),
+        new("CefrLevel", true),
+        new("IpaUk", false),
+        new("IpaUs", false),
+        new("ThaiReading", false),
+        new("MeaningEn", false),
+        new("ExampleEn", false),
+        new("ExampleTh", false),
+        new("CategorySlug", false),
+        new("Tags", false)
+    ];
+
+    private IBrowserFile? selectedFile;
+    private ContentImportResult? importResult;
+    private string? errorMessage;
+    private bool isImporting;
+
+    private void OnFileSelected(InputFileChangeEventArgs args)
+    {
+        selectedFile = args.File;
+        importResult = null;
+        errorMessage = null;
+    }
+
+    private async Task ImportWordsAsync()
+    {
+        if (selectedFile is null)
+        {
+            errorMessage = "Choose a CSV or JSON file.";
+            return;
+        }
+
+        isImporting = true;
+        importResult = null;
+        errorMessage = null;
+
+        try
+        {
+            await using var stream = selectedFile.OpenReadStream(MaximumFileSize);
+            importResult = await ImportExportApiClient.ImportWordsAsync(
+                stream,
+                selectedFile.Name,
+                selectedFile.ContentType,
+                CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        catch (IOException)
+        {
+            errorMessage = "The selected file could not be read.";
+        }
+        finally
+        {
+            isImporting = false;
+        }
+    }
+
+    private sealed record ImportField(string Name, bool Required);
+}

@@ -1,0 +1,53 @@
+@page "/learn/recommendations"
+@inject ILearningRecommendationApiClient RecommendationApiClient
+
+<PageTitle>Recommendations</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Recommendations</h1>
+        <p class="muted">Rule-based suggestions from your learning activity.</p>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading recommendations...</p>
+}
+else
+{
+    <RecommendationSection Title="Continue Learning" Items="summary.ContinueLearning" />
+    <RecommendationCards Title="Recommended Courses" Items="summary.RecommendedCourses" />
+    <RecommendationCards Title="Recommended Lessons" Items="summary.RecommendedLessons" />
+    <RecommendationCards Title="Recommended Words" Items="summary.RecommendedWords" />
+    <RecommendationCards Title="Recommended Grammar" Items="summary.RecommendedGrammar" />
+    <RecommendationCards Title="Recommended Quizzes" Items="summary.RecommendedQuizzes" />
+    <RecommendationCards Title="Review Weak Areas" Items="summary.ReviewRecommendations" />
+}
+
+@code {
+    private LearningRecommendationSummaryDto summary = new([], [], [], [], [], [], []);
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            summary = await RecommendationApiClient.GetRecommendationsAsync(10, CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Recommendations are unavailable right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
+

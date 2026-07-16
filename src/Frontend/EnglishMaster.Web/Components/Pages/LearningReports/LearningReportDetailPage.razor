@@ -1,0 +1,62 @@
+@page "/learn/reports/{Id:guid}"
+@inject ILearningReportApiClient LearningReportApiClient
+
+<PageTitle>Learning Report</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Learning Report</h1>
+        <p class="muted">Review weekly metrics and recommendations.</p>
+    </div>
+    <div class="actions">
+        <button class="button" type="button" @onclick="RegenerateAsync">Regenerate</button>
+        <a class="button secondary" href="/learn/reports">History</a>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading report...</p>
+}
+else if (report is null)
+{
+    <p class="muted">Report was not found.</p>
+}
+else
+{
+    <LearningReportSummary Report="report" />
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private WeeklyLearningReportDto? report;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            report = await LearningReportApiClient.GetByIdAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Learning report is unavailable right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RegenerateAsync()
+    {
+        report = await LearningReportApiClient.RegenerateAsync(Id, CancellationToken.None);
+    }
+}

@@ -1,0 +1,29 @@
+@using EnglishMaster.Contracts.LearningRecommendations
+
+<section class="content-section">
+    <h2>@Title</h2>
+    @if (Items.Count == 0)
+    {
+        <p class="muted">Nothing in progress yet.</p>
+    }
+    else
+    {
+        <div class="card-grid">
+            @foreach (var item in Items)
+            {
+                <article class="list-card">
+                    <span class="pill">@item.ContentType</span>
+                    <h3><a href="@item.Url">@item.Title</a></h3>
+                    <p>@item.Summary</p>
+                    <p class="muted">@item.ProgressPercent% complete · @item.RecommendationReason</p>
+                </article>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public IReadOnlyCollection<ContinueLearningItemDto> Items { get; set; } = [];
+}
+

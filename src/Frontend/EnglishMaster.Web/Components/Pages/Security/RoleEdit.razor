@@ -1,0 +1,85 @@
+@page "/admin/roles/{Id:guid}/edit"
+@rendermode InteractiveServer
+@inject ISecurityApiClient SecurityApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit Role</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Edit Role</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <p class="muted">Loading role...</p>
+}
+else
+{
+    <EditForm Model="model" OnValidSubmit="SaveAsync" class="word-form">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert error">@errorMessage</div>
+        }
+        <div class="form-grid">
+            <label><span>Name</span><InputText class="input" @bind-Value="model.Name" /></label>
+            <label class="span-2"><span>Description</span><InputTextArea class="input textarea" @bind-Value="model.Description" /></label>
+            <label class="checkbox-row"><InputCheckbox @bind-Value="model.IsActive" /><span>Active</span></label>
+        </div>
+        <div class="actions">
+            <button class="button primary" type="submit" disabled="@isSaving">Save</button>
+            <a class="button" href="@AdminRoutes.Roles.Detail(Id)">Cancel</a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    private sealed class FormModel
+    {
+        [Required] public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
+    }
+
+    [Parameter] public Guid Id { get; set; }
+    private readonly FormModel model = new();
+    private bool isLoading = true;
+    private bool isSaving;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var role = await SecurityApiClient.GetRoleAsync(Id, CancellationToken.None);
+        if (role is not null)
+        {
+            model.Name = role.Name;
+            model.Description = role.Description;
+            model.IsActive = role.IsActive;
+        }
+
+        isLoading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        try
+        {
+            await SecurityApiClient.UpdateRoleAsync(Id, new(model.Name, model.Description, model.IsActive), CancellationToken.None);
+            NavigationManager.NavigateTo(AdminRoutes.Roles.Detail(Id));
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

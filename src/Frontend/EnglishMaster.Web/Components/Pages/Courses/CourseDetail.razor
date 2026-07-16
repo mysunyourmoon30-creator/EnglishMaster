@@ -1,0 +1,333 @@
+@page "/admin/courses/{Id:guid}"
+@rendermode InteractiveServer
+@inject ICourseApiClient CourseApiClient
+@inject ILessonApiClient LessonApiClient
+
+<PageTitle>@(course is null ? "Course" : course.Title)</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Courses</p>
+        <h1>@(course is null ? "Course" : course.Title)</h1>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.Courses.Index">Back</a>
+        @if (course is not null)
+        {
+            <a class="button" href="@AdminRoutes.ContentRevisions.Timeline("Course", course.Id)">Revision History</a>
+            <a class="button primary" href="@AdminRoutes.Courses.Edit(course.Id)">Edit</a>
+            <button class="button" type="button" @onclick="TogglePublishAsync">
+                @(course.IsPublished ? "Unpublish" : "Publish")
+            </button>
+        }
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading course...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Course was not found.</p>
+    </section>
+}
+else if (course is not null)
+{
+    <section class="panel">
+        @if (course.ThumbnailMedia is not null)
+        {
+            <img class="thumbnail" src="@course.ThumbnailMedia.PublicUrl" alt="@course.ThumbnailMedia.AltText" />
+        }
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Slug</span>
+                <strong>@course.Slug</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">CEFR</span>
+                <strong>@(course.CefrLevel ?? "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Category</span>
+                <strong>@(course.Category?.Name ?? "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Estimated Minutes</span>
+                <strong>@course.EstimatedMinutes</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Sort Order</span>
+                <strong>@course.SortOrder</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Published</span>
+                <strong>@(course.IsPublished ? "Published" : "Draft")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Status</span>
+                <strong>@(course.IsActive ? "Active" : "Inactive")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Summary</span>
+                <strong>@course.Summary</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Description</span>
+                <strong>@course.Description</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-header section-header">
+        <div>
+            <p class="eyebrow">Learning Path</p>
+            <h1>Lessons</h1>
+        </div>
+    </section>
+
+    <section class="panel">
+        @if (!string.IsNullOrWhiteSpace(lessonErrorMessage))
+        {
+            <div class="alert error">@lessonErrorMessage</div>
+        }
+
+        <div class="filters-grid">
+            <label>
+                <span>Lesson</span>
+                <InputSelect class="input" @bind-Value="selectedLessonId">
+                    <option value="">Select lesson</option>
+                    @foreach (var lesson in AvailableLessons())
+                    {
+                        <option value="@lesson.Id">@lesson.Title</option>
+                    }
+                </InputSelect>
+            </label>
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="selectedLessonIsRequired" />
+                <span>Required</span>
+            </label>
+            <button class="button" type="button" @onclick="AddLessonAsync">Add Lesson</button>
+        </div>
+    </section>
+
+    @if (courseLessons.Count == 0)
+    {
+        <section class="panel nested-table">
+            <p class="muted">No lessons added yet.</p>
+        </section>
+    }
+    else
+    {
+        <section class="table-wrap nested-table">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Lesson</th>
+                        <th>CEFR</th>
+                        <th>Required</th>
+                        <th>Sort</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var relation in courseLessons.OrderBy(item => item.SortOrder))
+                    {
+                        <tr>
+                            <td>
+                                <strong>@relation.LessonTitle</strong>
+                                <span class="muted">@relation.LessonSummary</span>
+                            </td>
+                            <td>@(relation.LessonCefrLevel ?? "-")</td>
+                            <td>@(relation.IsRequired ? "Required" : "Optional")</td>
+                            <td>@relation.SortOrder</td>
+                            <td class="row-actions">
+                                <button class="button small" type="button" @onclick="() => MoveLessonUpAsync(relation.Id)">Up</button>
+                                <button class="button small" type="button" @onclick="() => MoveLessonDownAsync(relation.Id)">Down</button>
+                                <a class="button small" href="@AdminRoutes.Lessons.Detail(relation.LessonId)">View</a>
+                                <button class="button small danger" type="button" @onclick="() => RemoveLessonAsync(relation.LessonId)">Remove</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private CourseDto? course;
+    private IReadOnlyCollection<CourseLessonDto> courseLessons = [];
+    private IReadOnlyCollection<LessonDto> lessons = [];
+    private Guid? selectedLessonId;
+    private bool selectedLessonIsRequired = true;
+    private string? errorMessage;
+    private string? lessonErrorMessage;
+    private bool isLoading = true;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            lessons = (await LessonApiClient.SearchAsync(
+                new LessonSearchRequest(IsActive: true, PageSize: 100, SortBy: "Title", SortDirection: "Asc"),
+                CancellationToken.None)).Items;
+
+            course = await CourseApiClient.GetAsync(Id, CancellationToken.None);
+            if (course is null)
+            {
+                notFound = true;
+                return;
+            }
+
+            courseLessons = await CourseApiClient.GetLessonsAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private IEnumerable<LessonDto> AvailableLessons()
+    {
+        var relatedLessonIds = courseLessons.Select(item => item.LessonId).ToHashSet();
+        return lessons.Where(lesson => !relatedLessonIds.Contains(lesson.Id));
+    }
+
+    private async Task TogglePublishAsync()
+    {
+        if (course is null)
+        {
+            return;
+        }
+
+        errorMessage = null;
+
+        try
+        {
+            if (course.IsPublished)
+            {
+                await CourseApiClient.UnpublishAsync(course.Id, CancellationToken.None);
+            }
+            else
+            {
+                await CourseApiClient.PublishAsync(course.Id, CancellationToken.None);
+            }
+
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+
+    private async Task AddLessonAsync()
+    {
+        if (course is null || !selectedLessonId.HasValue)
+        {
+            return;
+        }
+
+        lessonErrorMessage = null;
+
+        try
+        {
+            await CourseApiClient.AddLessonAsync(
+                course.Id,
+                selectedLessonId.Value,
+                courseLessons.Count,
+                selectedLessonIsRequired,
+                CancellationToken.None);
+            selectedLessonId = null;
+            selectedLessonIsRequired = true;
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            lessonErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task RemoveLessonAsync(Guid lessonId)
+    {
+        if (course is null)
+        {
+            return;
+        }
+
+        lessonErrorMessage = null;
+
+        try
+        {
+            await CourseApiClient.RemoveLessonAsync(course.Id, lessonId, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            lessonErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task MoveLessonUpAsync(Guid id)
+    {
+        await MoveLessonAsync(id, -1);
+    }
+
+    private async Task MoveLessonDownAsync(Guid id)
+    {
+        await MoveLessonAsync(id, 1);
+    }
+
+    private async Task MoveLessonAsync(Guid id, int offset)
+    {
+        if (course is null)
+        {
+            return;
+        }
+
+        var ordered = courseLessons.OrderBy(item => item.SortOrder).Select(item => item.Id).ToList();
+        var index = ordered.IndexOf(id);
+        var newIndex = index + offset;
+        if (index < 0 || newIndex < 0 || newIndex >= ordered.Count)
+        {
+            return;
+        }
+
+        (ordered[index], ordered[newIndex]) = (ordered[newIndex], ordered[index]);
+        lessonErrorMessage = null;
+
+        try
+        {
+            await CourseApiClient.ReorderLessonsAsync(course.Id, ordered, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            lessonErrorMessage = exception.Message;
+        }
+    }
+}

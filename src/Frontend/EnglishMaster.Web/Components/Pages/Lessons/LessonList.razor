@@ -1,0 +1,264 @@
+@page "/admin/lessons"
+@rendermode InteractiveServer
+@inject ILessonApiClient LessonApiClient
+@inject ICategoriesApiClient CategoriesApiClient
+
+<PageTitle>Lessons</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Lessons</p>
+        <h1>Lessons</h1>
+    </div>
+    <a class="button primary" href="@AdminRoutes.Lessons.Create">New Lesson</a>
+</section>
+
+<section class="panel">
+    <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+        <label>
+            <span>Search</span>
+            <input class="input" @bind="search" @bind:event="oninput" />
+        </label>
+        <label>
+            <span>CEFR</span>
+            <select class="input" @bind="cefrLevel">
+                <option value="">All</option>
+                @foreach (var level in CefrLevels)
+                {
+                    <option value="@level">@level</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Category</span>
+            <select class="input" @bind="categoryId">
+                <option value="">All</option>
+                @foreach (var category in categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Published</span>
+            <select class="input" @bind="publishedFilter">
+                <option value="">All</option>
+                <option value="true">Published</option>
+                <option value="false">Draft</option>
+            </select>
+        </label>
+        <label>
+            <span>Status</span>
+            <select class="input" @bind="activeFilter">
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+                <option value="">All</option>
+            </select>
+        </label>
+        <label>
+            <span>Page Size</span>
+            <select class="input" @bind="pageSize">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </label>
+        <button class="button" type="submit">Search</button>
+    </form>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading lessons...</p>
+}
+else if (lessons.Count == 0)
+{
+    <section class="panel">
+        <p class="muted">No lessons found.</p>
+    </section>
+}
+else
+{
+    <section class="table-wrap">
+        <div class="pagination-summary">
+            <span class="muted">Showing page @searchResult.PageNumber of @searchResult.TotalPages (@searchResult.TotalCount lessons)</span>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>CEFR</th>
+                    <th>Category</th>
+                    <th>Published</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var lesson in lessons)
+                {
+                    <tr>
+                        <td>
+                            <strong>@lesson.Title</strong>
+                            <span class="muted">@lesson.Summary</span>
+                        </td>
+                        <td>@(lesson.CefrLevel ?? "-")</td>
+                        <td>@(lesson.Category?.Name ?? "-")</td>
+                        <td>@(lesson.IsPublished ? "Published" : "Draft")</td>
+                        <td>@(lesson.IsActive ? "Active" : "Inactive")</td>
+                        <td class="row-actions">
+                            <a class="button small" href="@AdminRoutes.Lessons.Detail(lesson.Id)">View</a>
+                            <a class="button small" href="@AdminRoutes.Lessons.Edit(lesson.Id)">Edit</a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(lesson.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="pagination-row">
+            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous</button>
+            <span class="muted">Page @searchResult.PageNumber</span>
+            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next</button>
+        </div>
+    </section>
+}
+
+@code {
+    private static readonly string[] CefrLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+    private IReadOnlyCollection<LessonDto> lessons = [];
+    private IReadOnlyCollection<CategoryDto> categories = [];
+    private LessonSearchResponse searchResult = EmptySearchResult();
+    private string? search;
+    private string? cefrLevel;
+    private string? categoryId;
+    private string publishedFilter = "";
+    private string activeFilter = "true";
+    private int pageNumber = 1;
+    private int pageSize = 10;
+    private string? errorMessage;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            categories = (await CategoriesApiClient.SearchAsync(search: null, isActive: true, CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException)
+        {
+            categories = [];
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task SearchAsync()
+    {
+        pageNumber = 1;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            searchResult = await LessonApiClient.SearchAsync(
+                new LessonSearchRequest(
+                    search,
+                    string.IsNullOrWhiteSpace(cefrLevel) ? null : cefrLevel,
+                    ParseCategoryFilter(),
+                    ParsePublishedFilter(),
+                    ParseActiveFilter(),
+                    pageNumber,
+                    pageSize),
+                CancellationToken.None);
+            lessons = searchResult.Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            searchResult = EmptySearchResult();
+            lessons = [];
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task PreviousPageAsync()
+    {
+        if (!searchResult.HasPreviousPage)
+        {
+            return;
+        }
+
+        pageNumber--;
+        await LoadAsync();
+    }
+
+    private async Task NextPageAsync()
+    {
+        if (!searchResult.HasNextPage)
+        {
+            return;
+        }
+
+        pageNumber++;
+        await LoadAsync();
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        errorMessage = null;
+
+        try
+        {
+            await LessonApiClient.DeleteAsync(id, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+
+    private Guid? ParseCategoryFilter()
+    {
+        return Guid.TryParse(categoryId, out var id) ? id : null;
+    }
+
+    private bool? ParsePublishedFilter()
+    {
+        return publishedFilter switch
+        {
+            "true" => true,
+            "false" => false,
+            _ => null
+        };
+    }
+
+    private bool? ParseActiveFilter()
+    {
+        return activeFilter switch
+        {
+            "true" => true,
+            "false" => false,
+            _ => null
+        };
+    }
+
+    private static LessonSearchResponse EmptySearchResult()
+    {
+        return new LessonSearchResponse([], 1, 10, 0, 0, false, false);
+    }
+}

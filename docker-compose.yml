@@ -1,0 +1,59 @@
+services:
+  englishmaster-sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: englishmaster-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${ENGLISHMASTER_SQL_PASSWORD:-EnglishMaster_dev_12345!}
+    ports:
+      - "${ENGLISHMASTER_SQL_PORT:-14333}:1433"
+    volumes:
+      - englishmaster-sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/1433'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  englishmaster-api:
+    build:
+      context: .
+      dockerfile: src/Backend/EnglishMaster.Api/Dockerfile
+    container_name: englishmaster-api
+    depends_on:
+      englishmaster-sqlserver:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Server=englishmaster-sqlserver,1433;Database=EnglishMaster;User Id=sa;Password=${ENGLISHMASTER_SQL_PASSWORD:-EnglishMaster_dev_12345!};TrustServerCertificate=True;MultipleActiveResultSets=true"
+      DevelopmentSeed__Enabled: ${ENGLISHMASTER_DEVELOPMENT_SEED_ENABLED:-true}
+      Auth__InitialSuperAdmin__Email: ${ENGLISHMASTER_SUPERADMIN_EMAIL:-}
+      Auth__InitialSuperAdmin__Password: ${ENGLISHMASTER_SUPERADMIN_PASSWORD:-}
+      Publishing__LocalStoragePath: /app/publishing
+    ports:
+      - "${ENGLISHMASTER_API_PORT:-7001}:8080"
+    volumes:
+      - englishmaster-api-media:/app/media
+      - englishmaster-api-publishing:/app/publishing
+
+  englishmaster-web:
+    build:
+      context: .
+      dockerfile: src/Frontend/EnglishMaster.Web/Dockerfile
+    container_name: englishmaster-web
+    depends_on:
+      - englishmaster-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ApiBaseUrl: http://englishmaster-api:8080/
+    ports:
+      - "${ENGLISHMASTER_WEB_PORT:-7002}:8080"
+
+volumes:
+  englishmaster-sqlserver-data:
+  englishmaster-api-media:
+  englishmaster-api-publishing:

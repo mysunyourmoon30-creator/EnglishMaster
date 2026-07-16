@@ -1,0 +1,32 @@
+@page "/login"
+
+<PageTitle>Login</PageTitle>
+
+<section class="login-shell">
+    <form class="panel login-panel" method="post" action="/login">
+        <p class="eyebrow">EnglishMaster Admin</p>
+        <h1>Login</h1>
+
+        @if (!string.IsNullOrWhiteSpace(Error))
+        {
+            <div class="alert error">@Error</div>
+        }
+
+        <label>
+            <span>Email</span>
+            <input class="input" name="email" type="email" autocomplete="username" required />
+        </label>
+
+        <label>
+            <span>Password</span>
+            <input class="input" name="password" type="password" autocomplete="current-password" required />
+        </label>
+
+        <button class="button primary" type="submit">Login</button>
+    </form>
+</section>
+
+@code {
+    [SupplyParameterFromQuery(Name = "error")]
+    private string? Error { get; set; }
+}

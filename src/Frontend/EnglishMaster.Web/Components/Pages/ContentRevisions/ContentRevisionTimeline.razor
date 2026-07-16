@@ -1,0 +1,58 @@
+@page "/admin/content-revisions/{ContentType}/{ContentId:guid}"
+@rendermode InteractiveServer
+@inject IContentRevisionApiClient ContentRevisionApiClient
+
+<PageTitle>Revision Timeline</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Revision Timeline</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading timeline...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else
+{
+    <section class="content-list">
+        @foreach (var revision in revisions)
+        {
+            <article class="panel">
+                <h2>#@revision.RevisionNumber @revision.EventType</h2>
+                <p class="muted">@revision.ChangedBy · @revision.ChangedAt.LocalDateTime.ToString("g")</p>
+                <a class="button small" href="@AdminRoutes.ContentRevisions.Detail(revision.Id)">Open</a>
+            </article>
+        }
+    </section>
+}
+
+@code {
+    [Parameter] public string ContentType { get; set; } = string.Empty;
+    [Parameter] public Guid ContentId { get; set; }
+    private IReadOnlyCollection<ContentRevisionDto> revisions = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            revisions = (await ContentRevisionApiClient.GetRevisionsForContentAsync(ContentType, ContentId, CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

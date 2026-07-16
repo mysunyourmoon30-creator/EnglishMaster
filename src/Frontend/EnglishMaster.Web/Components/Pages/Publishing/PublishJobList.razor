@@ -1,0 +1,186 @@
+@page "/admin/publishing/jobs"
+@rendermode InteractiveServer
+@inject IPublishingApiClient PublishingApiClient
+
+<PageTitle>Publish Jobs</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Publishing</p>
+        <h1>Publish Jobs</h1>
+    </div>
+    <a class="button primary" href="@AdminRoutes.Publishing.Jobs.Create">New Job</a>
+</section>
+
+<section class="panel">
+    <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+        <label>
+            <span>Source Type</span>
+            <select class="input" @bind="sourceType">
+                <option value="">All</option>
+                @foreach (var item in SourceTypes)
+                {
+                    <option value="@item">@item</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Format</span>
+            <select class="input" @bind="format">
+                <option value="">All</option>
+                @foreach (var item in Formats)
+                {
+                    <option value="@item">@item</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Status</span>
+            <select class="input" @bind="status">
+                <option value="">All</option>
+                @foreach (var item in Statuses)
+                {
+                    <option value="@item">@item</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Page Size</span>
+            <select class="input" @bind="pageSize">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </label>
+        <button class="button" type="submit">Search</button>
+    </form>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading publish jobs...</p>
+}
+else if (jobs.Count == 0)
+{
+    <section class="panel">
+        <p class="muted">No publish jobs found.</p>
+    </section>
+}
+else
+{
+    <section class="table-wrap">
+        <div class="pagination-summary">
+            <span class="muted">Showing page @searchResult.PageNumber of @searchResult.TotalPages (@searchResult.TotalCount jobs)</span>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Source</th>
+                    <th>Format</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var job in jobs)
+                {
+                    <tr>
+                        <td><strong>@job.Title</strong></td>
+                        <td>@job.SourceType</td>
+                        <td>@job.Format</td>
+                        <td>@job.Status</td>
+                        <td>@job.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td class="row-actions">
+                            <a class="button small" href="@AdminRoutes.Publishing.Jobs.Detail(job.Id)">View</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="pagination-row">
+            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous</button>
+            <span class="muted">Page @searchResult.PageNumber</span>
+            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next</button>
+        </div>
+    </section>
+}
+
+@code {
+    private static readonly string[] SourceTypes = ["Lesson", "Course", "Book", "Quiz"];
+    private static readonly string[] Formats = ["Html", "Pdf", "Docx", "Markdown"];
+    private static readonly string[] Statuses = ["Pending", "Running", "Completed", "Failed", "Cancelled"];
+
+    private IReadOnlyCollection<PublishJobDto> jobs = [];
+    private PublishJobSearchResponse searchResult = new([], 1, 10, 0, 0, false, false);
+    private string? sourceType;
+    private string? format;
+    private string? status;
+    private int pageNumber = 1;
+    private int pageSize = 10;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override Task OnInitializedAsync()
+    {
+        return LoadAsync();
+    }
+
+    private async Task SearchAsync()
+    {
+        pageNumber = 1;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            searchResult = await PublishingApiClient.SearchJobsAsync(
+                new PublishJobSearchRequest(sourceType, null, format, status, pageNumber, pageSize, "CreatedAt", "Desc"),
+                CancellationToken.None);
+            jobs = searchResult.Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            jobs = [];
+            searchResult = new PublishJobSearchResponse([], pageNumber, pageSize, 0, 0, false, false);
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task PreviousPageAsync()
+    {
+        if (!searchResult.HasPreviousPage)
+        {
+            return;
+        }
+
+        pageNumber--;
+        await LoadAsync();
+    }
+
+    private async Task NextPageAsync()
+    {
+        if (!searchResult.HasNextPage)
+        {
+            return;
+        }
+
+        pageNumber++;
+        await LoadAsync();
+    }
+}

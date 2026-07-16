@@ -1,0 +1,1882 @@
+﻿{
+    "project":  "EnglishMaster",
+    "queue_version":  "1.0.0",
+    "current_range":  {
+                          "start":  58,
+                          "end":  161
+                      },
+    "items":  [
+                  {
+                      "id":  58,
+                      "title":  "Prepare Staging Deployment",
+                      "file":  "prompts/queue/058-prepare-staging-deployment.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/058-prepare-staging-deployment.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-15T00:16:03",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  59,
+                      "title":  "Release Build Verification",
+                      "file":  "prompts/queue/059-release-build-verification.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         58
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/059-release-build-verification.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-15T00:17:21",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  60,
+                      "title":  "Smoke Test Scripts",
+                      "file":  "prompts/queue/060-smoke-test-scripts.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         59
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/060-smoke-test-scripts.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:24:20",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  61,
+                      "title":  "Release Tag Prep",
+                      "file":  "prompts/queue/061-release-tag-prep.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         60
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/061-release-tag-prep.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:25:08",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  62,
+                      "title":  "Staging Verification",
+                      "file":  "prompts/queue/062-staging-verification.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         61
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/062-staging-verification.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:25:55",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  63,
+                      "title":  "Bug Bash",
+                      "file":  "prompts/queue/063-bug-bash.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         62
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/063-bug-bash.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:26:44",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  64,
+                      "title":  "Final Release Gate",
+                      "file":  "prompts/queue/064-final-release-gate.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         63
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/064-final-release-gate.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:27:27",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  65,
+                      "title":  "Release Tag Instructions",
+                      "file":  "prompts/queue/065-release-tag-instructions.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         64
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/065-release-tag-instructions.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:28:27",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  66,
+                      "title":  "Github Release Prep",
+                      "file":  "prompts/queue/066-github-release-prep.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         65
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/066-github-release-prep.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:29:37",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  67,
+                      "title":  "Uat Plan",
+                      "file":  "prompts/queue/067-uat-plan.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         66
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/067-uat-plan.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:31:50",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  68,
+                      "title":  "Production Readiness",
+                      "file":  "prompts/queue/068-production-readiness.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         67
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/068-production-readiness.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:32:36",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  69,
+                      "title":  "Issue Triage",
+                      "file":  "prompts/queue/069-issue-triage.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         68
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/069-issue-triage.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:35:03",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  70,
+                      "title":  "Execute Uat Pilot",
+                      "file":  "prompts/queue/070-execute-uat-pilot.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         69
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/070-execute-uat-pilot.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:35:50",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  71,
+                      "title":  "Bug Fix Sprint",
+                      "file":  "prompts/queue/071-bug-fix-sprint.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         70
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/071-bug-fix-sprint.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:36:54",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  72,
+                      "title":  "Ux Consistency Pass",
+                      "file":  "prompts/queue/072-ux-consistency-pass.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         71
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/072-ux-consistency-pass.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:37:38",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  73,
+                      "title":  "V020 Roadmap",
+                      "file":  "prompts/queue/073-v020-roadmap.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         72
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/073-v020-roadmap.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:42:40",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  74,
+                      "title":  "Content Review Workflow",
+                      "file":  "prompts/queue/074-content-review-workflow.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         73
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/074-content-review-workflow.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:43:26",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  75,
+                      "title":  "Review Content Workflow",
+                      "file":  "prompts/queue/075-review-content-workflow.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         74
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/075-review-content-workflow.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:44:46",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  76,
+                      "title":  "Docs Content Workflow",
+                      "file":  "prompts/queue/076-docs-content-workflow.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         75
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/076-docs-content-workflow.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:47:27",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  77,
+                      "title":  "Commit Summary",
+                      "file":  "prompts/queue/077-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         76
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/077-commit-summary.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:48:20",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  78,
+                      "title":  "Better Publishing",
+                      "file":  "prompts/queue/078-better-publishing.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         77
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/078-better-publishing.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:49:06",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  79,
+                      "title":  "Review Better Publishing",
+                      "file":  "prompts/queue/079-review-better-publishing.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         78
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/079-review-better-publishing.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:50:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  80,
+                      "title":  "Docs Better Publishing",
+                      "file":  "prompts/queue/080-docs-better-publishing.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         79
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/080-docs-better-publishing.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:53:21",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  81,
+                      "title":  "Commit Summary",
+                      "file":  "prompts/queue/081-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         80
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/081-commit-summary.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:54:05",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  82,
+                      "title":  "Student Facing Learning Pages",
+                      "file":  "prompts/queue/082-student-facing-learning-pages.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         81
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/082-student-facing-learning-pages.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:54:57",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  83,
+                      "title":  "Review Student Learning Pages",
+                      "file":  "prompts/queue/083-review-student-learning-pages.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         82
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/083-review-student-learning-pages.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-14T23:56:05",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  84,
+                      "title":  "Docs Student Learning Pages",
+                      "file":  "prompts/queue/084-docs-student-learning-pages.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         83
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/084-docs-student-learning-pages.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-15T00:00:49",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  85,
+                      "title":  "Commit Summary",
+                      "file":  "prompts/queue/085-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         84
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/085-commit-summary.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-15T00:01:58",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  86,
+                      "title":  "Student Progress Learning Tracking",
+                      "file":  "prompts/queue/086-student-progress-learning-tracking.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         85
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/086-student-progress-learning-tracking.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-15T00:02:44",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  87,
+                      "title":  "Review Student Progress",
+                      "file":  "prompts/queue/087-review-student-progress.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         86
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/087-review-student-progress.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-15T00:03:41",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  88,
+                      "title":  "Docs Student Progress",
+                      "file":  "prompts/queue/088-docs-student-progress.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         87
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/088-docs-student-progress.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-15T00:06:27",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  89,
+                      "title":  "Commit Summary",
+                      "file":  "prompts/queue/089-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         88
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/089-commit-summary.log",
+                      "notes":  "Prompt completed successfully.",
+                      "updated_at":  "2026-07-15T00:07:12",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  90,
+                      "title":  "Basic Reporting Admin Dashboard",
+                      "file":  "prompts/queue/090-basic-reporting-admin-dashboard.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         89
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/090-basic-reporting-admin-dashboard.log",
+                      "notes":  "Completed by direct repair after nested Codex sandbox failure.",
+                      "updated_at":  "2026-07-15T07:31:49",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  91,
+                      "title":  "Review Reporting Analytics",
+                      "file":  "prompts/queue/091-review-reporting-analytics.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         90
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/091-review-reporting-analytics.log",
+                      "notes":  "Completed by direct repair after nested Codex sandbox failure.",
+                      "updated_at":  "2026-07-15T07:31:49",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  92,
+                      "title":  "Docs Reporting",
+                      "file":  "prompts/queue/092-docs-reporting.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         91
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/092-docs-reporting.log",
+                      "notes":  "Completed by direct repair after nested Codex sandbox failure.",
+                      "updated_at":  "2026-07-15T07:31:49",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  93,
+                      "title":  "Commit Summary",
+                      "file":  "prompts/queue/093-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         92
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/093-commit-summary.log",
+                      "notes":  "Prompt completed successfully by direct repair. See log: logs/codex-queue/093-commit-summary.log",
+                      "updated_at":  "2026-07-15T07:31:49",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  94,
+                      "title":  "Notification Email Foundation",
+                      "file":  "prompts/queue/094-notification-email-foundation.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         93
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/094-notification-email-foundation.log",
+                      "notes":  "Completed by direct implementation. Build and tests passed.",
+                      "updated_at":  "2026-07-15T00:54:40",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  95,
+                      "title":  "Review Notification Email",
+                      "file":  "prompts/queue/095-review-notification-email.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         94
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/095-review-notification-email.log",
+                      "notes":  "Notification/email foundation reviewed and hardened. Build and tests passed.",
+                      "updated_at":  "2026-07-15T01:04:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  96,
+                      "title":  "Docs Notification Email",
+                      "file":  "prompts/queue/096-docs-notification-email.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         95
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/096-docs-notification-email.log",
+                      "notes":  "Notification/email documentation created and updated. Build and tests passed.",
+                      "updated_at":  "2026-07-15T01:11:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  97,
+                      "title":  "Commit Summary",
+                      "file":  "prompts/queue/097-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         96
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/097-commit-summary.log",
+                      "notes":  "Commit and PR summary prepared. Build, tests, temp, and provider credential checks passed.",
+                      "updated_at":  "2026-07-15T01:16:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  98,
+                      "title":  "Production Deployment Hardening",
+                      "file":  "prompts/queue/098-production-deployment-hardening.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         97
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/098-production-deployment-hardening.log",
+                      "notes":  "Production deployment readiness hardened and documented. Build and tests passed.",
+                      "updated_at":  "2026-07-15T01:28:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  99,
+                      "title":  "Backup Restore Disaster Recovery",
+                      "file":  "prompts/queue/099-backup-restore-disaster-recovery.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         98
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/099-backup-restore-disaster-recovery.log",
+                      "notes":  "Backup, restore, and disaster recovery docs/scripts added. Build and tests passed.",
+                      "updated_at":  "2026-07-15T01:38:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  100,
+                      "title":  "Production Monitoring Operations Checklist",
+                      "file":  "prompts/queue/100-production-monitoring-operations-checklist.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         99
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/100-production-monitoring-operations-checklist.log",
+                      "notes":  "Production monitoring, operations, and incident response docs added. Build and tests passed.",
+                      "updated_at":  "2026-07-15T01:44:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  101,
+                      "title":  "Production Hardening Commit Summary",
+                      "file":  "prompts/queue/101-production-hardening-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         100
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/101-production-hardening-commit-summary.log",
+                      "notes":  "Production hardening commit and PR summary prepared. Build, tests, temp, and secret checks completed.",
+                      "updated_at":  "2026-07-15T01:48:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  102,
+                      "title":  "Content Quality Qa System",
+                      "file":  "prompts/queue/102-content-quality-qa-system.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         101
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/102-content-quality-qa-system.log",
+                      "notes":  "Rule-based Content Quality and QA system implemented. Build and tests passed.",
+                      "updated_at":  "2026-07-15T01:56:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  103,
+                      "title":  "Review Content Quality",
+                      "file":  "prompts/queue/103-review-content-quality.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         102
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/103-review-content-quality.log",
+                      "notes":  "Content Quality system reviewed and hardened. Build and tests passed.",
+                      "updated_at":  "2026-07-15T02:04:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  104,
+                      "title":  "Docs Content Quality",
+                      "file":  "prompts/queue/104-docs-content-quality.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         103
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/104-docs-content-quality.log",
+                      "notes":  "Content Quality documentation created and updated. Build and tests passed.",
+                      "updated_at":  "2026-07-15T02:10:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  105,
+                      "title":  "Clean Commit Summary Content Quality Qa System",
+                      "file":  "prompts/queue/105-clean-commit-summary-content-quality-qa-system.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         104
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/105-clean-commit-summary-content-quality-qa-system.log",
+                      "notes":  "Content Quality commit and PR summary prepared. Build, tests, temp, and secret checks completed.",
+                      "updated_at":  "2026-07-15T02:13:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  106,
+                      "title":  "Content Versioning Revision History",
+                      "file":  "prompts/queue/106-content-versioning-revision-history.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         105
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/106-content-versioning-revision-history.log",
+                      "notes":  "Prompt completed successfully. Content revision history, restore requests, UI, migration, and tests added.",
+                      "updated_at":  "2026-07-15T09:14:45",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  107,
+                      "title":  "Review Content Versioning",
+                      "file":  "prompts/queue/107-review-content-versioning.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         106
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/107-review-content-versioning.log",
+                      "notes":  "Prompt completed successfully. Content versioning reviewed and hardened.",
+                      "updated_at":  "2026-07-15T09:20:05",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  108,
+                      "title":  "Docs Content Versioning",
+                      "file":  "prompts/queue/108-docs-content-versioning.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         107
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/108-docs-content-versioning.log",
+                      "notes":  "Prompt completed successfully. Content versioning docs created and route/roadmap docs updated.",
+                      "updated_at":  "2026-07-15T09:25:59",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  109,
+                      "title":  "Commit Summary",
+                      "file":  "prompts/queue/109-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         108
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/109-commit-summary.log",
+                      "notes":  "Prompt completed successfully. Commit and PR summary prepared for content versioning.",
+                      "updated_at":  "2026-07-15T09:29:05",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  110,
+                      "title":  "Content Bulk Operations",
+                      "file":  "prompts/queue/110-content-bulk-operations.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         109
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/110-content-bulk-operations.log",
+                      "notes":  "Prompt completed successfully. Bulk operations module, API, UI, migration, permissions, and tests added.",
+                      "updated_at":  "2026-07-15T09:50:27",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  111,
+                      "title":  "Review Harden Content Bulk Operations",
+                      "file":  "prompts/queue/111-review-harden-content-bulk-operations.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         110
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/111-review-harden-content-bulk-operations.log",
+                      "notes":  "Prompt completed successfully. Bulk operations reviewed and hardened.",
+                      "updated_at":  "2026-07-15T09:54:25",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  112,
+                      "title":  "Docs Content Bulk Operations",
+                      "file":  "prompts/queue/112-docs-content-bulk-operations.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         111
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/112-docs-content-bulk-operations.log",
+                      "notes":  "Prompt completed successfully. Bulk operations docs created and route/roadmap docs updated.",
+                      "updated_at":  "2026-07-15T09:57:54",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  113,
+                      "title":  "Commit Summary",
+                      "file":  "prompts/queue/113-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         112
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/113-commit-summary.log",
+                      "notes":  "Prompt completed successfully. Commit and PR summary prepared for bulk operations.",
+                      "updated_at":  "2026-07-15T09:58:59",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  114,
+                      "title":  "Advanced Import Validation",
+                      "file":  "prompts/queue/114-advanced-import-validation.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         113
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/114-advanced-import-validation.log",
+                      "notes":  "Advanced Import Validation completed. Implemented import job history, row validation, Word CSV/JSON import validation/run/rollback, import permissions, API endpoints, admin pages, migration, and integration tests. Limitations: detailed validation/run currently focused on Words; other import types can upload/store rows but need full validators/runners; UI upload uses pasted content; CSV parser is intentionally simple.",
+                      "updated_at":  "2026-07-15T10:22:21",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  115,
+                      "title":  "Review Advanced Import",
+                      "file":  "prompts/queue/115-review-advanced-import.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         114
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/115-review-advanced-import.log",
+                      "notes":  "Review/harden completed. Locked import validation lifecycle, added upload safety checks for supported type, size, extension and JSON parse failures, expanded validation rules for category, tag, grammar, lesson, course, book and quiz previews, and added hardening integration tests. Build/test passed.",
+                      "updated_at":  "2026-07-15T10:31:58",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  116,
+                      "title":  "Documentation Advanced Import Validation Content Migration Tools",
+                      "file":  "prompts/queue/116-documentation-advanced-import-validation-content-migration-tools.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         115
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/116-documentation-advanced-import-validation-content-migration-tools.log",
+                      "notes":  "Documentation completed for advanced import module, entities, API, security, admin UI, content migration operations, admin routes and v0.2.0 roadmap. Build/test passed.",
+                      "updated_at":  "2026-07-15T10:37:21",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  117,
+                      "title":  "Commit Summary",
+                      "file":  "prompts/queue/117-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         116
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/117-commit-summary.log",
+                      "notes":  "Clean commit summary prepared without committing. Checked focused git status, temp files, secret-like strings, documentation, security, permissions, routes and test evidence. Build/test already passed.",
+                      "updated_at":  "2026-07-15T10:38:24",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  118,
+                      "title":  "Better Public Search Discovery",
+                      "file":  "prompts/queue/118-better-public-search-discovery.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         117
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/118-better-public-search-discovery.log",
+                      "notes":  "Better Public Search completed. Added public search contracts, application query/repository contract, EF repository, public API endpoints, anonymous public API access, Web API client, /search page, nav link, and integration tests. Build/test passed.",
+                      "updated_at":  "2026-07-15T10:51:30",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  119,
+                      "title":  "Review Public Search",
+                      "file":  "prompts/queue/119-review-public-search.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         118
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/119-review-public-search.log",
+                      "notes":  "Review/harden completed for public search. Added route query aliases, SQL-friendlier CEFR enum filtering, search pagination reset, extra tests for aliases, special characters and suggestions. Build/test passed.",
+                      "updated_at":  "2026-07-15T10:56:06",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  120,
+                      "title":  "Docs Public Search",
+                      "file":  "prompts/queue/120-docs-public-search.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         119
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/120-docs-public-search.log",
+                      "notes":  "Public search documentation completed. Added module, API, safety, UI docs and updated public routes, public content safety, public UI guidelines and roadmap. Build/test passed.",
+                      "updated_at":  "2026-07-15T10:59:17",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  121,
+                      "title":  "Commit Summary",
+                      "file":  "prompts/queue/121-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         120
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/121-commit-summary.log",
+                      "notes":  "Clean commit summary prepared without committing. Checked focused git status, temp files, secret-like strings, public search docs, safety, performance and test evidence. Build/test already passed.",
+                      "updated_at":  "2026-07-15T11:02:51",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  122,
+                      "title":  "Learning Recommendations",
+                      "file":  "prompts/queue/122-learning-recommendations.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         121
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/122-learning-recommendations.log",
+                      "notes":  "Learning Recommendations completed. Added minimal learning progress/profile/attempt foundation, rule-based recommendations, authenticated /me/learning API endpoints, Web client/pages, navigation, and integration tests. Build/test passed.",
+                      "updated_at":  "2026-07-15T11:16:01",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  123,
+                      "title":  "Review Learning Recommendations",
+                      "file":  "prompts/queue/123-review-learning-recommendations.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         122
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/123-review-learning-recommendations.log",
+                      "notes":  "Review/harden completed for learning recommendations. Added fail-safe user id handling, EF configurations/indexes, tests for other-user isolation and all-lessons-completed next lesson. Build/test passed.",
+                      "updated_at":  "2026-07-15T11:21:52",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  124,
+                      "title":  "Update Documentation Learning Recommendations Continue Learning",
+                      "file":  "prompts/queue/124-update-documentation-learning-recommendations-continue-learning.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         123
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/124-update-documentation-learning-recommendations-continue-learning.log",
+                      "notes":  "Learning recommendations documentation completed. Added module/API/security/UI docs and updated public routes and roadmap. Build/test passed.",
+                      "updated_at":  "2026-07-15T11:24:36",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  125,
+                      "title":  "Commit Summary",
+                      "file":  "prompts/queue/125-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         124
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/125-commit-summary.log",
+                      "notes":  "Clean commit summary prepared without committing. Checked focused git status, temp files, secret-like strings, docs, security, performance and test evidence. Build/test already passed.",
+                      "updated_at":  "2026-07-15T11:25:43",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  126,
+                      "title":  "Practice System Spaced Repetition",
+                      "file":  "prompts/queue/126-practice-system-spaced-repetition.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         125
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/126-practice-system-spaced-repetition.log",
+                      "notes":  "Practice system and simple spaced repetition foundation completed. Full build and tests passed.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  127,
+                      "title":  "Review Practice System",
+                      "file":  "prompts/queue/127-review-practice-system.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         126
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/127-review-practice-system.log",
+                      "notes":  "Practice system review and hardening completed. Full build and tests passed.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  128,
+                      "title":  "Update Documentation Practice System Spaced Repetition Foundation",
+                      "file":  "prompts/queue/128-update-documentation-practice-system-spaced-repetition-foundation.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         127
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/128-update-documentation-practice-system-spaced-repetition-foundation.log",
+                      "notes":  "Practice system and spaced repetition documentation completed. Full build and tests passed.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  129,
+                      "title":  "Commit Summary",
+                      "file":  "prompts/queue/129-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         128
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/129-commit-summary.log",
+                      "notes":  "Practice system commit summary prepared. Build/test evidence recorded.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  130,
+                      "title":  "Learning Goals Daily Study Plan",
+                      "file":  "prompts/queue/130-learning-goals-daily-study-plan.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         129
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/130-learning-goals-daily-study-plan.log",
+                      "notes":  "Learning goals and daily study plan implemented. Full build and tests passed.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  131,
+                      "title":  "Review Learning Goals Study Plan",
+                      "file":  "prompts/queue/131-review-learning-goals-study-plan.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         130
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/131-review-learning-goals-study-plan.log",
+                      "notes":  "Learning goals and study plan review hardening completed. Full build and tests passed.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  132,
+                      "title":  "Update Documentation Learning Goals Daily Study Plan",
+                      "file":  "prompts/queue/132-update-documentation-learning-goals-daily-study-plan.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         131
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/132-update-documentation-learning-goals-daily-study-plan.log",
+                      "notes":  "Learning goals and daily study plan documentation completed. Full build and tests passed.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  133,
+                      "title":  "Commit Summary",
+                      "file":  "prompts/queue/133-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         132
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/133-commit-summary.log",
+                      "notes":  "Learning goals and daily study plan commit summary prepared. Build/test evidence recorded.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  134,
+                      "title":  "Streaks Achievements Motivation",
+                      "file":  "prompts/queue/134-streaks-achievements-motivation.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         133
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/134-streaks-achievements-motivation.log",
+                      "notes":  "Streaks, achievements, and motivation foundation implemented. Full build and tests passed.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  135,
+                      "title":  "Review Streaks Achievements",
+                      "file":  "prompts/queue/135-review-streaks-achievements.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         134
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/135-review-streaks-achievements.log",
+                      "notes":  "Motivation review hardening completed. Full build and tests passed.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  136,
+                      "title":  "Docs Motivation",
+                      "file":  "prompts/queue/136-docs-motivation.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         135
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/136-docs-motivation.log",
+                      "notes":  "Motivation documentation completed. Full build and tests passed.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  137,
+                      "title":  "Commit Summary",
+                      "file":  "prompts/queue/137-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         136
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/137-commit-summary.log",
+                      "notes":  "Motivation commit summary prepared. Build/test evidence recorded.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  138,
+                      "title":  "Student Weekly Learning Report",
+                      "file":  "prompts/queue/138-student-weekly-learning-report.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         137
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/138-student-weekly-learning-report.log",
+                      "notes":  "Weekly learning reports implemented with API endpoints, learner pages, dashboard summary and integration coverage. dotnet test --no-restore passed.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  139,
+                      "title":  "Eview Harden Student Weekly Summary Learning Report",
+                      "file":  "prompts/queue/139-eview-harden-student-weekly-summary-learning-report.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         138
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/139-eview-harden-student-weekly-summary-learning-report.log",
+                      "notes":  "Weekly report review/hardening completed. Tightened by-date parsing, active-day calculation and endpoint/insight coverage. Build/test passed.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  140,
+                      "title":  "Docs Weekly Learning Report",
+                      "file":  "prompts/queue/140-docs-weekly-learning-report.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         139
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/140-docs-weekly-learning-report.log",
+                      "notes":  "Weekly learning report documentation created and route/dashboard/roadmap docs updated. Build/test passed.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  141,
+                      "title":  "Clean Commit Summary",
+                      "file":  "prompts/queue/141-clean-commit-summary.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         140
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/141-clean-commit-summary.log",
+                      "notes":  "Clean weekly learning report commit summary prepared without committing. Build/test, docs, security, performance and limitation evidence recorded.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  142,
+                      "title":  "V020 Release Candidate Stabilization",
+                      "file":  "prompts/queue/142-v020-release-candidate-stabilization.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         141
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/142-v020-release-candidate-stabilization.log",
+                      "notes":  "v0.2.0 RC stabilization completed. Restore/build/test passed, required routes verified, RC notes created, docs checked.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  143,
+                      "title":  "Perform Security Permission Audit",
+                      "file":  "prompts/queue/143-perform-security-permission-audit.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         142
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/143-perform-security-permission-audit.log",
+                      "notes":  "Security permission audit completed. Fixed import path-like filename validation and added test. Build/test passed.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  144,
+                      "title":  "V020 Uat Smoke Release Docs",
+                      "file":  "prompts/queue/144-v020-uat-smoke-release-docs.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         143
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/144-v020-uat-smoke-release-docs.log",
+                      "notes":  "v0.2.0 release notes, limitations, smoke, UAT, regression, go-live and rollback docs created. README/roadmap updated. Build/test passed.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  145,
+                      "title":  "V020 Rc Commit Tag Prep",
+                      "file":  "prompts/queue/145-v020-rc-commit-tag-prep.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         144
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/145-v020-rc-commit-tag-prep.log",
+                      "notes":  "v0.2.0 RC commit/tag prep completed with safe instructions only. No commit, tag, push, or deploy executed.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  146,
+                      "title":  "Smoke Test",
+                      "file":  "prompts/queue/146-smoke-test.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         145
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/146-smoke-test.log",
+                      "notes":  "Automated v0.2.0 smoke test executed and results documented. Build/test passed; manual browser and deployed health checks remain required.",
+                      "updated_at":  "2026-07-15T00:00:00",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  147,
+                      "title":  "V020 Uat Tracker",
+                      "file":  "prompts/queue/147-v020-uat-tracker.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         146
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/147-v020-uat-tracker.log",
+                      "notes":  "Created UAT results and defect log. Manual UAT remains Not Run. Build and tests passed.",
+                      "updated_at":  "2026-07-15",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  148,
+                      "title":  "Prompt",
+                      "file":  "prompts/queue/148-prompt.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         147
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/148-prompt.log",
+                      "notes":  "Reviewed blocker/high/security defects. No confirmed defects to fix. Defect log and bug fix summary updated. Build/test passed.",
+                      "updated_at":  "2026-07-15",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  149,
+                      "title":  "V020 Rc Final Decision",
+                      "file":  "prompts/queue/149-v020-rc-final-decision.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         148
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/149-v020-rc-final-decision.log",
+                      "notes":  "Created RC decision. Status: Ready for UAT only. Restore/build/test passed. Safe tag commands documented but not run.",
+                      "updated_at":  "2026-07-15",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  150,
+                      "title":  "Prompt",
+                      "file":  "prompts/queue/150-prompt.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         149
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/150-prompt.log",
+                      "notes":  "Created staging deployment checklist and validation plan. Restore/build/test passed. Ready for staging preparation; no tag/deploy executed.",
+                      "updated_at":  "2026-07-15",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  151,
+                      "title":  "Execute Staging Smoke Uat",
+                      "file":  "prompts/queue/151-execute-staging-smoke-uat.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         150
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/151-execute-staging-smoke-uat.log",
+                      "notes":  "Automated checks passed and staging validation results created. Manual staging remains Not Run due to no staging URL/deployment evidence. No defects fixed.",
+                      "updated_at":  "2026-07-15",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  152,
+                      "title":  "Final V020 Release Decision",
+                      "file":  "prompts/queue/152-final-v020-release-decision.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         151
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/152-final-v020-release-decision.log",
+                      "notes":  "Created final release decision. Production release/go-live blocked by missing staging/manual/ops evidence. Restore/build/test passed; final tag commands documented only.",
+                      "updated_at":  "2026-07-15",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  153,
+                      "title":  "Prompt",
+                      "file":  "prompts/queue/153-prompt.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         152
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/153-prompt.log",
+                      "notes":  "Prepared final release package docs, changelog, monitoring, hotfix, production smoke, and final summary. Build/test passed.",
+                      "updated_at":  "2026-07-15",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  154,
+                      "title":  "Production Go Live Execution Prep",
+                      "file":  "prompts/queue/154-production-go-live-execution-prep.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         153
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/154-production-go-live-execution-prep.log",
+                      "notes":  "Created go-live execution record. Restore/build/test passed. Recommendation: No-Go until staging/manual/ops gates complete. No tag/deploy executed.",
+                      "updated_at":  "2026-07-15",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  155,
+                      "title":  "Production Smoke Test",
+                      "file":  "prompts/queue/155-production-smoke-test.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         154
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/155-production-smoke-test.log",
+                      "notes":  "Created production smoke test results. Build/test passed. Manual production smoke remains Not Run due to no production deployment/URL/evidence. No hotfix required.",
+                      "updated_at":  "2026-07-15",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  156,
+                      "title":  "Prompt",
+                      "file":  "prompts/queue/156-prompt.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         155
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/156-prompt.log",
+                      "notes":  "Created monitoring results and hotfix triage. No confirmed production issues; hotfix/rollback not required. Build/test passed.",
+                      "updated_at":  "2026-07-15",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  157,
+                      "title":  "Release Closure V030 Planning Gate",
+                      "file":  "prompts/queue/157-release-closure-v030-planning-gate.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         156
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/157-release-closure-v030-planning-gate.log",
+                      "notes":  "Created v0.2.0 closure and v0.3.0 planning gate/backlog/decision matrix. Build/test passed. No v0.3.0 implementation started.",
+                      "updated_at":  "2026-07-16",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  158,
+                      "title":  "V030 Roadmap Prioritization",
+                      "file":  "prompts/queue/158-v030-roadmap-prioritization.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         157
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/158-v030-roadmap-prioritization.log",
+                      "notes":  "Created v0.3.0 roadmap prioritization, theme analysis, and weighted priority score docs. Planning only; no implementation.",
+                      "updated_at":  "2026-07-16",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  159,
+                      "title":  "V030 Scope Decision Mvp Slice",
+                      "file":  "prompts/queue/159-v030-scope-decision-mvp-slice.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         158
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/159-v030-scope-decision-mvp-slice.log",
+                      "notes":  "Created v0.3.0 scope decision, MVP slice, acceptance criteria, and out-of-scope docs. Planning only; no implementation.",
+                      "updated_at":  "2026-07-16",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  160,
+                      "title":  "V030 Architecture Risk Review",
+                      "file":  "prompts/queue/160-v030-architecture-risk-review.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         159
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/160-v030-architecture-risk-review.log",
+                      "notes":  "Created v0.3.0 architecture, security, operational risk, and test strategy docs. Go for implementation planning with guardrails. No implementation.",
+                      "updated_at":  "2026-07-16",
+                      "created_at":  ""
+                  },
+                  {
+                      "id":  161,
+                      "title":  "V030 Implementation Plan Prompt Queue",
+                      "file":  "prompts/queue/161-v030-implementation-plan-prompt-queue.md",
+                      "status":  "completed",
+                      "phase":  "queue",
+                      "attempts":  0,
+                      "max_attempts":  3,
+                      "depends_on":  [
+                                         160
+                                     ],
+                      "run_build_after":  true,
+                      "run_test_after":  true,
+                      "log_file":  "logs/codex-queue/161-v030-implementation-plan-prompt-queue.log",
+                      "notes":  "Created v0.3.0 implementation plan, prompt queue, release plan, and prompts README. Planning only; Prompt 162 is next if explicitly approved.",
+                      "updated_at":  "2026-07-16",
+                      "created_at":  ""
+                  }
+              ]
+}

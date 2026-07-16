@@ -1,0 +1,308 @@
+@page "/admin/words/{Id:guid}"
+@rendermode InteractiveServer
+@inject IWordsApiClient WordsApiClient
+
+<PageTitle>@(word is null ? "Word" : word.Text)</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Vocabulary</p>
+        <h1>@(word is null ? "Word" : word.Text)</h1>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.Words.Index">Back</a>
+        @if (word is not null)
+        {
+            <a class="button" href="@AdminRoutes.ContentRevisions.Timeline("Word", word.Id)">Revision History</a>
+            <a class="button primary" href="@AdminRoutes.Words.Edit(word.Id)">Edit</a>
+        }
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading word...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Word was not found.</p>
+    </section>
+}
+else if (word is not null)
+{
+    <section class="panel">
+        @if (word.ImageMedia is not null && !string.IsNullOrWhiteSpace(word.ImageMedia.PublicUrl))
+        {
+            <img class="media-preview" src="@word.ImageMedia.PublicUrl" alt="@word.ImageMedia.AltText" />
+        }
+
+        @if (word.AudioMedia is not null && !string.IsNullOrWhiteSpace(word.AudioMedia.PublicUrl))
+        {
+            <audio class="media-player" controls src="@word.AudioMedia.PublicUrl"></audio>
+        }
+
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Text</span>
+                <strong>@word.Text</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Slug</span>
+                <strong>@word.Slug</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">IPA UK</span>
+                <strong>@word.IpaUk</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">IPA US</span>
+                <strong>@word.IpaUs</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Thai Reading</span>
+                <strong>@word.ThaiReading</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Status</span>
+                <strong>@(word.IsActive ? "Active" : "Inactive")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Category</span>
+                <strong>@(word.Category?.Name ?? "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Tags</span>
+                <strong>@FormatTags(word.Tags)</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Image</span>
+                <strong>@FormatMediaName(word.ImageMedia)</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Audio</span>
+                <strong>@FormatMediaName(word.AudioMedia)</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Part of Speech</span>
+                <strong>@word.PartOfSpeech</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">CEFR Level</span>
+                <strong>@word.CefrLevel</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Meaning TH</span>
+                <strong>@word.MeaningTh</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Meaning EN</span>
+                <strong>@word.MeaningEn</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Example EN</span>
+                <strong>@word.ExampleEn</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Example TH</span>
+                <strong>@word.ExampleTh</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Created</span>
+                <strong>@FormatDate(word.CreatedAt)</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Updated</span>
+                <strong>@FormatDate(word.UpdatedAt)</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel pronunciation-panel">
+        <div class="page-header compact-header">
+            <div>
+                <p class="eyebrow">Pronunciation</p>
+                <h1>Pronunciation</h1>
+            </div>
+            @if (word.Pronunciation is null)
+            {
+                <a class="button primary" href="@AdminRoutes.Pronunciations.CreateForWord(word.Id)">Create</a>
+            }
+            else
+            {
+                <a class="button primary" href="@AdminRoutes.Pronunciations.Edit(word.Pronunciation.Id)">Edit</a>
+            }
+        </div>
+
+        @if (word.Pronunciation is null)
+        {
+            <p class="muted">No pronunciation record yet.</p>
+        }
+        else
+        {
+            var pronunciation = word.Pronunciation;
+
+            @if (pronunciation.MouthImageMedia is not null && !string.IsNullOrWhiteSpace(pronunciation.MouthImageMedia.PublicUrl))
+            {
+                <img class="media-preview" src="@pronunciation.MouthImageMedia.PublicUrl" alt="@pronunciation.MouthImageMedia.AltText" />
+            }
+
+            @if (pronunciation.AudioSlowMedia is not null && !string.IsNullOrWhiteSpace(pronunciation.AudioSlowMedia.PublicUrl))
+            {
+                <p class="muted">Slow audio</p>
+                <audio class="media-player" controls src="@pronunciation.AudioSlowMedia.PublicUrl"></audio>
+            }
+
+            @if (pronunciation.AudioNormalMedia is not null && !string.IsNullOrWhiteSpace(pronunciation.AudioNormalMedia.PublicUrl))
+            {
+                <p class="muted">Normal audio</p>
+                <audio class="media-player" controls src="@pronunciation.AudioNormalMedia.PublicUrl"></audio>
+            }
+
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="muted">IPA UK</span>
+                    <strong>@pronunciation.IpaUk</strong>
+                </div>
+                <div class="detail-item">
+                    <span class="muted">IPA US</span>
+                    <strong>@pronunciation.IpaUs</strong>
+                </div>
+                <div class="detail-item">
+                    <span class="muted">Thai Reading</span>
+                    <strong>@pronunciation.ThaiReading</strong>
+                </div>
+                <div class="detail-item">
+                    <span class="muted">Syllables</span>
+                    <strong>@pronunciation.Syllables</strong>
+                </div>
+                <div class="detail-item">
+                    <span class="muted">Stress Pattern</span>
+                    <strong>@pronunciation.StressPattern</strong>
+                </div>
+                <div class="detail-item">
+                    <span class="muted">Status</span>
+                    <strong>@(pronunciation.IsActive ? "Active" : "Inactive")</strong>
+                </div>
+                <div class="detail-item full">
+                    <span class="muted">Mouth Position</span>
+                    <strong>@pronunciation.MouthPosition</strong>
+                </div>
+                <div class="detail-item full">
+                    <span class="muted">Tongue Position</span>
+                    <strong>@pronunciation.TonguePosition</strong>
+                </div>
+                <div class="detail-item full">
+                    <span class="muted">Common Mistake</span>
+                    <strong>@pronunciation.CommonMistake</strong>
+                </div>
+                <div class="detail-item full">
+                    <span class="muted">Practice Note</span>
+                    <strong>@pronunciation.PracticeNote</strong>
+                </div>
+            </div>
+
+            @if (pronunciation.MinimalPairs.Count == 0)
+            {
+                <p class="muted">No minimal pairs yet.</p>
+            }
+            else
+            {
+                <div class="table-wrap nested-table">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Pair Word</th>
+                                <th>IPA</th>
+                                <th>Thai Reading</th>
+                                <th>Difference</th>
+                                <th>Audio</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var pair in pronunciation.MinimalPairs.OrderBy(item => item.SortOrder).ThenBy(item => item.PairWordText))
+                            {
+                                <tr>
+                                    <td>@pair.PairWordText</td>
+                                    <td>@pair.PairIpa</td>
+                                    <td>@pair.PairThaiReading</td>
+                                    <td>@pair.DifferenceNote</td>
+                                    <td>
+                                        @if (pair.AudioMedia is not null && !string.IsNullOrWhiteSpace(pair.AudioMedia.PublicUrl))
+                                        {
+                                            <audio class="media-player compact" controls src="@pair.AudioMedia.PublicUrl"></audio>
+                                        }
+                                        else
+                                        {
+                                            <span>-</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private WordDto? word;
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            word = await WordsApiClient.GetAsync(Id, CancellationToken.None);
+            notFound = word is null;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static string FormatDate(DateTimeOffset value)
+    {
+        return value.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+    }
+
+    private static string FormatTags(IReadOnlyCollection<WordTagDto> tags)
+    {
+        return tags.Count == 0
+            ? "-"
+            : string.Join(", ", tags.Select(tag => tag.Name));
+    }
+
+    private static string FormatMediaName(WordMediaDto? media)
+    {
+        if (media is null)
+        {
+            return "-";
+        }
+
+        return string.IsNullOrWhiteSpace(media.AltText)
+            ? media.FileName
+            : media.AltText;
+    }
+}

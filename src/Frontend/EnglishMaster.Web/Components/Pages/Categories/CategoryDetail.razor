@@ -1,0 +1,93 @@
+@page "/admin/categories/{Id:guid}"
+@rendermode InteractiveServer
+@inject ICategoriesApiClient CategoriesApiClient
+
+<PageTitle>@(category is null ? "Category" : category.Name)</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Vocabulary</p>
+        <h1>@(category is null ? "Category" : category.Name)</h1>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.Categories.Index">Back</a>
+        @if (category is not null)
+        {
+            <a class="button primary" href="@AdminRoutes.Categories.Edit(category.Id)">Edit</a>
+        }
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading category...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Category was not found.</p>
+    </section>
+}
+else if (category is not null)
+{
+    <section class="panel">
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Name</span>
+                <strong>@category.Name</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Slug</span>
+                <strong>@category.Slug</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Sort Order</span>
+                <strong>@category.SortOrder</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Status</span>
+                <strong>@(category.IsActive ? "Active" : "Inactive")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Description</span>
+                <strong>@category.Description</strong>
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private CategoryDto? category;
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            category = await CategoriesApiClient.GetAsync(Id, CancellationToken.None);
+            notFound = category is null;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

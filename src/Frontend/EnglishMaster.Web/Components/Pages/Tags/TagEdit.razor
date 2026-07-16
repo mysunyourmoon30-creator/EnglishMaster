@@ -1,0 +1,102 @@
+@page "/admin/tags/{Id:guid}/edit"
+@rendermode InteractiveServer
+@inject ITagsApiClient TagsApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Tag</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Vocabulary</p>
+        <h1>Edit Tag</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <p class="muted">Loading tag...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Tag was not found.</p>
+        <a class="button" href="@AdminRoutes.Tags.Index">Back to Tags</a>
+    </section>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert error">@errorMessage</div>
+    }
+
+    <section class="panel">
+        <TagForm Model="model"
+                 ValidationErrors="validationErrors"
+                 IsSaving="isSaving"
+                 ShowActiveToggle="true"
+                 SubmitText="Save"
+                 OnValidSubmit="SaveAsync" />
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private TagFormModel model = new();
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSaving;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            var tag = await TagsApiClient.GetAsync(Id, CancellationToken.None);
+            if (tag is null)
+            {
+                notFound = true;
+                return;
+            }
+
+            model = TagFormModel.FromDto(tag);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            await TagsApiClient.UpdateAsync(Id, model.ToUpdateRequest(), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.Tags.Index);
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

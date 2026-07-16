@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EnglishMaster.Application\EnglishMaster.Application.csproj" />
+    <ProjectReference Include="..\EnglishMaster.Infrastructure\EnglishMaster.Infrastructure.csproj" />
+    <ProjectReference Include="..\EnglishMaster.Contracts\EnglishMaster.Contracts.csproj" />
+    <ProjectReference Include="..\EnglishMaster.Shared\EnglishMaster.Shared.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

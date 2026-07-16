@@ -1,0 +1,88 @@
+@page "/admin/lessons/create"
+@rendermode InteractiveServer
+@inject ILessonApiClient LessonApiClient
+@inject ICategoriesApiClient CategoriesApiClient
+@inject IMediaApiClient MediaApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>New Lesson</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Lessons</p>
+        <h1>New Lesson</h1>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading...</p>
+}
+else
+{
+    <section class="panel">
+        <LessonForm Model="model"
+                    Categories="categories"
+                    ThumbnailMediaOptions="thumbnailMediaOptions"
+                    ValidationErrors="validationErrors"
+                    IsSaving="isSaving"
+                    SubmitText="Create"
+                    OnValidSubmit="SaveAsync" />
+    </section>
+}
+
+@code {
+    private readonly LessonFormModel model = new();
+    private IReadOnlyCollection<CategoryDto> categories = [];
+    private IReadOnlyCollection<MediaDto> thumbnailMediaOptions = [];
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            categories = (await CategoriesApiClient.SearchAsync(search: null, isActive: true, CancellationToken.None)).Items;
+            thumbnailMediaOptions = (await MediaApiClient.SearchAsync(
+                new MediaSearchRequest(MediaType: "Image", IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            var lesson = await LessonApiClient.CreateAsync(model.ToCreateRequest(), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.Lessons.Detail(lesson.Id));
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

@@ -1,0 +1,332 @@
+@page "/admin/quizzes"
+@rendermode InteractiveServer
+@inject IQuizApiClient QuizApiClient
+@inject ICategoriesApiClient CategoriesApiClient
+@inject ILessonApiClient LessonApiClient
+@inject ICourseApiClient CourseApiClient
+@inject IBookApiClient BookApiClient
+
+<PageTitle>Quizzes</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Exercises</p>
+        <h1>Quizzes</h1>
+    </div>
+    <a class="button primary" href="@AdminRoutes.Quizzes.Create">New Quiz</a>
+</section>
+
+<section class="panel">
+    <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+        <label>
+            <span>Search</span>
+            <input class="input" @bind="search" @bind:event="oninput" />
+        </label>
+        <label>
+            <span>CEFR</span>
+            <select class="input" @bind="cefrLevel">
+                <option value="">All</option>
+                @foreach (var level in CefrLevels)
+                {
+                    <option value="@level">@level</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Category</span>
+            <select class="input" @bind="categoryId">
+                <option value="">All</option>
+                @foreach (var category in categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Lesson</span>
+            <select class="input" @bind="lessonId">
+                <option value="">All</option>
+                @foreach (var lesson in lessons)
+                {
+                    <option value="@lesson.Id">@lesson.Title</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Course</span>
+            <select class="input" @bind="courseId">
+                <option value="">All</option>
+                @foreach (var course in courses)
+                {
+                    <option value="@course.Id">@course.Title</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Book</span>
+            <select class="input" @bind="bookId">
+                <option value="">All</option>
+                @foreach (var book in books)
+                {
+                    <option value="@book.Id">@book.Title</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Published</span>
+            <select class="input" @bind="publishedFilter">
+                <option value="">All</option>
+                <option value="true">Published</option>
+                <option value="false">Draft</option>
+            </select>
+        </label>
+        <label>
+            <span>Status</span>
+            <select class="input" @bind="activeFilter">
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+                <option value="">All</option>
+            </select>
+        </label>
+        <label>
+            <span>Sort</span>
+            <select class="input" @bind="sortBy">
+                <option value="Title">Title</option>
+                <option value="CreatedAt">Created</option>
+            </select>
+        </label>
+        <label>
+            <span>Page Size</span>
+            <select class="input" @bind="pageSize">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </label>
+        <button class="button" type="submit">Search</button>
+    </form>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading quizzes...</p>
+}
+else if (quizzes.Count == 0)
+{
+    <section class="panel">
+        <p class="muted">No quizzes found.</p>
+    </section>
+}
+else
+{
+    <section class="table-wrap">
+        <div class="pagination-summary">
+            <span class="muted">Showing page @searchResult.PageNumber of @searchResult.TotalPages (@searchResult.TotalCount quizzes)</span>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>CEFR</th>
+                    <th>Category</th>
+                    <th>Lesson</th>
+                    <th>Questions</th>
+                    <th>Published</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var quiz in quizzes)
+                {
+                    <tr>
+                        <td>
+                            <strong>@quiz.Title</strong>
+                            <span class="muted">@quiz.Summary</span>
+                        </td>
+                        <td>@(quiz.CefrLevel ?? "-")</td>
+                        <td>@(quiz.Category?.Name ?? "-")</td>
+                        <td>@(quiz.Lesson?.Title ?? "-")</td>
+                        <td>@quiz.Questions.Count</td>
+                        <td>@(quiz.IsPublished ? "Published" : "Draft")</td>
+                        <td>@(quiz.IsActive ? "Active" : "Inactive")</td>
+                        <td class="row-actions">
+                            <a class="button small" href="@AdminRoutes.Quizzes.Detail(quiz.Id)">View</a>
+                            <a class="button small" href="@AdminRoutes.Quizzes.Edit(quiz.Id)">Edit</a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(quiz.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="pagination-row">
+            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous</button>
+            <span class="muted">Page @searchResult.PageNumber</span>
+            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next</button>
+        </div>
+    </section>
+}
+
+@code {
+    private static readonly string[] CefrLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+    private IReadOnlyCollection<QuizDto> quizzes = [];
+    private IReadOnlyCollection<CategoryDto> categories = [];
+    private IReadOnlyCollection<LessonDto> lessons = [];
+    private IReadOnlyCollection<CourseDto> courses = [];
+    private IReadOnlyCollection<BookDto> books = [];
+    private QuizSearchResponse searchResult = EmptySearchResult();
+    private string? search;
+    private string? cefrLevel;
+    private string? categoryId;
+    private string? lessonId;
+    private string? courseId;
+    private string? bookId;
+    private string publishedFilter = "";
+    private string activeFilter = "true";
+    private string sortBy = "Title";
+    private int pageNumber = 1;
+    private int pageSize = 10;
+    private string? errorMessage;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            categories = (await CategoriesApiClient.SearchAsync(search: null, isActive: true, CancellationToken.None)).Items;
+            lessons = (await LessonApiClient.SearchAsync(
+                new LessonSearchRequest(IsActive: true, PageSize: 100, SortBy: "Title", SortDirection: "Asc"),
+                CancellationToken.None)).Items;
+            courses = (await CourseApiClient.SearchAsync(
+                new CourseSearchRequest(IsActive: true, PageSize: 100, SortBy: "Title", SortDirection: "Asc"),
+                CancellationToken.None)).Items;
+            books = (await BookApiClient.SearchAsync(
+                new BookSearchRequest(IsActive: true, PageSize: 100, SortBy: "Title", SortDirection: "Asc"),
+                CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException)
+        {
+            categories = [];
+            lessons = [];
+            courses = [];
+            books = [];
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task SearchAsync()
+    {
+        pageNumber = 1;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            searchResult = await QuizApiClient.SearchAsync(
+                new QuizSearchRequest(
+                    search,
+                    string.IsNullOrWhiteSpace(cefrLevel) ? null : cefrLevel,
+                    ParseGuidFilter(categoryId),
+                    ParseGuidFilter(lessonId),
+                    ParseGuidFilter(courseId),
+                    ParseGuidFilter(bookId),
+                    ParsePublishedFilter(),
+                    ParseActiveFilter(),
+                    pageNumber,
+                    pageSize,
+                    sortBy,
+                    "Asc"),
+                CancellationToken.None);
+            quizzes = searchResult.Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            searchResult = EmptySearchResult();
+            quizzes = [];
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task PreviousPageAsync()
+    {
+        if (!searchResult.HasPreviousPage)
+        {
+            return;
+        }
+
+        pageNumber--;
+        await LoadAsync();
+    }
+
+    private async Task NextPageAsync()
+    {
+        if (!searchResult.HasNextPage)
+        {
+            return;
+        }
+
+        pageNumber++;
+        await LoadAsync();
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        errorMessage = null;
+
+        try
+        {
+            await QuizApiClient.DeleteAsync(id, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+
+    private static Guid? ParseGuidFilter(string? value)
+    {
+        return Guid.TryParse(value, out var id) ? id : null;
+    }
+
+    private bool? ParsePublishedFilter()
+    {
+        return publishedFilter switch
+        {
+            "true" => true,
+            "false" => false,
+            _ => null
+        };
+    }
+
+    private bool? ParseActiveFilter()
+    {
+        return activeFilter switch
+        {
+            "true" => true,
+            "false" => false,
+            _ => null
+        };
+    }
+
+    private static QuizSearchResponse EmptySearchResult()
+    {
+        return new QuizSearchResponse([], 1, 10, 0, 0, false, false);
+    }
+}

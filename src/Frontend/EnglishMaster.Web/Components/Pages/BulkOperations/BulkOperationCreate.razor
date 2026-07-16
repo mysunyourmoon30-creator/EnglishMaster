@@ -1,0 +1,109 @@
+@page "/admin/bulk-operations/create"
+@rendermode InteractiveServer
+@inject IBulkOperationApiClient BulkOperationApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Bulk Operation</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Create Bulk Operation</h1>
+    </div>
+    <a class="button secondary" href="@AdminRoutes.BulkOperations.Index">Back</a>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+<section class="panel">
+    <div class="filters-grid">
+        <label>
+            Operation
+            <InputSelect class="input" @bind-Value="operationType">
+                @foreach (var option in OperationTypes)
+                {
+                    <option value="@option">@option</option>
+                }
+            </InputSelect>
+        </label>
+        <label>
+            Content
+            <InputSelect class="input" @bind-Value="contentType">
+                @foreach (var option in ContentTypes)
+                {
+                    <option value="@option">@option</option>
+                }
+            </InputSelect>
+        </label>
+        <label>
+            Category Id
+            <InputText class="input" @bind-Value="categoryIdText" />
+        </label>
+        <label>
+            Export Format
+            <InputText class="input" @bind-Value="exportFormat" />
+        </label>
+    </div>
+    <label>
+        Content IDs
+        <textarea rows="6" @bind="contentIdsText"></textarea>
+    </label>
+    <label>
+        Tag IDs
+        <textarea rows="3" @bind="tagIdsText"></textarea>
+    </label>
+    <label>
+        Note
+        <textarea rows="3" @bind="note"></textarea>
+    </label>
+    <div class="form-actions">
+        <button class="button primary" @onclick="CreateAsync" disabled="@isSaving">Create</button>
+    </div>
+</section>
+
+@code {
+    private static readonly string[] OperationTypes = ["RunQualityCheck", "Publish", "Archive", "Activate", "Deactivate", "AssignCategory", "AddTags", "RemoveTags", "Export", "SubmitForReview", "Approve", "RequestChanges"];
+    private static readonly string[] ContentTypes = ["Word", "Lesson", "Course", "Book", "Quiz", "Pronunciation", "GrammarTopic", "GrammarRule"];
+
+    private string operationType = "RunQualityCheck";
+    private string contentType = "Word";
+    private string? contentIdsText;
+    private string? note;
+    private string? categoryIdText;
+    private string? tagIdsText;
+    private string? exportFormat = "json";
+    private bool isSaving;
+    private string? errorMessage;
+
+    private async Task CreateAsync()
+    {
+        errorMessage = null;
+        isSaving = true;
+        try
+        {
+            var contentIds = ParseIds(contentIdsText);
+            var categoryId = Guid.TryParse(categoryIdText, out var parsedCategoryId) ? parsedCategoryId : (Guid?)null;
+            var tagIds = ParseIds(tagIdsText);
+            var operation = await BulkOperationApiClient.CreateAsync(
+                new CreateBulkOperationRequest(operationType, contentType, contentIds, note, categoryId, tagIds, exportFormat),
+                CancellationToken.None);
+            NavigationManager.NavigateTo(AdminRoutes.BulkOperations.Detail(operation.Id));
+        }
+        catch (Exception exception) when (exception is ApiRequestException or FormatException)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private static Guid[] ParseIds(string? value) =>
+        string.IsNullOrWhiteSpace(value)
+            ? []
+            : value.Split([',', '\r', '\n', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(Guid.Parse).ToArray();
+}

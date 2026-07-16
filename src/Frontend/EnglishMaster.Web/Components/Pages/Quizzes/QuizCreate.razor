@@ -1,0 +1,105 @@
+@page "/admin/quizzes/create"
+@rendermode InteractiveServer
+@inject IQuizApiClient QuizApiClient
+@inject ICategoriesApiClient CategoriesApiClient
+@inject ILessonApiClient LessonApiClient
+@inject ICourseApiClient CourseApiClient
+@inject IBookApiClient BookApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>New Quiz</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Quizzes</p>
+        <h1>New Quiz</h1>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading...</p>
+}
+else
+{
+    <section class="panel">
+        <QuizForm Model="model"
+                  Categories="categories"
+                  Lessons="lessons"
+                  Courses="courses"
+                  Books="books"
+                  ValidationErrors="validationErrors"
+                  IsSaving="isSaving"
+                  SubmitText="Create"
+                  OnValidSubmit="SaveAsync" />
+    </section>
+}
+
+@code {
+    private readonly QuizFormModel model = new();
+    private IReadOnlyCollection<CategoryDto> categories = [];
+    private IReadOnlyCollection<LessonDto> lessons = [];
+    private IReadOnlyCollection<CourseDto> courses = [];
+    private IReadOnlyCollection<BookDto> books = [];
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOptionsAsync();
+    }
+
+    private async Task LoadOptionsAsync()
+    {
+        try
+        {
+            categories = (await CategoriesApiClient.SearchAsync(search: null, isActive: true, CancellationToken.None)).Items;
+            lessons = (await LessonApiClient.SearchAsync(
+                new LessonSearchRequest(IsActive: true, PageSize: 100, SortBy: "Title", SortDirection: "Asc"),
+                CancellationToken.None)).Items;
+            courses = (await CourseApiClient.SearchAsync(
+                new CourseSearchRequest(IsActive: true, PageSize: 100, SortBy: "Title", SortDirection: "Asc"),
+                CancellationToken.None)).Items;
+            books = (await BookApiClient.SearchAsync(
+                new BookSearchRequest(IsActive: true, PageSize: 100, SortBy: "Title", SortDirection: "Asc"),
+                CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            var quiz = await QuizApiClient.CreateAsync(model.ToCreateRequest(), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.Quizzes.Detail(quiz.Id));
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

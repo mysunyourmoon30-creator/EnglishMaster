@@ -1,0 +1,101 @@
+@page "/admin/publishing/jobs/create"
+@rendermode InteractiveServer
+@inject IPublishingApiClient PublishingApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Publish Job</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Publishing</p>
+        <h1>Create Publish Job</h1>
+    </div>
+    <a class="button" href="@AdminRoutes.Publishing.Jobs.Index">Back</a>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+<section class="panel">
+    <EditForm Model="model" OnValidSubmit="SubmitAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-grid">
+            <label>
+                <span>Source Type</span>
+                <InputSelect class="input" @bind-Value="model.SourceType">
+                    @foreach (var item in SourceTypes)
+                    {
+                        <option value="@item">@item</option>
+                    }
+                </InputSelect>
+            </label>
+            <label>
+                <span>Source Id</span>
+                <InputText class="input" @bind-Value="model.SourceId" />
+                <ValidationMessage For="@(() => model.SourceId)" />
+            </label>
+            <label>
+                <span>Format</span>
+                <InputSelect class="input" @bind-Value="model.Format">
+                    @foreach (var item in Formats)
+                    {
+                        <option value="@item">@item</option>
+                    }
+                </InputSelect>
+            </label>
+            <label>
+                <span>Title</span>
+                <InputText class="input" @bind-Value="model.Title" />
+                <ValidationMessage For="@(() => model.Title)" />
+            </label>
+            <label>
+                <span>Requested By</span>
+                <InputText class="input" @bind-Value="model.RequestedBy" />
+                <ValidationMessage For="@(() => model.RequestedBy)" />
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button class="button primary" type="submit" disabled="@isSaving">@(isSaving ? "Saving..." : "Create")</button>
+        </div>
+    </EditForm>
+</section>
+
+@code {
+    private static readonly string[] SourceTypes = ["Lesson", "Course", "Book", "Quiz"];
+    private static readonly string[] Formats = ["Html", "Pdf", "Docx", "Markdown"];
+
+    private readonly PublishJobFormModel model = new();
+    private bool isSaving;
+    private string? errorMessage;
+
+    private async Task SubmitAsync()
+    {
+        errorMessage = null;
+
+        if (!Guid.TryParse(model.SourceId, out _))
+        {
+            errorMessage = "Source Id must be a valid GUID.";
+            return;
+        }
+
+        isSaving = true;
+        try
+        {
+            var job = await PublishingApiClient.CreateJobAsync(model.ToRequest(), CancellationToken.None);
+            NavigationManager.NavigateTo(AdminRoutes.Publishing.Jobs.Detail(job.Id));
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

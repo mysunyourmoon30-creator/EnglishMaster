@@ -1,0 +1,84 @@
+@page "/admin/content-quality"
+@rendermode InteractiveServer
+@inject IContentQualityApiClient ContentQualityApiClient
+
+<PageTitle>Content Quality</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Content Quality</h1>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.ContentQuality.Checks">Checks</a>
+        <a class="button secondary" href="@AdminRoutes.ContentQuality.Rules">Rules</a>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading quality dashboard...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (dashboard is not null)
+{
+    <section class="panel filter-bar">
+        <InputText @bind-Value="runContentType" placeholder="Content type" />
+        <InputText @bind-Value="runContentId" placeholder="Content id" />
+        <button class="button" type="button" @onclick="RunAsync">Run Quality Check</button>
+    </section>
+
+    <section class="stat-grid">
+        <div class="panel stat-card"><span class="stat-label">Total Checks</span><span class="stat-value">@dashboard.TotalChecks</span></div>
+        <div class="panel stat-card"><span class="stat-label">Failed</span><span class="stat-value">@dashboard.FailedChecks</span></div>
+        <div class="panel stat-card"><span class="stat-label">Warnings</span><span class="stat-value">@dashboard.WarningChecks</span></div>
+        <div class="panel stat-card"><span class="stat-label">Average Score</span><span class="stat-value">@dashboard.AverageScore.ToString("0")</span></div>
+    </section>
+}
+
+@code {
+    private ContentQualityDashboardDto? dashboard;
+    private string? runContentType;
+    private string? runContentId;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            dashboard = await ContentQualityApiClient.GetDashboardAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RunAsync()
+    {
+        errorMessage = null;
+        if (string.IsNullOrWhiteSpace(runContentType) || !Guid.TryParse(runContentId, out var contentId))
+        {
+            errorMessage = "Enter a content type and content id.";
+            return;
+        }
+
+        try
+        {
+            await ContentQualityApiClient.RunAsync(runContentType, contentId, CancellationToken.None);
+            dashboard = await ContentQualityApiClient.GetDashboardAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+}

@@ -1,0 +1,85 @@
+@page "/admin/notifications"
+@rendermode InteractiveServer
+@inject INotificationsApiClient NotificationsApiClient
+
+<PageTitle>Admin Notifications</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Notifications</h1>
+    </div>
+</section>
+
+<section class="panel filter-bar">
+    <InputText @bind-Value="status" placeholder="Status" />
+    <InputText @bind-Value="eventType" placeholder="Event type" />
+    <button class="button" type="button" @onclick="SearchAsync">Search</button>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading notifications...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (notifications.Count == 0)
+{
+    <div class="panel">No notifications found.</div>
+}
+else
+{
+    <section class="content-list">
+        @foreach (var notification in notifications)
+        {
+            <article class="panel">
+                <div class="item-header">
+                    <div>
+                        <h2>@notification.Title</h2>
+                        <p class="muted">@notification.EventType · @notification.RecipientUserId</p>
+                    </div>
+                    <span class="badge">@notification.Status</span>
+                </div>
+                <p>@notification.Message</p>
+                @if (!string.IsNullOrWhiteSpace(notification.ErrorMessage))
+                {
+                    <p class="muted">@notification.ErrorMessage</p>
+                }
+            </article>
+        }
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<NotificationDto> notifications = [];
+    private string? status;
+    private string? eventType;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SearchAsync();
+    }
+
+    private async Task SearchAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            var result = await NotificationsApiClient.SearchAdminAsync(status, eventType, CancellationToken.None);
+            notifications = result.Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

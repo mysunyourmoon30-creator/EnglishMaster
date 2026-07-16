@@ -1,0 +1,84 @@
+@page "/admin/email-messages"
+@rendermode InteractiveServer
+@inject IEmailMessagesApiClient EmailMessagesApiClient
+
+<PageTitle>Email Messages</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Email Messages</h1>
+    </div>
+</section>
+
+<section class="panel filter-bar">
+    <InputText @bind-Value="status" placeholder="Status" />
+    <InputText @bind-Value="toEmail" placeholder="Recipient email" />
+    <button class="button" type="button" @onclick="SearchAsync">Search</button>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading email messages...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (emailMessages.Count == 0)
+{
+    <div class="panel">No email messages found.</div>
+}
+else
+{
+    <section class="content-list">
+        @foreach (var email in emailMessages)
+        {
+            <article class="panel">
+                <div class="item-header">
+                    <div>
+                        <h2>@email.Subject</h2>
+                        <p class="muted">@email.ToEmail · @email.CreatedAt.LocalDateTime.ToString("g")</p>
+                    </div>
+                    <span class="badge">@email.Status</span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(email.ErrorMessage))
+                {
+                    <p class="muted">@email.ErrorMessage</p>
+                }
+            </article>
+        }
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<EmailMessageDto> emailMessages = [];
+    private string? status;
+    private string? toEmail;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SearchAsync();
+    }
+
+    private async Task SearchAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            var result = await EmailMessagesApiClient.SearchAsync(status, toEmail, CancellationToken.None);
+            emailMessages = result.Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

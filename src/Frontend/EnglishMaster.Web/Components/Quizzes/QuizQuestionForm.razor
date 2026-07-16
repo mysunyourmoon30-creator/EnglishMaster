@@ -1,0 +1,161 @@
+@using EnglishMaster.Web.Services.Quizzes
+
+<EditForm Model="Model" OnValidSubmit="SubmitAsync" class="word-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    @if (ValidationErrors.Count > 0)
+    {
+        <div class="alert error">
+            <ul>
+                @foreach (var error in ValidationErrors.SelectMany(item => item.Value))
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="form-grid">
+        <label class="span-2">
+            <span>Question</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.QuestionText" />
+            <ValidationMessage For="@(() => Model.QuestionText)" />
+        </label>
+
+        <label>
+            <span>Type</span>
+            <InputSelect class="input" @bind-Value="Model.QuestionType">
+                @foreach (var type in QuestionTypes)
+                {
+                    <option value="@type">@type</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>Points</span>
+            <InputNumber class="input" @bind-Value="Model.Points" />
+            <ValidationMessage For="@(() => Model.Points)" />
+        </label>
+
+        <label>
+            <span>Sort Order</span>
+            <InputNumber class="input" @bind-Value="Model.SortOrder" />
+            <ValidationMessage For="@(() => Model.SortOrder)" />
+        </label>
+
+        <label class="span-2">
+            <span>Thai Explanation</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.ExplanationTh" />
+            <ValidationMessage For="@(() => Model.ExplanationTh)" />
+        </label>
+
+        <label class="span-2">
+            <span>English Explanation</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.ExplanationEn" />
+            <ValidationMessage For="@(() => Model.ExplanationEn)" />
+        </label>
+
+        <label>
+            <span>Word</span>
+            <InputSelect class="input" @bind-Value="Model.WordId">
+                <option value="">No word</option>
+                @foreach (var word in Words)
+                {
+                    <option value="@word.Id">@word.Text</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>Grammar Rule</span>
+            <InputSelect class="input" @bind-Value="Model.GrammarRuleId">
+                <option value="">No grammar rule</option>
+                @foreach (var rule in GrammarRules)
+                {
+                    <option value="@rule.Id">@rule.Title</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>Pronunciation</span>
+            <InputSelect class="input" @bind-Value="Model.PronunciationId">
+                <option value="">No pronunciation</option>
+                @foreach (var pronunciation in Pronunciations)
+                {
+                    <option value="@pronunciation.Id">@(pronunciation.Word?.Text ?? pronunciation.Id.ToString())</option>
+                }
+            </InputSelect>
+        </label>
+
+        @if (ShowStatusToggle)
+        {
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="Model.IsActive" />
+                <span>Active</span>
+            </label>
+        }
+    </div>
+
+    <div class="actions">
+        <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
+        @if (OnCancel.HasDelegate)
+        {
+            <button class="button" type="button" @onclick="CancelAsync">Cancel</button>
+        }
+    </div>
+</EditForm>
+
+@code {
+    private static readonly string[] QuestionTypes =
+    [
+        "SingleChoice",
+        "MultipleChoice",
+        "TrueFalse",
+        "FillBlank",
+        "ShortAnswer"
+    ];
+
+    [Parameter, EditorRequired]
+    public QuizQuestionFormModel Model { get; set; } = new();
+
+    [Parameter]
+    public IReadOnlyCollection<WordDto> Words { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyCollection<GrammarRuleDto> GrammarRules { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyCollection<PronunciationDto> Pronunciations { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyDictionary<string, string[]> ValidationErrors { get; set; } =
+        new Dictionary<string, string[]>();
+
+    [Parameter]
+    public bool IsSaving { get; set; }
+
+    [Parameter]
+    public bool ShowStatusToggle { get; set; }
+
+    [Parameter]
+    public string SubmitText { get; set; } = "Save";
+
+    [Parameter]
+    public EventCallback OnValidSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private async Task SubmitAsync()
+    {
+        await OnValidSubmit.InvokeAsync();
+    }
+
+    private async Task CancelAsync()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

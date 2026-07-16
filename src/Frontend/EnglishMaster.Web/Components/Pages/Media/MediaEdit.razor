@@ -1,0 +1,102 @@
+@page "/admin/media/{Id:guid}/edit"
+@rendermode InteractiveServer
+@inject IMediaApiClient MediaApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Media</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Assets</p>
+        <h1>Edit Media</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <p class="muted">Loading media...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Media was not found.</p>
+        <a class="button" href="@AdminRoutes.Media.Index">Back to Media</a>
+    </section>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert error">@errorMessage</div>
+    }
+
+    <section class="panel">
+        <MediaForm Model="model"
+                   ValidationErrors="validationErrors"
+                   IsSaving="isSaving"
+                   ShowActiveToggle="true"
+                   SubmitText="Save"
+                   OnValidSubmit="SaveAsync" />
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private MediaFormModel model = new();
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSaving;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            var media = await MediaApiClient.GetAsync(Id, CancellationToken.None);
+            if (media is null)
+            {
+                notFound = true;
+                return;
+            }
+
+            model = MediaFormModel.FromDto(media);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            await MediaApiClient.UpdateAsync(Id, model.ToUpdateRequest(), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.Media.Index);
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

@@ -1,0 +1,77 @@
+@page "/admin/import-jobs/upload"
+@rendermode InteractiveServer
+@inject IImportJobApiClient ImportJobApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Upload Import</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Upload Import</h1>
+    </div>
+    <a class="button secondary" href="@AdminRoutes.ImportJobs.Index">Back</a>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+<section class="panel">
+    <div class="filters-grid">
+        <label>
+            Import Type
+            <InputSelect class="input" @bind-Value="importType">
+                <option value="Words">Words</option>
+                <option value="Categories">Categories</option>
+                <option value="Tags">Tags</option>
+                <option value="Lessons">Lessons</option>
+            </InputSelect>
+        </label>
+        <label>
+            Format
+            <InputSelect class="input" @bind-Value="format">
+                <option value="CSV">CSV</option>
+                <option value="JSON">JSON</option>
+            </InputSelect>
+        </label>
+        <label>
+            File Name
+            <InputText class="input" @bind-Value="fileName" />
+        </label>
+    </div>
+    <label>
+        Content
+        <textarea rows="12" @bind="content"></textarea>
+    </label>
+    <button class="button primary" @onclick="UploadAsync" disabled="@isSaving">Upload</button>
+</section>
+
+@code {
+    private string importType = "Words";
+    private string format = "CSV";
+    private string fileName = "words.csv";
+    private string content = "Text,MeaningTh,CefrLevel,PartOfSpeech\nhello,สวัสดี,A1,Noun";
+    private bool isSaving;
+    private string? errorMessage;
+
+    private async Task UploadAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        try
+        {
+            var job = await ImportJobApiClient.UploadAsync(new UploadImportJobRequest(importType, format, fileName, content), CancellationToken.None);
+            NavigationManager.NavigateTo(AdminRoutes.ImportJobs.Detail(job.Id));
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

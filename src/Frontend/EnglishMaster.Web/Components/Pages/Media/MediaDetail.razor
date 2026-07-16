@@ -1,0 +1,138 @@
+@page "/admin/media/{Id:guid}"
+@rendermode InteractiveServer
+@inject IMediaApiClient MediaApiClient
+
+<PageTitle>@(media is null ? "Media" : media.OriginalFileName)</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Assets</p>
+        <h1>@(media is null ? "Media" : media.OriginalFileName)</h1>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.Media.Index">Back</a>
+        @if (media is not null)
+        {
+            <a class="button primary" href="@AdminRoutes.Media.Edit(media.Id)">Edit</a>
+        }
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading media...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Media was not found.</p>
+    </section>
+}
+else if (media is not null)
+{
+    <section class="panel">
+        @if (media.MediaType == "Image" && !string.IsNullOrWhiteSpace(media.PublicUrl))
+        {
+            <img class="media-preview" src="@media.PublicUrl" alt="@media.AltText" />
+        }
+        else if (media.MediaType == "Audio" && !string.IsNullOrWhiteSpace(media.PublicUrl))
+        {
+            <audio class="media-player" controls src="@media.PublicUrl"></audio>
+        }
+
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">File Name</span>
+                <strong>@media.FileName</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Original File Name</span>
+                <strong>@media.OriginalFileName</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Media Type</span>
+                <strong>@media.MediaType</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Content Type</span>
+                <strong>@media.ContentType</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">File Size</span>
+                <strong>@FormatSize(media.FileSize)</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Status</span>
+                <strong>@(media.IsActive ? "Active" : "Inactive")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Public URL</span>
+                <strong>@media.PublicUrl</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Alt Text</span>
+                <strong>@media.AltText</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Description</span>
+                <strong>@media.Description</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Created</span>
+                <strong>@FormatDate(media.CreatedAt)</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Updated</span>
+                <strong>@FormatDate(media.UpdatedAt)</strong>
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private MediaDto? media;
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            media = await MediaApiClient.GetAsync(Id, CancellationToken.None);
+            notFound = media is null;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static string FormatDate(DateTimeOffset value)
+    {
+        return value.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+    }
+
+    private static string FormatSize(long bytes)
+    {
+        return bytes < 1024
+            ? $"{bytes} B"
+            : $"{bytes / 1024d:0.##} KB";
+    }
+}

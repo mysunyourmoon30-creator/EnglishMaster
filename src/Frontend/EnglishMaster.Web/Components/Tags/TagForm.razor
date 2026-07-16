@@ -1,0 +1,69 @@
+<EditForm Model="Model" OnValidSubmit="SubmitAsync" class="word-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    @if (ValidationErrors.Count > 0)
+    {
+        <div class="alert error">
+            <ul>
+                @foreach (var error in ValidationErrors.SelectMany(item => item.Value))
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="form-grid">
+        <label>
+            <span>Name</span>
+            <InputText class="input" @bind-Value="Model.Name" />
+            <ValidationMessage For="@(() => Model.Name)" />
+        </label>
+
+        <label class="span-2">
+            <span>Description</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.Description" />
+            <ValidationMessage For="@(() => Model.Description)" />
+        </label>
+
+        @if (ShowActiveToggle)
+        {
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="Model.IsActive" />
+                <span>Active</span>
+            </label>
+        }
+    </div>
+
+    <div class="actions">
+        <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
+        <a class="button" href="@AdminRoutes.Tags.Index">Cancel</a>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter, EditorRequired]
+    public TagFormModel Model { get; set; } = new();
+
+    [Parameter]
+    public IReadOnlyDictionary<string, string[]> ValidationErrors { get; set; } =
+        new Dictionary<string, string[]>();
+
+    [Parameter]
+    public bool IsSaving { get; set; }
+
+    [Parameter]
+    public bool ShowActiveToggle { get; set; }
+
+    [Parameter]
+    public string SubmitText { get; set; } = "Save";
+
+    [Parameter]
+    public EventCallback OnValidSubmit { get; set; }
+
+    private async Task SubmitAsync()
+    {
+        await OnValidSubmit.InvokeAsync();
+    }
+}

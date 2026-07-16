@@ -1,0 +1,107 @@
+@page "/admin/grammar-rules/{Id:guid}/edit"
+@rendermode InteractiveServer
+@inject IGrammarApiClient GrammarApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Grammar Rule</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Grammar</p>
+        <h1>Edit Grammar Rule</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <p class="muted">Loading grammar rule...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Grammar rule was not found.</p>
+        <a class="button" href="@AdminRoutes.GrammarRules.Index">Back to Rules</a>
+    </section>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert error">@errorMessage</div>
+    }
+
+    <section class="panel">
+        <GrammarRuleForm Model="model"
+                         Topics="topics"
+                         ValidationErrors="validationErrors"
+                         IsSaving="isSaving"
+                         ShowActiveToggle="true"
+                         SubmitText="Save"
+                         OnValidSubmit="SaveAsync" />
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private GrammarRuleFormModel model = new();
+    private IReadOnlyCollection<GrammarTopicDto> topics = [];
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSaving;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            topics = (await GrammarApiClient.SearchTopicsAsync(
+                new GrammarTopicSearchRequest(IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+            var rule = await GrammarApiClient.GetRuleAsync(Id, CancellationToken.None);
+            if (rule is null)
+            {
+                notFound = true;
+                return;
+            }
+
+            model = GrammarRuleFormModel.FromDto(rule);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            await GrammarApiClient.UpdateRuleAsync(Id, model.ToUpdateRequest(), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.GrammarRules.Detail(Id));
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

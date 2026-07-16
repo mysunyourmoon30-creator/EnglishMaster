@@ -1,0 +1,102 @@
+@page "/admin/grammar-topics/{Id:guid}/edit"
+@rendermode InteractiveServer
+@inject IGrammarApiClient GrammarApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Grammar Topic</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Grammar</p>
+        <h1>Edit Grammar Topic</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <p class="muted">Loading grammar topic...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Grammar topic was not found.</p>
+        <a class="button" href="@AdminRoutes.GrammarTopics.Index">Back to Topics</a>
+    </section>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert error">@errorMessage</div>
+    }
+
+    <section class="panel">
+        <GrammarTopicForm Model="model"
+                          ValidationErrors="validationErrors"
+                          IsSaving="isSaving"
+                          ShowActiveToggle="true"
+                          SubmitText="Save"
+                          OnValidSubmit="SaveAsync" />
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private GrammarTopicFormModel model = new();
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSaving;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            var topic = await GrammarApiClient.GetTopicAsync(Id, CancellationToken.None);
+            if (topic is null)
+            {
+                notFound = true;
+                return;
+            }
+
+            model = GrammarTopicFormModel.FromDto(topic);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            await GrammarApiClient.UpdateTopicAsync(Id, model.ToUpdateRequest(), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.GrammarTopics.Detail(Id));
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

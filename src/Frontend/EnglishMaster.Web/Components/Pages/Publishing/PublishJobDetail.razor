@@ -1,0 +1,172 @@
+@page "/admin/publishing/jobs/{Id:guid}"
+@rendermode InteractiveServer
+@inject IPublishingApiClient PublishingApiClient
+
+<PageTitle>Publish Job</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Publishing</p>
+        <h1>@(job?.Title ?? "Publish Job")</h1>
+    </div>
+    <a class="button" href="@AdminRoutes.Publishing.Jobs.Index">Back</a>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading publish job...</p>
+}
+else if (job is null)
+{
+    <section class="panel">
+        <p class="muted">Publish job was not found.</p>
+    </section>
+}
+else
+{
+    <section class="panel detail-grid">
+        <div>
+            <span class="muted">Status</span>
+            <strong>@job.Status</strong>
+        </div>
+        <div>
+            <span class="muted">Source</span>
+            <strong>@job.SourceType</strong>
+        </div>
+        <div>
+            <span class="muted">Format</span>
+            <strong>@job.Format</strong>
+        </div>
+        <div>
+            <span class="muted">Output</span>
+            <strong>@(string.IsNullOrWhiteSpace(job.OutputFileName) ? "-" : job.OutputFileName)</strong>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(job.ErrorMessage))
+        {
+            <div>
+                <span class="muted">Error</span>
+                <strong>@job.ErrorMessage</strong>
+            </div>
+        }
+    </section>
+
+    <section class="panel">
+        <div class="form-actions">
+            <button class="button primary" type="button" disabled="@(!CanRun || isBusy)" @onclick="RunAsync">Run</button>
+            <button class="button danger" type="button" disabled="@(!CanCancel || isBusy)" @onclick="CancelAsync">Cancel</button>
+        </div>
+    </section>
+
+    <section class="table-wrap">
+        <h2>Artifacts</h2>
+        @if (artifacts.Count == 0)
+        {
+            <p class="muted">No artifacts generated yet.</p>
+        }
+        else
+        {
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Format</th>
+                        <th>Size</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var artifact in artifacts)
+                    {
+                        <tr>
+                            <td>@artifact.FileName</td>
+                            <td>@artifact.Format</td>
+                            <td>@artifact.FileSize</td>
+                            <td class="row-actions">
+                                @if (!string.IsNullOrWhiteSpace(artifact.PublicUrl))
+                                {
+                                    <a class="button small" href="@artifact.PublicUrl" target="_blank">Open</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private PublishJobDto? job;
+    private IReadOnlyCollection<PublishedArtifactDto> artifacts = [];
+    private bool isLoading = true;
+    private bool isBusy;
+    private string? errorMessage;
+
+    private bool CanRun => job?.Status is "Pending" or "Failed";
+    private bool CanCancel => job?.Status is "Pending" or "Running" or "Failed";
+
+    protected override Task OnInitializedAsync()
+    {
+        return LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            job = await PublishingApiClient.GetJobAsync(Id, CancellationToken.None);
+            artifacts = job is null
+                ? []
+                : await PublishingApiClient.GetArtifactsByJobAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RunAsync()
+    {
+        await ExecuteAsync(() => PublishingApiClient.RunJobAsync(Id, CancellationToken.None));
+    }
+
+    private async Task CancelAsync()
+    {
+        await ExecuteAsync(() => PublishingApiClient.CancelJobAsync(Id, CancellationToken.None));
+    }
+
+    private async Task ExecuteAsync(Func<Task<PublishJobDto>> action)
+    {
+        isBusy = true;
+        errorMessage = null;
+
+        try
+        {
+            job = await action();
+            artifacts = await PublishingApiClient.GetArtifactsByJobAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+}

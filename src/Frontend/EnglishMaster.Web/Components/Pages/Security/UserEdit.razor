@@ -1,0 +1,88 @@
+@page "/admin/users/{Id:guid}/edit"
+@rendermode InteractiveServer
+@inject ISecurityApiClient SecurityApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit User</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Edit User</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <p class="muted">Loading user...</p>
+}
+else
+{
+    <EditForm Model="model" OnValidSubmit="SaveAsync" class="word-form">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert error">@errorMessage</div>
+        }
+        <div class="form-grid">
+            <label><span>Email</span><InputText class="input" @bind-Value="model.Email" /></label>
+            <label><span>User Name</span><InputText class="input" @bind-Value="model.UserName" /></label>
+            <label><span>Display Name</span><InputText class="input" @bind-Value="model.DisplayName" /></label>
+            <label class="checkbox-row"><InputCheckbox @bind-Value="model.IsActive" /><span>Active</span></label>
+        </div>
+        <div class="actions">
+            <button class="button primary" type="submit" disabled="@isSaving">Save</button>
+            <a class="button" href="@AdminRoutes.Users.Detail(Id)">Cancel</a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    private sealed class FormModel
+    {
+        [Required, EmailAddress] public string Email { get; set; } = string.Empty;
+        [Required] public string UserName { get; set; } = string.Empty;
+        [Required] public string DisplayName { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
+    }
+
+    [Parameter] public Guid Id { get; set; }
+    private readonly FormModel model = new();
+    private bool isLoading = true;
+    private bool isSaving;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await SecurityApiClient.GetUserAsync(Id, CancellationToken.None);
+        if (user is not null)
+        {
+            model.Email = user.Email;
+            model.UserName = user.UserName;
+            model.DisplayName = user.DisplayName;
+            model.IsActive = user.IsActive;
+        }
+
+        isLoading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        try
+        {
+            await SecurityApiClient.UpdateUserAsync(Id, new(model.Email, model.UserName, model.DisplayName, model.IsActive), CancellationToken.None);
+            NavigationManager.NavigateTo(AdminRoutes.Users.Detail(Id));
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

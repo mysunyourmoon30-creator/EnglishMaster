@@ -1,0 +1,64 @@
+@page "/admin/permissions"
+@rendermode InteractiveServer
+@inject ISecurityApiClient SecurityApiClient
+
+<PageTitle>Permissions</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Permissions</h1>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading permissions...</p>
+}
+else
+{
+    <section class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>Key</th><th>Module</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var permission in permissions)
+                {
+                    <tr>
+                        <td><strong>@permission.Key</strong><span class="muted">@permission.Name</span></td>
+                        <td>@permission.Module</td>
+                        <td>@permission.Description</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<PermissionDto> permissions = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            permissions = await SecurityApiClient.GetPermissionsAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

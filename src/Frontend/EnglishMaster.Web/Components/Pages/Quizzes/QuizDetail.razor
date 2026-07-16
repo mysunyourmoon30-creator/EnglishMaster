@@ -1,0 +1,578 @@
+@page "/admin/quizzes/{Id:guid}"
+@rendermode InteractiveServer
+@inject IQuizApiClient QuizApiClient
+@inject IWordsApiClient WordsApiClient
+@inject IGrammarApiClient GrammarApiClient
+@inject IPronunciationsApiClient PronunciationsApiClient
+
+<PageTitle>@(quiz is null ? "Quiz" : quiz.Title)</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Quizzes</p>
+        <h1>@(quiz is null ? "Quiz" : quiz.Title)</h1>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.Quizzes.Index">Back</a>
+        @if (quiz is not null)
+        {
+            <a class="button" href="@AdminRoutes.ContentRevisions.Timeline("Quiz", quiz.Id)">Revision History</a>
+            <a class="button primary" href="@AdminRoutes.Quizzes.Edit(quiz.Id)">Edit</a>
+            <button class="button" type="button" @onclick="TogglePublishAsync">
+                @(quiz.IsPublished ? "Unpublish" : "Publish")
+            </button>
+        }
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading quiz...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Quiz was not found.</p>
+    </section>
+}
+else if (quiz is not null)
+{
+    <section class="panel">
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Slug</span>
+                <strong>@quiz.Slug</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">CEFR</span>
+                <strong>@(quiz.CefrLevel ?? "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Category</span>
+                <strong>@(quiz.Category?.Name ?? "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Lesson</span>
+                <strong>@(quiz.Lesson?.Title ?? "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Course</span>
+                <strong>@(quiz.Course?.Title ?? "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Book</span>
+                <strong>@(quiz.Book?.Title ?? "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Time Limit</span>
+                <strong>@quiz.TimeLimitMinutes minutes</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Passing Score</span>
+                <strong>@quiz.PassingScore%</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Published</span>
+                <strong>@(quiz.IsPublished ? "Published" : "Draft")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Status</span>
+                <strong>@(quiz.IsActive ? "Active" : "Inactive")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Summary</span>
+                <strong>@quiz.Summary</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Description</span>
+                <strong>@quiz.Description</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-header section-header">
+        <div>
+            <p class="eyebrow">Exercise Builder</p>
+            <h1>Questions</h1>
+        </div>
+    </section>
+
+    <section class="panel">
+        @if (!string.IsNullOrWhiteSpace(questionErrorMessage))
+        {
+            <div class="alert error">@questionErrorMessage</div>
+        }
+
+        <QuizQuestionForm Model="questionModel"
+                          Words="words"
+                          GrammarRules="grammarRules"
+                          Pronunciations="pronunciations"
+                          ValidationErrors="questionValidationErrors"
+                          IsSaving="isSavingQuestion"
+                          ShowStatusToggle="@(editingQuestionId.HasValue)"
+                          SubmitText="@(editingQuestionId.HasValue ? "Save Question" : "Add Question")"
+                          OnValidSubmit="SaveQuestionAsync"
+                          OnCancel="CancelQuestionEdit" />
+    </section>
+
+    @if (questions.Count == 0)
+    {
+        <section class="panel nested-table">
+            <p class="muted">No questions added yet.</p>
+        </section>
+    }
+    else
+    {
+        <section class="table-wrap nested-table">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Question</th>
+                        <th>Type</th>
+                        <th>Points</th>
+                        <th>Sort</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var question in questions.OrderBy(item => item.SortOrder))
+                    {
+                        <tr>
+                            <td>
+                                <strong>@question.QuestionText</strong>
+                                <span class="muted">@question.ExplanationEn</span>
+                            </td>
+                            <td>@question.QuestionType</td>
+                            <td>@question.Points</td>
+                            <td>@question.SortOrder</td>
+                            <td>@(question.IsActive ? "Active" : "Inactive")</td>
+                            <td class="row-actions">
+                                <button class="button small" type="button" @onclick="() => MoveQuestionUpAsync(question.Id)">Up</button>
+                                <button class="button small" type="button" @onclick="() => MoveQuestionDownAsync(question.Id)">Down</button>
+                                <button class="button small" type="button" @onclick="() => EditQuestion(question)">Edit</button>
+                                <button class="button small danger" type="button" @onclick="() => DeleteQuestionAsync(question.Id)">Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="6">
+                                <section class="panel">
+                                    <h2>Choices</h2>
+                                    @if (choiceQuestionId == question.Id && !string.IsNullOrWhiteSpace(choiceErrorMessage))
+                                    {
+                                        <div class="alert error">@choiceErrorMessage</div>
+                                    }
+
+                                    <QuizChoiceForm Model="ChoiceModelFor(question)"
+                                                    ValidationErrors="ChoiceValidationErrorsFor(question.Id)"
+                                                    IsSaving="isSavingChoice"
+                                                    ShowStatusToggle="@(editingChoiceId.HasValue && choiceQuestionId == question.Id)"
+                                                    SubmitText="@(editingChoiceId.HasValue && choiceQuestionId == question.Id ? "Save Choice" : "Add Choice")"
+                                                    OnValidSubmit="() => SaveChoiceAsync(question)"
+                                                    OnCancel="CancelChoiceEdit" />
+
+                                    @if (question.Choices.Count == 0)
+                                    {
+                                        <p class="muted">No choices added yet.</p>
+                                    }
+                                    else
+                                    {
+                                        <table class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Choice</th>
+                                                    <th>Correct</th>
+                                                    <th>Sort</th>
+                                                    <th>Status</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var choice in question.Choices.OrderBy(item => item.SortOrder))
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            <strong>@choice.ChoiceText</strong>
+                                                            <span class="muted">@choice.ExplanationEn</span>
+                                                        </td>
+                                                        <td>@(choice.IsCorrect ? "Yes" : "No")</td>
+                                                        <td>@choice.SortOrder</td>
+                                                        <td>@(choice.IsActive ? "Active" : "Inactive")</td>
+                                                        <td class="row-actions">
+                                                            <button class="button small" type="button" @onclick="() => MoveChoiceUpAsync(question.Id, choice.Id)">Up</button>
+                                                            <button class="button small" type="button" @onclick="() => MoveChoiceDownAsync(question.Id, choice.Id)">Down</button>
+                                                            <button class="button small" type="button" @onclick="() => EditChoice(question.Id, choice)">Edit</button>
+                                                            <button class="button small danger" type="button" @onclick="() => DeleteChoiceAsync(choice.Id)">Delete</button>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    }
+                                </section>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private QuizDto? quiz;
+    private IReadOnlyCollection<QuizQuestionDto> questions = [];
+    private IReadOnlyCollection<WordDto> words = [];
+    private IReadOnlyCollection<GrammarRuleDto> grammarRules = [];
+    private IReadOnlyCollection<PronunciationDto> pronunciations = [];
+    private QuizQuestionFormModel questionModel = new();
+    private QuizChoiceFormModel choiceModel = new();
+    private readonly Dictionary<Guid, QuizChoiceFormModel> choiceModels = [];
+    private IReadOnlyDictionary<string, string[]> questionValidationErrors = new Dictionary<string, string[]>();
+    private IReadOnlyDictionary<string, string[]> choiceValidationErrors = new Dictionary<string, string[]>();
+    private Guid? editingQuestionId;
+    private Guid? editingChoiceId;
+    private Guid? choiceQuestionId;
+    private string? errorMessage;
+    private string? questionErrorMessage;
+    private string? choiceErrorMessage;
+    private bool isLoading = true;
+    private bool isSavingQuestion;
+    private bool isSavingChoice;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            words = (await WordsApiClient.SearchAsync(
+                new WordSearchRequest(IsActive: true, PageSize: 100, SortBy: "Text", SortDirection: "Asc"),
+                CancellationToken.None)).Items;
+            grammarRules = (await GrammarApiClient.SearchRulesAsync(
+                new GrammarRuleSearchRequest(IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+            pronunciations = (await PronunciationsApiClient.SearchAsync(
+                new PronunciationSearchRequest(IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+
+            quiz = await QuizApiClient.GetAsync(Id, CancellationToken.None);
+            if (quiz is null)
+            {
+                notFound = true;
+                return;
+            }
+
+            questions = await QuizApiClient.GetQuestionsAsync(Id, CancellationToken.None);
+            questionModel.SortOrder = questions.Count;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task TogglePublishAsync()
+    {
+        if (quiz is null)
+        {
+            return;
+        }
+
+        errorMessage = null;
+
+        try
+        {
+            if (quiz.IsPublished)
+            {
+                await QuizApiClient.UnpublishAsync(quiz.Id, CancellationToken.None);
+            }
+            else
+            {
+                await QuizApiClient.PublishAsync(quiz.Id, CancellationToken.None);
+            }
+
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+
+    private void EditQuestion(QuizQuestionDto question)
+    {
+        editingQuestionId = question.Id;
+        questionModel = QuizQuestionFormModel.FromDto(question);
+        questionValidationErrors = new Dictionary<string, string[]>();
+        questionErrorMessage = null;
+    }
+
+    private Task CancelQuestionEdit()
+    {
+        editingQuestionId = null;
+        questionModel = new QuizQuestionFormModel { SortOrder = questions.Count };
+        questionValidationErrors = new Dictionary<string, string[]>();
+        questionErrorMessage = null;
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveQuestionAsync()
+    {
+        if (quiz is null)
+        {
+            return;
+        }
+
+        isSavingQuestion = true;
+        questionErrorMessage = null;
+        questionValidationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            if (editingQuestionId.HasValue)
+            {
+                await QuizApiClient.UpdateQuestionAsync(
+                    editingQuestionId.Value,
+                    questionModel.ToUpdateRequest(),
+                    CancellationToken.None);
+            }
+            else
+            {
+                questionModel.SortOrder = questions.Count;
+                await QuizApiClient.AddQuestionAsync(
+                    quiz.Id,
+                    questionModel.ToCreateRequest(),
+                    CancellationToken.None);
+            }
+
+            await CancelQuestionEdit();
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            questionValidationErrors = exception.ValidationErrors;
+            questionErrorMessage = questionValidationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSavingQuestion = false;
+        }
+    }
+
+    private async Task DeleteQuestionAsync(Guid questionId)
+    {
+        questionErrorMessage = null;
+
+        try
+        {
+            await QuizApiClient.DeleteQuestionAsync(questionId, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            questionErrorMessage = exception.Message;
+        }
+    }
+
+    private QuizChoiceFormModel ChoiceModelFor(QuizQuestionDto question)
+    {
+        if (choiceQuestionId == question.Id)
+        {
+            return choiceModel;
+        }
+
+        if (!choiceModels.TryGetValue(question.Id, out var model))
+        {
+            model = new QuizChoiceFormModel { SortOrder = question.Choices.Count };
+            choiceModels[question.Id] = model;
+        }
+
+        return model;
+    }
+
+    private IReadOnlyDictionary<string, string[]> ChoiceValidationErrorsFor(Guid questionId)
+    {
+        return choiceQuestionId == questionId
+            ? choiceValidationErrors
+            : new Dictionary<string, string[]>();
+    }
+
+    private void EditChoice(Guid questionId, QuizChoiceDto choice)
+    {
+        choiceQuestionId = questionId;
+        editingChoiceId = choice.Id;
+        choiceModel = QuizChoiceFormModel.FromDto(choice);
+        choiceModels[questionId] = choiceModel;
+        choiceValidationErrors = new Dictionary<string, string[]>();
+        choiceErrorMessage = null;
+    }
+
+    private Task CancelChoiceEdit()
+    {
+        choiceQuestionId = null;
+        editingChoiceId = null;
+        choiceModel = new QuizChoiceFormModel();
+        choiceModels.Clear();
+        choiceValidationErrors = new Dictionary<string, string[]>();
+        choiceErrorMessage = null;
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveChoiceAsync(QuizQuestionDto question)
+    {
+        isSavingChoice = true;
+        choiceErrorMessage = null;
+        choiceValidationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            var model = ChoiceModelFor(question);
+            choiceModel = model;
+            if (editingChoiceId.HasValue && choiceQuestionId == question.Id)
+            {
+                await QuizApiClient.UpdateChoiceAsync(
+                    editingChoiceId.Value,
+                    model.ToUpdateRequest(),
+                    CancellationToken.None);
+            }
+            else
+            {
+                choiceQuestionId = question.Id;
+                model.SortOrder = question.Choices.Count;
+                await QuizApiClient.AddChoiceAsync(
+                    question.Id,
+                    model.ToCreateRequest(),
+                    CancellationToken.None);
+            }
+
+            await CancelChoiceEdit();
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            choiceQuestionId = question.Id;
+            choiceValidationErrors = exception.ValidationErrors;
+            choiceErrorMessage = choiceValidationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSavingChoice = false;
+        }
+    }
+
+    private async Task DeleteChoiceAsync(Guid choiceId)
+    {
+        choiceErrorMessage = null;
+
+        try
+        {
+            await QuizApiClient.DeleteChoiceAsync(choiceId, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            choiceErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task MoveQuestionUpAsync(Guid id)
+    {
+        await MoveQuestionAsync(id, -1);
+    }
+
+    private async Task MoveQuestionDownAsync(Guid id)
+    {
+        await MoveQuestionAsync(id, 1);
+    }
+
+    private async Task MoveQuestionAsync(Guid id, int offset)
+    {
+        if (quiz is null)
+        {
+            return;
+        }
+
+        var ordered = questions.OrderBy(item => item.SortOrder).Select(item => item.Id).ToList();
+        var index = ordered.IndexOf(id);
+        var newIndex = index + offset;
+        if (index < 0 || newIndex < 0 || newIndex >= ordered.Count)
+        {
+            return;
+        }
+
+        (ordered[index], ordered[newIndex]) = (ordered[newIndex], ordered[index]);
+        questionErrorMessage = null;
+
+        try
+        {
+            await QuizApiClient.ReorderQuestionsAsync(quiz.Id, ordered, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            questionErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task MoveChoiceUpAsync(Guid questionId, Guid choiceId)
+    {
+        await MoveChoiceAsync(questionId, choiceId, -1);
+    }
+
+    private async Task MoveChoiceDownAsync(Guid questionId, Guid choiceId)
+    {
+        await MoveChoiceAsync(questionId, choiceId, 1);
+    }
+
+    private async Task MoveChoiceAsync(Guid questionId, Guid choiceId, int offset)
+    {
+        var question = questions.FirstOrDefault(item => item.Id == questionId);
+        if (question is null)
+        {
+            return;
+        }
+
+        var ordered = question.Choices.OrderBy(item => item.SortOrder).Select(item => item.Id).ToList();
+        var index = ordered.IndexOf(choiceId);
+        var newIndex = index + offset;
+        if (index < 0 || newIndex < 0 || newIndex >= ordered.Count)
+        {
+            return;
+        }
+
+        (ordered[index], ordered[newIndex]) = (ordered[newIndex], ordered[index]);
+        choiceErrorMessage = null;
+
+        try
+        {
+            await QuizApiClient.ReorderChoicesAsync(questionId, ordered, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            choiceQuestionId = questionId;
+            choiceErrorMessage = exception.Message;
+        }
+    }
+}

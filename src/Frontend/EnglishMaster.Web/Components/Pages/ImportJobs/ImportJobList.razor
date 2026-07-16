@@ -1,0 +1,71 @@
+@page "/admin/import-jobs"
+@rendermode InteractiveServer
+@inject IImportJobApiClient ImportJobApiClient
+
+<PageTitle>Import Jobs</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Import Jobs</h1>
+    </div>
+    <a class="button primary" href="@AdminRoutes.ImportJobs.Upload">Upload</a>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading import jobs...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (jobs.Count == 0)
+{
+    <div class="panel">No import jobs found.</div>
+}
+else
+{
+    <section class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>Type</th><th>Format</th><th>Status</th><th>Rows</th><th>Requested</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var job in jobs)
+                {
+                    <tr>
+                        <td>@job.ImportType</td>
+                        <td>@job.Format</td>
+                        <td>@job.Status</td>
+                        <td>@job.ValidRows valid / @job.InvalidRows invalid</td>
+                        <td>@job.RequestedBy at @job.RequestedAt.LocalDateTime.ToString("g")</td>
+                        <td><a class="button small" href="@AdminRoutes.ImportJobs.Detail(job.Id)">Open</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<ImportJobDto> jobs = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            jobs = (await ImportJobApiClient.SearchAsync(null, null, null, CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

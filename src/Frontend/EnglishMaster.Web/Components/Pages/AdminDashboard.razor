@@ -1,0 +1,99 @@
+@page "/admin"
+@rendermode InteractiveServer
+@inject IReportsApiClient ReportsApiClient
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Admin Dashboard</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Dashboard</h1>
+        @if (!string.IsNullOrWhiteSpace(CurrentUserName))
+        {
+            <p class="muted">Signed in as @CurrentUserName</p>
+        }
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+<section class="stat-grid">
+    @foreach (var card in cards)
+    {
+        <a class="panel stat-card" href="@card.Route">
+            <span class="stat-label">@card.Label</span>
+            <span class="stat-value">@(isLoading ? "..." : card.Count?.ToString() ?? "-")</span>
+        </a>
+    }
+</section>
+
+@code {
+    private readonly record struct StatCard(string Label, string Route, int? Count);
+
+    private IReadOnlyList<StatCard> cards = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var summary = await ReportsApiClient.GetAdminDashboardSummaryAsync(CancellationToken.None);
+            var overview = summary.Overview;
+            var content = summary.ContentStatus;
+            var quiz = summary.QuizAnalytics;
+
+            cards =
+            [
+                new StatCard("Students", AdminRoutes.Users.Index, overview.TotalStudents),
+                new StatCard("Active Students", AdminRoutes.Users.Index, overview.TotalActiveStudents),
+                new StatCard("Words", AdminRoutes.Words.Index, overview.TotalWords),
+                new StatCard("Lessons", AdminRoutes.Lessons.Index, overview.TotalLessons),
+                new StatCard("Courses", AdminRoutes.Courses.Index, overview.TotalCourses),
+                new StatCard("Books", AdminRoutes.Books.Index, overview.TotalBooks),
+                new StatCard("Quizzes", AdminRoutes.Quizzes.Index, overview.TotalQuizzes),
+                new StatCard("Published Lessons", AdminRoutes.Reports.Index, content.PublishedLessons),
+                new StatCard("Draft Lessons", AdminRoutes.Reports.Index, content.DraftLessons),
+                new StatCard("Published Courses", AdminRoutes.Reports.Index, content.PublishedCourses),
+                new StatCard("Published Books", AdminRoutes.Reports.Index, content.PublishedBooks),
+                new StatCard("Published Quizzes", AdminRoutes.Reports.Index, content.PublishedQuizzes),
+                new StatCard("Quiz Attempts", AdminRoutes.Reports.Index, quiz.TotalAttempts),
+                new StatCard("Recent Activity", AdminRoutes.Reports.Index, summary.RecentActivity.Count)
+            ];
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+            cards =
+            [
+                new StatCard("Students", AdminRoutes.Users.Index, null),
+                new StatCard("Active Students", AdminRoutes.Users.Index, null),
+                new StatCard("Words", AdminRoutes.Words.Index, null),
+                new StatCard("Lessons", AdminRoutes.Lessons.Index, null),
+                new StatCard("Courses", AdminRoutes.Courses.Index, null),
+                new StatCard("Books", AdminRoutes.Books.Index, null),
+                new StatCard("Quizzes", AdminRoutes.Quizzes.Index, null),
+                new StatCard("Published Lessons", AdminRoutes.Reports.Index, null),
+                new StatCard("Draft Lessons", AdminRoutes.Reports.Index, null),
+                new StatCard("Published Courses", AdminRoutes.Reports.Index, null),
+                new StatCard("Published Books", AdminRoutes.Reports.Index, null),
+                new StatCard("Published Quizzes", AdminRoutes.Reports.Index, null),
+                new StatCard("Quiz Attempts", AdminRoutes.Reports.Index, null),
+                new StatCard("Recent Activity", AdminRoutes.Reports.Index, null)
+            ];
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string? CurrentUserName => HttpContextAccessor.HttpContext?.User.Identity?.Name;
+}

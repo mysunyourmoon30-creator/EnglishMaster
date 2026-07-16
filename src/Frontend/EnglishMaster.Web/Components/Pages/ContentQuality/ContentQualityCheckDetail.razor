@@ -1,0 +1,81 @@
+@page "/admin/content-quality/checks/{Id:guid}"
+@rendermode InteractiveServer
+@inject IContentQualityApiClient ContentQualityApiClient
+
+<PageTitle>Quality Check</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Quality Check</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading quality check...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (check is not null)
+{
+    <section class="panel">
+        <h2>@check.ContentType</h2>
+        <p class="muted">@check.ContentId</p>
+        <p>Status: @check.Status · Score: @check.Score</p>
+    </section>
+
+    <section class="content-list">
+        @foreach (var finding in check.Findings)
+        {
+            <article class="panel">
+                <div class="item-header">
+                    <div>
+                        <h2>@finding.RuleCode</h2>
+                        <p>@finding.Message</p>
+                    </div>
+                    <span class="badge">@finding.Severity</span>
+                </div>
+                <p class="muted">@finding.Recommendation</p>
+                @if (!finding.IsResolved)
+                {
+                    <button class="button small" type="button" @onclick="() => ResolveAsync(finding.Id)">Resolve</button>
+                }
+            </article>
+        }
+    </section>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private ContentQualityCheckDto? check;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            check = await ContentQualityApiClient.GetCheckAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ResolveAsync(Guid id)
+    {
+        await ContentQualityApiClient.ResolveFindingAsync(id, CancellationToken.None);
+        await LoadAsync();
+    }
+}

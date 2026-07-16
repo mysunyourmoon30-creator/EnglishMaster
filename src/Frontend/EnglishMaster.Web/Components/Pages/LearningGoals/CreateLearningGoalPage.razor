@@ -1,0 +1,60 @@
+@page "/learn/goals/create"
+@inject ILearningGoalApiClient GoalApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Learning Goal</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Create Learning Goal</h1>
+        <p class="muted">Set a simple target for your study routine.</p>
+    </div>
+    <a class="button secondary" href="/learn/goals">Back</a>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+<EditForm Model="form" OnValidSubmit="SaveAsync" FormName="create-learning-goal">
+    <DataAnnotationsValidator />
+    <section class="form-grid">
+        <label>Goal type <InputText @bind-Value="form.GoalType" /></label>
+        <label>Title <InputText @bind-Value="form.Title" /></label>
+        <label>Description <InputTextArea @bind-Value="form.Description" /></label>
+        <label>Target value <InputNumber @bind-Value="form.TargetValue" /></label>
+        <label>Unit <InputText @bind-Value="form.Unit" /></label>
+    </section>
+    <button class="button" type="submit">Create</button>
+</EditForm>
+
+@code {
+    private GoalForm form = new();
+    private string? errorMessage;
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            var goal = await GoalApiClient.CreateAsync(new CreateLearningGoalRequest(form.GoalType, form.Title, form.Description, form.TargetValue, form.Unit, null), CancellationToken.None);
+            NavigationManager.NavigateTo($"/learn/goals/{goal.Id}");
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Goal could not be created.";
+        }
+    }
+
+    private sealed class GoalForm
+    {
+        [Required]
+        public string GoalType { get; set; } = "DailyStudyMinutes";
+        [Required]
+        public string Title { get; set; } = "Study 30 minutes daily";
+        public string? Description { get; set; }
+        [Range(0, int.MaxValue)]
+        public int TargetValue { get; set; } = 30;
+        public string? Unit { get; set; } = "minutes";
+    }
+}

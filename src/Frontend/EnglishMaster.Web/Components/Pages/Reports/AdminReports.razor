@@ -1,0 +1,136 @@
+@page "/admin/reports"
+@rendermode InteractiveServer
+@inject IReportsApiClient ReportsApiClient
+
+<PageTitle>Admin Reports</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Reports</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading reports...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (dashboard is not null && learning is not null)
+{
+    <section class="stat-grid">
+        <div class="panel stat-card">
+            <span class="stat-label">Students</span>
+            <span class="stat-value">@dashboard.Overview.TotalStudents</span>
+        </div>
+        <div class="panel stat-card">
+            <span class="stat-label">Words</span>
+            <span class="stat-value">@dashboard.Overview.TotalWords</span>
+        </div>
+        <div class="panel stat-card">
+            <span class="stat-label">Lessons</span>
+            <span class="stat-value">@dashboard.Overview.TotalLessons</span>
+        </div>
+        <div class="panel stat-card">
+            <span class="stat-label">Quizzes</span>
+            <span class="stat-value">@dashboard.Overview.TotalQuizzes</span>
+        </div>
+    </section>
+
+    <section class="content-grid">
+        <article class="panel">
+            <h2>Content Status</h2>
+            <dl class="metric-list">
+                <dt>Published lessons</dt>
+                <dd>@dashboard.ContentStatus.PublishedLessons</dd>
+                <dt>Draft lessons</dt>
+                <dd>@dashboard.ContentStatus.DraftLessons</dd>
+                <dt>Published courses</dt>
+                <dd>@dashboard.ContentStatus.PublishedCourses</dd>
+                <dt>Published books</dt>
+                <dd>@dashboard.ContentStatus.PublishedBooks</dd>
+                <dt>Published quizzes</dt>
+                <dd>@dashboard.ContentStatus.PublishedQuizzes</dd>
+            </dl>
+        </article>
+
+        <article class="panel">
+            <h2>Quiz Analytics</h2>
+            <dl class="metric-list">
+                <dt>Total attempts</dt>
+                <dd>@dashboard.QuizAnalytics.TotalAttempts</dd>
+                <dt>Average score</dt>
+                <dd>@dashboard.QuizAnalytics.AverageScore</dd>
+                <dt>Passed</dt>
+                <dd>@dashboard.QuizAnalytics.PassedCount</dd>
+                <dt>Failed</dt>
+                <dd>@dashboard.QuizAnalytics.FailedCount</dd>
+            </dl>
+        </article>
+
+        <article class="panel">
+            <h2>Learning Progress</h2>
+            <dl class="metric-list">
+                <dt>Course started</dt>
+                <dd>@learning.CourseProgress.StartedCount</dd>
+                <dt>Course completed</dt>
+                <dd>@learning.CourseProgress.CompletedCount</dd>
+                <dt>Book started</dt>
+                <dd>@learning.BookProgress.StartedCount</dd>
+                <dt>Book completed</dt>
+                <dd>@learning.BookProgress.CompletedCount</dd>
+            </dl>
+        </article>
+
+        <article class="panel">
+            <h2>Recent Activity</h2>
+            @if (dashboard.RecentActivity.Count == 0)
+            {
+                <p class="muted">No recent activity.</p>
+            }
+            else
+            {
+                <ul class="plain-list">
+                    @foreach (var item in dashboard.RecentActivity)
+                    {
+                        <li>
+                            <strong>@item.Type</strong>
+                            <span>@item.Title</span>
+                            <span class="muted">@item.OccurredAt.LocalDateTime.ToString("g")</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </article>
+    </section>
+}
+
+@code {
+    private AdminDashboardSummaryDto? dashboard;
+    private LearningProgressSummaryDto? learning;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var dashboardTask = ReportsApiClient.GetAdminDashboardSummaryAsync(CancellationToken.None);
+            var learningTask = ReportsApiClient.GetLearningProgressSummaryAsync(CancellationToken.None);
+            await Task.WhenAll(dashboardTask, learningTask);
+            dashboard = dashboardTask.Result;
+            learning = learningTask.Result;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

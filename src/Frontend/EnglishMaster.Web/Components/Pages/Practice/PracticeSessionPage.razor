@@ -1,0 +1,87 @@
+@page "/learn/practice/session/{Id:guid}"
+@inject IPracticeApiClient PracticeApiClient
+
+<PageTitle>Practice Session</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Practice Session</h1>
+        <p class="muted">@session.CompletedItems of @session.TotalItems completed</p>
+    </div>
+    <button class="button" type="button" @onclick="CompleteAsync">Complete session</button>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading session...</p>
+}
+else if (session.Items.Count == 0)
+{
+    <p class="muted">No items in this session.</p>
+}
+else
+{
+    <section class="content-list">
+        @foreach (var item in session.Items)
+        {
+            <article class="list-card">
+                <span class="pill">@item.PracticeType</span>
+                <h2>@item.PromptText</h2>
+                @if (item.PracticedAt.HasValue)
+                {
+                    <p class="muted">Submitted: @item.Result</p>
+                }
+                else
+                {
+                    <div class="actions">
+                        <button class="button small" type="button" @onclick="@(() => SubmitAsync(item.Id, "Again"))">Again</button>
+                        <button class="button small" type="button" @onclick="@(() => SubmitAsync(item.Id, "Hard"))">Hard</button>
+                        <button class="button small" type="button" @onclick="@(() => SubmitAsync(item.Id, "Good"))">Good</button>
+                        <button class="button small" type="button" @onclick="@(() => SubmitAsync(item.Id, "Easy"))">Easy</button>
+                    </div>
+                }
+            </article>
+        }
+    </section>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private PracticeSessionDto session = new(Guid.Empty, DateTimeOffset.UtcNow, null, "Started", 0, 0, 0, 0, []);
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            session = await PracticeApiClient.GetSessionAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Practice session is unavailable.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SubmitAsync(Guid itemId, string result)
+    {
+        await PracticeApiClient.SubmitAsync(itemId, new SubmitPracticeSessionItemRequest(null, result), CancellationToken.None);
+        await LoadAsync();
+    }
+
+    private async Task CompleteAsync()
+    {
+        session = await PracticeApiClient.CompleteAsync(Id, CancellationToken.None);
+    }
+}
+

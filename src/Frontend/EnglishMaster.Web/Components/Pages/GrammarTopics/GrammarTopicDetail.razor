@@ -1,0 +1,152 @@
+@page "/admin/grammar-topics/{Id:guid}"
+@rendermode InteractiveServer
+@inject IGrammarApiClient GrammarApiClient
+
+<PageTitle>@(topic is null ? "Grammar Topic" : topic.Title)</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Grammar</p>
+        <h1>@(topic is null ? "Grammar Topic" : topic.Title)</h1>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.GrammarTopics.Index">Back</a>
+        @if (topic is not null)
+        {
+            <a class="button primary" href="@AdminRoutes.GrammarTopics.Edit(topic.Id)">Edit</a>
+            <a class="button" href="@AdminRoutes.GrammarRules.CreateForTopic(topic.Id)">New Rule</a>
+        }
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading grammar topic...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Grammar topic was not found.</p>
+    </section>
+}
+else if (topic is not null)
+{
+    <section class="panel">
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Slug</span>
+                <strong>@topic.Slug</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">CEFR</span>
+                <strong>@topic.CefrLevel</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Sort Order</span>
+                <strong>@topic.SortOrder</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Status</span>
+                <strong>@(topic.IsActive ? "Active" : "Inactive")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Summary</span>
+                <strong>@topic.Summary</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-header section-header">
+        <div>
+            <p class="eyebrow">Rules</p>
+            <h1>Grammar Rules</h1>
+        </div>
+    </section>
+
+    @if (rules.Count == 0)
+    {
+        <section class="panel">
+            <p class="muted">No grammar rules found for this topic.</p>
+        </section>
+    }
+    else
+    {
+        <section class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Sort</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var rule in rules)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@rule.Title</strong>
+                                <span class="muted">@rule.StructurePattern</span>
+                            </td>
+                            <td>@rule.SortOrder</td>
+                            <td>@(rule.IsActive ? "Active" : "Inactive")</td>
+                            <td class="row-actions">
+                                <a class="button small" href="@AdminRoutes.GrammarRules.Detail(rule.Id)">View</a>
+                                <a class="button small" href="@AdminRoutes.GrammarRules.Edit(rule.Id)">Edit</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private GrammarTopicDto? topic;
+    private IReadOnlyCollection<GrammarRuleDto> rules = [];
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            topic = await GrammarApiClient.GetTopicAsync(Id, CancellationToken.None);
+            if (topic is null)
+            {
+                notFound = true;
+                return;
+            }
+
+            rules = (await GrammarApiClient.GetRulesByTopicIdAsync(
+                Id,
+                isActive: null,
+                pageNumber: 1,
+                pageSize: 50,
+                CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

@@ -1,0 +1,531 @@
+@page "/admin/books/{Id:guid}"
+@rendermode InteractiveServer
+@inject IBookApiClient BookApiClient
+@inject ILessonApiClient LessonApiClient
+
+<PageTitle>@(book is null ? "Book" : book.Title)</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Books</p>
+        <h1>@(book is null ? "Book" : book.Title)</h1>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.Books.Index">Back</a>
+        @if (book is not null)
+        {
+            <a class="button" href="@AdminRoutes.ContentRevisions.Timeline("Book", book.Id)">Revision History</a>
+            <a class="button primary" href="@AdminRoutes.Books.Edit(book.Id)">Edit</a>
+            <button class="button" type="button" @onclick="TogglePublishAsync">
+                @(book.IsPublished ? "Unpublish" : "Publish")
+            </button>
+        }
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading book...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Book was not found.</p>
+    </section>
+}
+else if (book is not null)
+{
+    <section class="panel">
+        @if (book.CoverMedia is not null)
+        {
+            <img class="thumbnail" src="@book.CoverMedia.PublicUrl" alt="@book.CoverMedia.AltText" />
+        }
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Slug</span>
+                <strong>@book.Slug</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">CEFR</span>
+                <strong>@(book.CefrLevel ?? "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Category</span>
+                <strong>@(book.Category?.Name ?? "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Course</span>
+                <strong>@(book.Course?.Title ?? "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Author</span>
+                <strong>@book.AuthorName</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Edition</span>
+                <strong>@book.Edition</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Version</span>
+                <strong>@book.Version</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Estimated Pages</span>
+                <strong>@book.EstimatedPages</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Published</span>
+                <strong>@(book.IsPublished ? "Published" : "Draft")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Status</span>
+                <strong>@(book.IsActive ? "Active" : "Inactive")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Subtitle</span>
+                <strong>@book.Subtitle</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Summary</span>
+                <strong>@book.Summary</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Description</span>
+                <strong>@book.Description</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-header section-header">
+        <div>
+            <p class="eyebrow">Structure</p>
+            <h1>Chapters</h1>
+        </div>
+    </section>
+
+    <section class="panel">
+        @if (!string.IsNullOrWhiteSpace(chapterErrorMessage))
+        {
+            <div class="alert error">@chapterErrorMessage</div>
+        }
+
+        <BookChapterForm Model="chapterModel"
+                         ValidationErrors="chapterValidationErrors"
+                         IsSaving="isSavingChapter"
+                         ShowStatusToggle="@(editingChapterId.HasValue)"
+                         SubmitText="@(editingChapterId.HasValue ? "Save Chapter" : "Add Chapter")"
+                         OnValidSubmit="SaveChapterAsync"
+                         OnCancel="CancelChapterEdit" />
+    </section>
+
+    <section class="panel">
+        @if (!string.IsNullOrWhiteSpace(lessonErrorMessage))
+        {
+            <div class="alert error">@lessonErrorMessage</div>
+        }
+
+        <div class="filters-grid">
+            <label>
+                <span>Chapter</span>
+                <InputSelect class="input" @bind-Value="selectedChapterId">
+                    <option value="">Select chapter</option>
+                    @foreach (var chapter in chapters.OrderBy(item => item.SortOrder))
+                    {
+                        <option value="@chapter.Id">@chapter.Title</option>
+                    }
+                </InputSelect>
+            </label>
+            <label>
+                <span>Lesson</span>
+                <InputSelect class="input" @bind-Value="selectedLessonId">
+                    <option value="">Select lesson</option>
+                    @foreach (var lesson in AvailableLessonsForSelectedChapter())
+                    {
+                        <option value="@lesson.Id">@lesson.Title</option>
+                    }
+                </InputSelect>
+            </label>
+            <button class="button" type="button" @onclick="AddLessonAsync">Add Lesson</button>
+        </div>
+    </section>
+
+    @if (chapters.Count == 0)
+    {
+        <section class="panel nested-table">
+            <p class="muted">No chapters added yet.</p>
+        </section>
+    }
+    else
+    {
+        <section class="table-wrap nested-table">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Chapter</th>
+                        <th>Status</th>
+                        <th>Sort</th>
+                        <th>Lessons</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var chapter in chapters.OrderBy(item => item.SortOrder))
+                    {
+                        <tr>
+                            <td>
+                                <strong>@chapter.Title</strong>
+                                <span class="muted">@chapter.Summary</span>
+                            </td>
+                            <td>@(chapter.IsActive ? "Active" : "Inactive")</td>
+                            <td>@chapter.SortOrder</td>
+                            <td>@chapter.Lessons.Count</td>
+                            <td class="row-actions">
+                                <button class="button small" type="button" @onclick="() => MoveChapterUpAsync(chapter.Id)">Up</button>
+                                <button class="button small" type="button" @onclick="() => MoveChapterDownAsync(chapter.Id)">Down</button>
+                                <button class="button small" type="button" @onclick="() => EditChapter(chapter)">Edit</button>
+                                <button class="button small danger" type="button" @onclick="() => DeleteChapterAsync(chapter.Id)">Delete</button>
+                            </td>
+                        </tr>
+                        @if (chapter.Lessons.Count > 0)
+                        {
+                            <tr>
+                                <td colspan="5">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Lesson</th>
+                                                <th>CEFR</th>
+                                                <th>Sort</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var relation in chapter.Lessons.OrderBy(item => item.SortOrder))
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <strong>@relation.LessonTitle</strong>
+                                                        <span class="muted">@relation.LessonSummary</span>
+                                                    </td>
+                                                    <td>@(relation.LessonCefrLevel ?? "-")</td>
+                                                    <td>@relation.SortOrder</td>
+                                                    <td class="row-actions">
+                                                        <button class="button small" type="button" @onclick="() => MoveLessonUpAsync(chapter.Id, relation.Id)">Up</button>
+                                                        <button class="button small" type="button" @onclick="() => MoveLessonDownAsync(chapter.Id, relation.Id)">Down</button>
+                                                        <a class="button small" href="@AdminRoutes.Lessons.Detail(relation.LessonId)">View</a>
+                                                        <button class="button small danger" type="button" @onclick="() => RemoveLessonAsync(chapter.Id, relation.LessonId)">Remove</button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private BookDto? book;
+    private IReadOnlyCollection<BookChapterDto> chapters = [];
+    private IReadOnlyCollection<LessonDto> lessons = [];
+    private BookChapterFormModel chapterModel = new();
+    private IReadOnlyDictionary<string, string[]> chapterValidationErrors = new Dictionary<string, string[]>();
+    private Guid? editingChapterId;
+    private Guid? selectedChapterId;
+    private Guid? selectedLessonId;
+    private string? errorMessage;
+    private string? chapterErrorMessage;
+    private string? lessonErrorMessage;
+    private bool isLoading = true;
+    private bool isSavingChapter;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            lessons = (await LessonApiClient.SearchAsync(
+                new LessonSearchRequest(IsActive: true, PageSize: 100, SortBy: "Title", SortDirection: "Asc"),
+                CancellationToken.None)).Items;
+
+            book = await BookApiClient.GetAsync(Id, CancellationToken.None);
+            if (book is null)
+            {
+                notFound = true;
+                return;
+            }
+
+            chapters = await BookApiClient.GetChaptersAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private IEnumerable<LessonDto> AvailableLessonsForSelectedChapter()
+    {
+        if (!selectedChapterId.HasValue)
+        {
+            return [];
+        }
+
+        var chapter = chapters.FirstOrDefault(item => item.Id == selectedChapterId.Value);
+        if (chapter is null)
+        {
+            return [];
+        }
+
+        var relatedLessonIds = chapter.Lessons.Select(item => item.LessonId).ToHashSet();
+        return lessons.Where(lesson => !relatedLessonIds.Contains(lesson.Id));
+    }
+
+    private async Task TogglePublishAsync()
+    {
+        if (book is null)
+        {
+            return;
+        }
+
+        errorMessage = null;
+
+        try
+        {
+            if (book.IsPublished)
+            {
+                await BookApiClient.UnpublishAsync(book.Id, CancellationToken.None);
+            }
+            else
+            {
+                await BookApiClient.PublishAsync(book.Id, CancellationToken.None);
+            }
+
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+
+    private void EditChapter(BookChapterDto chapter)
+    {
+        editingChapterId = chapter.Id;
+        chapterModel = BookChapterFormModel.FromDto(chapter);
+        chapterValidationErrors = new Dictionary<string, string[]>();
+        chapterErrorMessage = null;
+    }
+
+    private Task CancelChapterEdit()
+    {
+        editingChapterId = null;
+        chapterModel = new BookChapterFormModel { SortOrder = chapters.Count };
+        chapterValidationErrors = new Dictionary<string, string[]>();
+        chapterErrorMessage = null;
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveChapterAsync()
+    {
+        if (book is null)
+        {
+            return;
+        }
+
+        isSavingChapter = true;
+        chapterErrorMessage = null;
+        chapterValidationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            if (editingChapterId.HasValue)
+            {
+                await BookApiClient.UpdateChapterAsync(
+                    editingChapterId.Value,
+                    chapterModel.ToUpdateRequest(),
+                    CancellationToken.None);
+            }
+            else
+            {
+                chapterModel.SortOrder = chapters.Count;
+                await BookApiClient.AddChapterAsync(
+                    book.Id,
+                    chapterModel.ToCreateRequest(),
+                    CancellationToken.None);
+            }
+
+            await CancelChapterEdit();
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            chapterValidationErrors = exception.ValidationErrors;
+            chapterErrorMessage = chapterValidationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSavingChapter = false;
+        }
+    }
+
+    private async Task DeleteChapterAsync(Guid chapterId)
+    {
+        chapterErrorMessage = null;
+
+        try
+        {
+            await BookApiClient.DeleteChapterAsync(chapterId, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            chapterErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task AddLessonAsync()
+    {
+        if (!selectedChapterId.HasValue || !selectedLessonId.HasValue)
+        {
+            return;
+        }
+
+        lessonErrorMessage = null;
+
+        try
+        {
+            var chapter = chapters.First(item => item.Id == selectedChapterId.Value);
+            await BookApiClient.AddLessonAsync(
+                selectedChapterId.Value,
+                selectedLessonId.Value,
+                chapter.Lessons.Count,
+                CancellationToken.None);
+            selectedLessonId = null;
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            lessonErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task RemoveLessonAsync(Guid chapterId, Guid lessonId)
+    {
+        lessonErrorMessage = null;
+
+        try
+        {
+            await BookApiClient.RemoveLessonAsync(chapterId, lessonId, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            lessonErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task MoveChapterUpAsync(Guid id)
+    {
+        await MoveChapterAsync(id, -1);
+    }
+
+    private async Task MoveChapterDownAsync(Guid id)
+    {
+        await MoveChapterAsync(id, 1);
+    }
+
+    private async Task MoveChapterAsync(Guid id, int offset)
+    {
+        if (book is null)
+        {
+            return;
+        }
+
+        var ordered = chapters.OrderBy(item => item.SortOrder).Select(item => item.Id).ToList();
+        var index = ordered.IndexOf(id);
+        var newIndex = index + offset;
+        if (index < 0 || newIndex < 0 || newIndex >= ordered.Count)
+        {
+            return;
+        }
+
+        (ordered[index], ordered[newIndex]) = (ordered[newIndex], ordered[index]);
+        chapterErrorMessage = null;
+
+        try
+        {
+            await BookApiClient.ReorderChaptersAsync(book.Id, ordered, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            chapterErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task MoveLessonUpAsync(Guid chapterId, Guid relationId)
+    {
+        await MoveLessonAsync(chapterId, relationId, -1);
+    }
+
+    private async Task MoveLessonDownAsync(Guid chapterId, Guid relationId)
+    {
+        await MoveLessonAsync(chapterId, relationId, 1);
+    }
+
+    private async Task MoveLessonAsync(Guid chapterId, Guid relationId, int offset)
+    {
+        var chapter = chapters.FirstOrDefault(item => item.Id == chapterId);
+        if (chapter is null)
+        {
+            return;
+        }
+
+        var ordered = chapter.Lessons.OrderBy(item => item.SortOrder).Select(item => item.Id).ToList();
+        var index = ordered.IndexOf(relationId);
+        var newIndex = index + offset;
+        if (index < 0 || newIndex < 0 || newIndex >= ordered.Count)
+        {
+            return;
+        }
+
+        (ordered[index], ordered[newIndex]) = (ordered[newIndex], ordered[index]);
+        lessonErrorMessage = null;
+
+        try
+        {
+            await BookApiClient.ReorderChapterLessonsAsync(chapterId, ordered, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            lessonErrorMessage = exception.Message;
+        }
+    }
+}

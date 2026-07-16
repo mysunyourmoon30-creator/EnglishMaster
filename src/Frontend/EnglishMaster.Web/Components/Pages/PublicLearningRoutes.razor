@@ -1,0 +1,48 @@
+@page "/learn/courses"
+@page "/learn/lessons"
+@page "/dictionary"
+@page "/grammar"
+@page "/books"
+@page "/quizzes"
+@inject NavigationManager NavigationManager
+
+<PageTitle>@Title</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>@Title</h1>
+        <p class="muted">Browse published learning content through search.</p>
+    </div>
+    <a class="button" href="@SearchUrl">Search @Title</a>
+</section>
+
+<section class="content-section">
+    <h2>Discovery</h2>
+    <p class="muted">Published content for this area is available through the learner search experience.</p>
+</section>
+
+@code {
+    private string Path => new Uri(NavigationManager.Uri).AbsolutePath.ToLowerInvariant();
+
+    private string Title => Path switch
+    {
+        "/learn/courses" => "Courses",
+        "/learn/lessons" => "Lessons",
+        "/dictionary" => "Dictionary",
+        "/grammar" => "Grammar",
+        "/books" => "Books",
+        "/quizzes" => "Quizzes",
+        _ => "Learning Content"
+    };
+
+    private string SearchUrl => Path switch
+    {
+        "/learn/courses" => "/search?type=course",
+        "/learn/lessons" => "/search?type=lesson",
+        "/dictionary" => "/search?type=word",
+        "/grammar" => "/search?type=grammar",
+        "/books" => "/search?type=book",
+        "/quizzes" => "/search?type=quiz",
+        _ => "/search"
+    };
+}

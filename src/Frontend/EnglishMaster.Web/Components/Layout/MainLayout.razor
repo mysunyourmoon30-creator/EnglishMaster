@@ -1,0 +1,132 @@
+@inherits LayoutComponentBase
+@inject IHttpContextAccessor HttpContextAccessor
+@inject INotificationsApiClient NotificationsApiClient
+
+<div class="app-shell">
+    <header class="topbar">
+        <a class="brand" href="@AdminRoutes.Dashboard">EnglishMaster</a>
+        <nav class="topnav" aria-label="Main navigation">
+            <NavLink href="@AdminRoutes.Dashboard" Match="NavLinkMatch.All">Dashboard</NavLink>
+            <NavLink href="/search">Search</NavLink>
+            @if (IsAuthenticated)
+            {
+                <NavLink href="/learn/recommendations">Recommendations</NavLink>
+                <NavLink href="/learn/practice">Practice</NavLink>
+                <NavLink href="/learn/goals">Goals</NavLink>
+                <NavLink href="/learn/study-plan">Study Plan</NavLink>
+                <NavLink href="/learn/motivation">Motivation</NavLink>
+                <NavLink href="/learn/reports">Reports</NavLink>
+            }
+            <NavLink href="@AdminRoutes.Words.Index">Words</NavLink>
+            <NavLink href="@AdminRoutes.Categories.Index">Categories</NavLink>
+            <NavLink href="@AdminRoutes.Tags.Index">Tags</NavLink>
+            <NavLink href="@AdminRoutes.Media.Index">Media</NavLink>
+            <NavLink href="@AdminRoutes.Pronunciations.Index">Pronunciation</NavLink>
+            <NavLink href="@AdminRoutes.GrammarTopics.Index">Grammar Topics</NavLink>
+            <NavLink href="@AdminRoutes.GrammarRules.Index">Grammar Rules</NavLink>
+            <NavLink href="@AdminRoutes.Lessons.Index">Lessons</NavLink>
+            <NavLink href="@AdminRoutes.Courses.Index">Courses</NavLink>
+            <NavLink href="@AdminRoutes.Books.Index">Books</NavLink>
+            <NavLink href="@AdminRoutes.Quizzes.Index">Quizzes</NavLink>
+            @if (HasPermission("reports.read"))
+            {
+                <NavLink href="@AdminRoutes.Reports.Index">Reports</NavLink>
+            }
+            @if (IsAuthenticated)
+            {
+                <NavLink href="@AdminRoutes.Notifications.Mine">Notifications@if (unreadNotificationCount > 0)
+                    {
+                        <span class="nav-badge">@unreadNotificationCount</span>
+                    }</NavLink>
+            }
+            @if (HasPermission("notifications.manage"))
+            {
+                <NavLink href="@AdminRoutes.Notifications.Index">Admin Notifications</NavLink>
+            }
+            @if (HasPermission("email.read"))
+            {
+                <NavLink href="@AdminRoutes.EmailMessages.Index">Email</NavLink>
+            }
+            @if (HasPermission("content-quality.read"))
+            {
+                <NavLink href="@AdminRoutes.ContentQuality.Index">Quality</NavLink>
+            }
+            @if (HasPermission("content-revisions.read"))
+            {
+                <NavLink href="@AdminRoutes.ContentRevisions.Index">Revisions</NavLink>
+            }
+            @if (HasPermission("bulk-operations.read"))
+            {
+                <NavLink href="@AdminRoutes.BulkOperations.Index">Bulk Operations</NavLink>
+            }
+            @if (HasPermission("import.read"))
+            {
+                <NavLink href="@AdminRoutes.ImportJobs.Index">Import Jobs</NavLink>
+            }
+            @if (HasPermission("achievements.manage"))
+            {
+                <NavLink href="/admin/achievement-definitions">Achievement Definitions</NavLink>
+            }
+            <NavLink href="@AdminRoutes.Publishing.Jobs.Index">Publishing</NavLink>
+            <NavLink href="@AdminRoutes.ImportExport.Import">Import</NavLink>
+            <NavLink href="@AdminRoutes.ImportExport.Export">Export</NavLink>
+            @if (HasSecurityAccess)
+            {
+                <NavLink href="@AdminRoutes.Users.Index">Users</NavLink>
+                <NavLink href="@AdminRoutes.Roles.Index">Roles</NavLink>
+                <NavLink href="@AdminRoutes.Permissions.Index">Permissions</NavLink>
+            }
+        </nav>
+        <div class="topbar-user">
+            @if (IsAuthenticated)
+            {
+                <span>@DisplayName</span>
+                <form method="post" action="@AdminRoutes.Logout">
+                    <button class="button small" type="submit">Logout</button>
+                </form>
+            }
+        </div>
+    </header>
+
+    <main class="main-content">
+        @Body
+    </main>
+</div>
+
+@code {
+    private bool IsAuthenticated => HttpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated == true;
+
+    private string DisplayName =>
+        HttpContextAccessor.HttpContext?.User.Identity?.Name ?? "Admin";
+
+    private bool HasSecurityAccess =>
+        HasPermission("users.read") || HasPermission("roles.read") || HasPermission("permissions.read");
+
+    private int unreadNotificationCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!IsAuthenticated || !HasPermission("notifications.read"))
+        {
+            return;
+        }
+
+        try
+        {
+            unreadNotificationCount = await NotificationsApiClient.GetUnreadCountAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            unreadNotificationCount = 0;
+        }
+    }
+
+    private bool HasPermission(string permission) =>
+        HttpContextAccessor.HttpContext?.User.HasClaim("permission", permission) == true;
+}
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">x</span>
+</div>

@@ -1,0 +1,170 @@
+@using EnglishMaster.Web.Services.Pronunciations
+
+<EditForm Model="Model" OnValidSubmit="SubmitAsync" class="word-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    @if (ValidationErrors.Count > 0)
+    {
+        <div class="alert error">
+            <ul>
+                @foreach (var error in ValidationErrors.SelectMany(item => item.Value))
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="form-grid">
+        <label class="span-2">
+            <span>Word</span>
+            <InputSelect class="input" @bind-Value="Model.WordId">
+                <option value="">Select word</option>
+                @foreach (var word in Words)
+                {
+                    <option value="@word.Id">@word.Text</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => Model.WordId)" />
+        </label>
+
+        <label>
+            <span>IPA UK</span>
+            <InputText class="input" @bind-Value="Model.IpaUk" />
+            <ValidationMessage For="@(() => Model.IpaUk)" />
+        </label>
+
+        <label>
+            <span>IPA US</span>
+            <InputText class="input" @bind-Value="Model.IpaUs" />
+            <ValidationMessage For="@(() => Model.IpaUs)" />
+        </label>
+
+        <label>
+            <span>Thai Reading</span>
+            <InputText class="input" @bind-Value="Model.ThaiReading" />
+            <ValidationMessage For="@(() => Model.ThaiReading)" />
+        </label>
+
+        <label>
+            <span>Syllables</span>
+            <InputText class="input" @bind-Value="Model.Syllables" />
+            <ValidationMessage For="@(() => Model.Syllables)" />
+        </label>
+
+        <label>
+            <span>Stress Pattern</span>
+            <InputText class="input" @bind-Value="Model.StressPattern" />
+            <ValidationMessage For="@(() => Model.StressPattern)" />
+        </label>
+
+        <label>
+            <span>Slow Audio</span>
+            <InputSelect class="input" @bind-Value="Model.AudioSlowMediaId">
+                <option value="">No slow audio</option>
+                @foreach (var media in AudioMedia)
+                {
+                    <option value="@media.Id">@media.OriginalFileName</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>Normal Audio</span>
+            <InputSelect class="input" @bind-Value="Model.AudioNormalMediaId">
+                <option value="">No normal audio</option>
+                @foreach (var media in AudioMedia)
+                {
+                    <option value="@media.Id">@media.OriginalFileName</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label class="span-2">
+            <span>Mouth Image</span>
+            <InputSelect class="input" @bind-Value="Model.MouthImageMediaId">
+                <option value="">No mouth image</option>
+                @foreach (var media in ImageMedia)
+                {
+                    <option value="@media.Id">@media.OriginalFileName</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label class="span-2">
+            <span>Mouth Position</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.MouthPosition" />
+            <ValidationMessage For="@(() => Model.MouthPosition)" />
+        </label>
+
+        <label class="span-2">
+            <span>Tongue Position</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.TonguePosition" />
+            <ValidationMessage For="@(() => Model.TonguePosition)" />
+        </label>
+
+        <label class="span-2">
+            <span>Common Mistake</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.CommonMistake" />
+            <ValidationMessage For="@(() => Model.CommonMistake)" />
+        </label>
+
+        <label class="span-2">
+            <span>Practice Note</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.PracticeNote" />
+            <ValidationMessage For="@(() => Model.PracticeNote)" />
+        </label>
+
+        @if (ShowActiveToggle)
+        {
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="Model.IsActive" />
+                <span>Active</span>
+            </label>
+        }
+    </div>
+
+    <div class="actions">
+        <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
+        <a class="button" href="@CancelHref">Cancel</a>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter, EditorRequired]
+    public PronunciationFormModel Model { get; set; } = new();
+
+    [Parameter]
+    public IReadOnlyCollection<WordDto> Words { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyCollection<MediaDto> AudioMedia { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyCollection<MediaDto> ImageMedia { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyDictionary<string, string[]> ValidationErrors { get; set; } =
+        new Dictionary<string, string[]>();
+
+    [Parameter]
+    public bool IsSaving { get; set; }
+
+    [Parameter]
+    public bool ShowActiveToggle { get; set; }
+
+    [Parameter]
+    public string SubmitText { get; set; } = "Save";
+
+    [Parameter]
+    public string CancelHref { get; set; } = AdminRoutes.Pronunciations.Index;
+
+    [Parameter]
+    public EventCallback OnValidSubmit { get; set; }
+
+    private async Task SubmitAsync()
+    {
+        await OnValidSubmit.InvokeAsync();
+    }
+}

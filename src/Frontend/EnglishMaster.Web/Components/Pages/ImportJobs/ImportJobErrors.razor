@@ -1,0 +1,49 @@
+@page "/admin/import-jobs/{Id:guid}/errors"
+@rendermode InteractiveServer
+@inject IImportJobApiClient ImportJobApiClient
+
+<PageTitle>Import Errors</PageTitle>
+
+<section class="page-header">
+    <div><p class="eyebrow">Admin</p><h1>Import Errors</h1></div>
+    <a class="button secondary" href="@AdminRoutes.ImportJobs.Detail(Id)">Back</a>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else
+{
+    <section class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Field</th><th>Code</th><th>Severity</th><th>Message</th></tr></thead>
+            <tbody>
+                @foreach (var error in errors)
+                {
+                    <tr><td>@error.FieldName</td><td>@error.ErrorCode</td><td>@error.Severity</td><td>@error.ErrorMessage</td></tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private IReadOnlyCollection<ImportValidationErrorDto> errors = [];
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            errors = await ImportJobApiClient.GetErrorsAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+}

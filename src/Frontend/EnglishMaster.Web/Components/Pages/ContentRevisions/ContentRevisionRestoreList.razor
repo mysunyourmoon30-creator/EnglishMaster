@@ -1,0 +1,61 @@
+@page "/admin/content-revision-restores"
+@rendermode InteractiveServer
+@inject IContentRevisionApiClient ContentRevisionApiClient
+
+<PageTitle>Revision Restores</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Revision Restore Requests</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading restore requests...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (requests.Count == 0)
+{
+    <div class="panel">No restore requests found.</div>
+}
+else
+{
+    <section class="content-list">
+        @foreach (var request in requests)
+        {
+            <article class="panel">
+                <h2>@request.Status</h2>
+                <p class="muted">@request.RequestedBy at @request.RequestedAt.LocalDateTime.ToString("g")</p>
+                <p>@request.Reason</p>
+                <a class="button secondary" href="@AdminRoutes.ContentRevisions.RestoreDetail(request.Id)">Open</a>
+            </article>
+        }
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<ContentRevisionRestoreRequestDto> requests = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            requests = (await ContentRevisionApiClient.SearchRestoreRequestsAsync(null, CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

@@ -1,0 +1,90 @@
+@using EnglishMaster.Web.Services.Grammar
+
+<EditForm Model="Model" OnValidSubmit="SubmitAsync" class="word-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    @if (ValidationErrors.Count > 0)
+    {
+        <div class="alert error">
+            <ul>
+                @foreach (var error in ValidationErrors.SelectMany(item => item.Value))
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="form-grid">
+        <label class="span-2">
+            <span>Title</span>
+            <InputText class="input" @bind-Value="Model.Title" />
+            <ValidationMessage For="@(() => Model.Title)" />
+        </label>
+
+        <label>
+            <span>CEFR</span>
+            <InputSelect class="input" @bind-Value="Model.CefrLevel">
+                @foreach (var level in CefrLevels)
+                {
+                    <option value="@level">@level</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => Model.CefrLevel)" />
+        </label>
+
+        <label>
+            <span>Sort Order</span>
+            <InputNumber class="input" @bind-Value="Model.SortOrder" />
+            <ValidationMessage For="@(() => Model.SortOrder)" />
+        </label>
+
+        <label class="span-2">
+            <span>Summary</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.Summary" />
+            <ValidationMessage For="@(() => Model.Summary)" />
+        </label>
+
+        @if (ShowActiveToggle)
+        {
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="Model.IsActive" />
+                <span>Active</span>
+            </label>
+        }
+    </div>
+
+    <div class="actions">
+        <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
+        <a class="button" href="@AdminRoutes.GrammarTopics.Index">Cancel</a>
+    </div>
+</EditForm>
+
+@code {
+    private static readonly string[] CefrLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+    [Parameter, EditorRequired]
+    public GrammarTopicFormModel Model { get; set; } = new();
+
+    [Parameter]
+    public IReadOnlyDictionary<string, string[]> ValidationErrors { get; set; } =
+        new Dictionary<string, string[]>();
+
+    [Parameter]
+    public bool IsSaving { get; set; }
+
+    [Parameter]
+    public bool ShowActiveToggle { get; set; }
+
+    [Parameter]
+    public string SubmitText { get; set; } = "Save";
+
+    [Parameter]
+    public EventCallback OnValidSubmit { get; set; }
+
+    private async Task SubmitAsync()
+    {
+        await OnValidSubmit.InvokeAsync();
+    }
+}

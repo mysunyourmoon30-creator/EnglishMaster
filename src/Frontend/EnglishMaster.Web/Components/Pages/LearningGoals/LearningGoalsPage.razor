@@ -1,0 +1,96 @@
+@page "/learn/goals"
+@inject ILearningGoalApiClient GoalApiClient
+
+<PageTitle>Learning Goals</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Learning Goals</h1>
+        <p class="muted">Track active and completed learning goals.</p>
+    </div>
+    <a class="button" href="/learn/goals/create">Create goal</a>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading goals...</p>
+}
+else
+{
+    <section class="metrics-grid">
+        <article class="metric-card"><span>Active</span><strong>@summary.ActiveCount</strong></article>
+        <article class="metric-card"><span>Completed</span><strong>@summary.CompletedCount</strong></article>
+        <article class="metric-card"><span>Paused</span><strong>@summary.PausedCount</strong></article>
+        <article class="metric-card"><span>Cancelled</span><strong>@summary.CancelledCount</strong></article>
+    </section>
+
+    <section class="content-section">
+        <h2>Active Goals</h2>
+        @if (!goals.Any(goal => goal.Status == "Active"))
+        {
+            <p class="muted">No active goals yet.</p>
+        }
+        else
+        {
+            <div class="card-grid">
+                @foreach (var goal in goals.Where(goal => goal.Status == "Active"))
+                {
+                    <article class="list-card">
+                        <span class="pill">@goal.GoalType</span>
+                        <h3><a href="/learn/goals/@goal.Id">@goal.Title</a></h3>
+                        <p class="muted">@goal.CurrentValue / @goal.TargetValue @goal.Unit</p>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="content-section">
+        <h2>Completed Goals</h2>
+        @if (!goals.Any(goal => goal.Status == "Completed"))
+        {
+            <p class="muted">No completed goals yet.</p>
+        }
+        else
+        {
+            <div class="card-grid">
+                @foreach (var goal in goals.Where(goal => goal.Status == "Completed"))
+                {
+                    <article class="list-card">
+                        <span class="pill">@goal.Status</span>
+                        <h3><a href="/learn/goals/@goal.Id">@goal.Title</a></h3>
+                        <p class="muted">@goal.TargetValue @goal.Unit</p>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+}
+
+@code {
+    private LearningGoalSummaryDto summary = new(0, 0, 0, 0);
+    private IReadOnlyCollection<LearningGoalDto> goals = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            summary = await GoalApiClient.GetSummaryAsync(CancellationToken.None);
+            goals = await GoalApiClient.GetGoalsAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Learning goals are unavailable right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

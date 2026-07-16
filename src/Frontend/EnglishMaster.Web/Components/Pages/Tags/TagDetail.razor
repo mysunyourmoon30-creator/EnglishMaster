@@ -1,0 +1,89 @@
+@page "/admin/tags/{Id:guid}"
+@rendermode InteractiveServer
+@inject ITagsApiClient TagsApiClient
+
+<PageTitle>@(tag is null ? "Tag" : tag.Name)</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Vocabulary</p>
+        <h1>@(tag is null ? "Tag" : tag.Name)</h1>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.Tags.Index">Back</a>
+        @if (tag is not null)
+        {
+            <a class="button primary" href="@AdminRoutes.Tags.Edit(tag.Id)">Edit</a>
+        }
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading tag...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Tag was not found.</p>
+    </section>
+}
+else if (tag is not null)
+{
+    <section class="panel">
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Name</span>
+                <strong>@tag.Name</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Slug</span>
+                <strong>@tag.Slug</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Status</span>
+                <strong>@(tag.IsActive ? "Active" : "Inactive")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Description</span>
+                <strong>@tag.Description</strong>
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private TagDto? tag;
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            tag = await TagsApiClient.GetAsync(Id, CancellationToken.None);
+            notFound = tag is null;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

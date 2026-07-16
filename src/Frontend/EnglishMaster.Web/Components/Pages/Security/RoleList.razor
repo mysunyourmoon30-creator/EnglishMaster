@@ -1,0 +1,73 @@
+@page "/admin/roles"
+@rendermode InteractiveServer
+@inject ISecurityApiClient SecurityApiClient
+
+<PageTitle>Roles</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Roles</h1>
+    </div>
+    <a class="button primary" href="@AdminRoutes.Roles.Create">New Role</a>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading roles...</p>
+}
+else if (roles.Count == 0)
+{
+    <section class="panel"><p class="muted">No roles found.</p></section>
+}
+else
+{
+    <section class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>Name</th><th>Permissions</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var role in roles)
+                {
+                    <tr>
+                        <td><strong>@role.Name</strong><span class="muted">@role.Description</span></td>
+                        <td>@role.Permissions.Count</td>
+                        <td>@(role.IsActive ? "Active" : "Inactive")</td>
+                        <td class="row-actions">
+                            <a class="button small" href="@AdminRoutes.Roles.Detail(role.Id)">View</a>
+                            <a class="button small" href="@AdminRoutes.Roles.Edit(role.Id)">Edit</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<RoleDto> roles = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            roles = (await SecurityApiClient.SearchRolesAsync(null, null, 1, 100, CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

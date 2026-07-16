@@ -1,0 +1,46 @@
+@page "/admin/roles/{Id:guid}"
+@rendermode InteractiveServer
+@inject ISecurityApiClient SecurityApiClient
+
+<PageTitle>Role Detail</PageTitle>
+
+@if (isLoading)
+{
+    <p class="muted">Loading role...</p>
+}
+else if (role is null)
+{
+    <section class="panel"><p class="muted">Role was not found.</p></section>
+}
+else
+{
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">Administration</p>
+            <h1>@role.Name</h1>
+        </div>
+        <a class="button primary" href="@AdminRoutes.Roles.Edit(role.Id)">Edit</a>
+    </section>
+    <section class="panel detail-grid">
+        <div><span class="muted">Slug</span><strong>@role.Slug</strong></div>
+        <div><span class="muted">System</span><strong>@(role.IsSystem ? "Yes" : "No")</strong></div>
+        <div><span class="muted">Status</span><strong>@(role.IsActive ? "Active" : "Inactive")</strong></div>
+        <div><span class="muted">Permissions</span><strong>@role.Permissions.Count</strong></div>
+    </section>
+    <section class="panel">
+        <h2>Permissions</h2>
+        <p class="muted">@string.Join(", ", role.Permissions)</p>
+    </section>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private RoleDto? role;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        role = await SecurityApiClient.GetRoleAsync(Id, CancellationToken.None);
+        isLoading = false;
+    }
+}

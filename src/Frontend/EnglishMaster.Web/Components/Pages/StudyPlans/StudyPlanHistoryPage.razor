@@ -1,0 +1,60 @@
+@page "/learn/study-plan/history"
+@inject IDailyStudyPlanApiClient StudyPlanApiClient
+
+<PageTitle>Study Plan History</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Study Plan History</h1>
+        <p class="muted">Review recent daily study plans.</p>
+    </div>
+    <a class="button secondary" href="/learn/study-plan">Today</a>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading history...</p>
+}
+else if (plans.Count == 0)
+{
+    <p class="muted">No study plan history yet.</p>
+}
+else
+{
+    <div class="card-grid">
+        @foreach (var plan in plans)
+        {
+            <article class="list-card">
+                <span class="pill">@plan.Status</span>
+                <h3>@plan.PlanDate.ToString("yyyy-MM-dd")</h3>
+                <p class="muted">@plan.CompletedItems / @plan.TotalItems items - @plan.CompletedMinutes minutes</p>
+            </article>
+        }
+    </div>
+}
+
+@code {
+    private IReadOnlyCollection<DailyStudyPlanDto> plans = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            plans = await StudyPlanApiClient.GetHistoryAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Study plan history is unavailable right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

@@ -1,0 +1,68 @@
+@page "/learn/achievements"
+@inject IMotivationApiClient MotivationApiClient
+
+<PageTitle>Achievements</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Achievements</h1>
+        <p class="muted">Review earned and in-progress achievements.</p>
+    </div>
+    <button class="button" type="button" @onclick="EvaluateAsync">Evaluate</button>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading achievements...</p>
+}
+else if (achievements.Count == 0)
+{
+    <p class="muted">No achievement progress yet.</p>
+}
+else
+{
+    <div class="card-grid">
+        @foreach (var achievement in achievements)
+        {
+            <article class="list-card">
+                <span class="pill">@achievement.Status</span>
+                <h3>@achievement.Name</h3>
+                <p>@achievement.Description</p>
+                <p class="muted">@achievement.ProgressValue / @achievement.TargetValue</p>
+            </article>
+        }
+    </div>
+}
+
+@code {
+    private IReadOnlyCollection<StudentAchievementDto> achievements = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            achievements = await MotivationApiClient.GetAchievementsAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Achievements are unavailable right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task EvaluateAsync()
+    {
+        achievements = await MotivationApiClient.EvaluateAchievementsAsync(CancellationToken.None);
+    }
+}

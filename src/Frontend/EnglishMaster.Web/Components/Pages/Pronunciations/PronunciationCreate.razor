@@ -1,0 +1,101 @@
+@page "/admin/pronunciations/create"
+@rendermode InteractiveServer
+@inject IPronunciationsApiClient PronunciationsApiClient
+@inject IWordsApiClient WordsApiClient
+@inject IMediaApiClient MediaApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>New Pronunciation</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Pronunciation</p>
+        <h1>New Pronunciation</h1>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading pronunciation options...</p>
+}
+else
+{
+    <section class="panel">
+        <PronunciationForm Model="model"
+                           Words="words"
+                           AudioMedia="audioMedia"
+                           ImageMedia="imageMedia"
+                           ValidationErrors="validationErrors"
+                           IsSaving="isSaving"
+                           SubmitText="Create"
+                           OnValidSubmit="SaveAsync" />
+    </section>
+}
+
+@code {
+    private readonly PronunciationFormModel model = new();
+    private IReadOnlyCollection<WordDto> words = [];
+    private IReadOnlyCollection<MediaDto> audioMedia = [];
+    private IReadOnlyCollection<MediaDto> imageMedia = [];
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSaving;
+
+    [SupplyParameterFromQuery]
+    public Guid? WordId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            model.WordId = WordId;
+            words = (await WordsApiClient.SearchAsync(
+                new WordSearchRequest(IsActive: true, PageSize: 100, SortBy: "Text", SortDirection: "Asc"),
+                CancellationToken.None)).Items;
+            audioMedia = (await MediaApiClient.SearchAsync(
+                new MediaSearchRequest(MediaType: "Audio", IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+            imageMedia = (await MediaApiClient.SearchAsync(
+                new MediaSearchRequest(MediaType: "Image", IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            var pronunciation = await PronunciationsApiClient.CreateAsync(
+                model.ToCreateRequest(),
+                CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.Pronunciations.Detail(pronunciation.Id));
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

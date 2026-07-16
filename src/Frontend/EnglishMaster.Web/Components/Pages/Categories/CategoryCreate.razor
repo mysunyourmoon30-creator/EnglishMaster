@@ -1,0 +1,55 @@
+@page "/admin/categories/create"
+@rendermode InteractiveServer
+@inject ICategoriesApiClient CategoriesApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>New Category</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Vocabulary</p>
+        <h1>New Category</h1>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+<section class="panel">
+    <CategoryForm Model="model"
+                  ValidationErrors="validationErrors"
+                  IsSaving="isSaving"
+                  SubmitText="Create"
+                  OnValidSubmit="SaveAsync" />
+</section>
+
+@code {
+    private readonly CategoryFormModel model = new();
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isSaving;
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            await CategoriesApiClient.CreateAsync(model.ToCreateRequest(), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.Categories.Index);
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

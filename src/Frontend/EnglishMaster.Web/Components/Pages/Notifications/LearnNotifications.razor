@@ -1,0 +1,88 @@
+@page "/learn/notifications"
+@rendermode InteractiveServer
+@inject INotificationsApiClient NotificationsApiClient
+
+<PageTitle>Notifications</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Learning</p>
+        <h1>Notifications</h1>
+    </div>
+    <div class="actions">
+        <span class="badge">@unreadCount unread</span>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading notifications...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (notifications.Count == 0)
+{
+    <div class="panel">No notifications yet.</div>
+}
+else
+{
+    <section class="content-list">
+        @foreach (var notification in notifications)
+        {
+            <article class="panel">
+                <div class="item-header">
+                    <div>
+                        <h2>@notification.Title</h2>
+                        <p class="muted">@notification.EventType · @notification.CreatedAt.LocalDateTime.ToString("g")</p>
+                    </div>
+                    <span class="badge">@notification.Status</span>
+                </div>
+                <p>@notification.Message</p>
+                @if (!string.Equals(notification.Status, "Read", StringComparison.OrdinalIgnoreCase))
+                {
+                    <button class="button small" type="button" @onclick="() => MarkReadAsync(notification.Id)">Mark read</button>
+                }
+            </article>
+        }
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<NotificationDto> notifications = [];
+    private int unreadCount;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            var notificationsTask = NotificationsApiClient.GetMyNotificationsAsync(null, null, CancellationToken.None);
+            var unreadTask = NotificationsApiClient.GetUnreadCountAsync(CancellationToken.None);
+            await Task.WhenAll(notificationsTask, unreadTask);
+            notifications = notificationsTask.Result.Items;
+            unreadCount = unreadTask.Result;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task MarkReadAsync(Guid id)
+    {
+        await NotificationsApiClient.MarkReadAsync(id, CancellationToken.None);
+        await LoadAsync();
+    }
+}

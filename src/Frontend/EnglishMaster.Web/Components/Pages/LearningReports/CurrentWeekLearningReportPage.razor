@@ -1,0 +1,61 @@
+@page "/learn/reports/current-week"
+@inject ILearningReportApiClient LearningReportApiClient
+
+<PageTitle>Current Week Report</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Current Week Report</h1>
+        <p class="muted">See this week's learning progress.</p>
+    </div>
+    <div class="actions">
+        <button class="button" type="button" @onclick="GenerateAsync">Generate</button>
+        <a class="button secondary" href="/learn/reports">History</a>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading report...</p>
+}
+else if (report is null)
+{
+    <p class="muted">No report generated for this week yet.</p>
+}
+else
+{
+    <LearningReportSummary Report="report" />
+}
+
+@code {
+    private WeeklyLearningReportDto? report;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            report = await LearningReportApiClient.GetCurrentWeekAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Current week report is unavailable right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task GenerateAsync()
+    {
+        report = await LearningReportApiClient.GenerateCurrentWeekAsync(CancellationToken.None);
+    }
+}

@@ -1,0 +1,112 @@
+@page "/admin/content-revision-restores/{Id:guid}"
+@rendermode InteractiveServer
+@inject IContentRevisionApiClient ContentRevisionApiClient
+
+<PageTitle>Restore Request</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Restore Request</h1>
+    </div>
+    <a class="button secondary" href="@AdminRoutes.ContentRevisions.Restores">Back</a>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading restore request...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (request is not null)
+{
+    <section class="detail-grid">
+        <article class="panel">
+            <p class="eyebrow">Status</p>
+            <h2>@request.Status</h2>
+            <dl>
+                <dt>Revision</dt>
+                <dd><a href="@AdminRoutes.ContentRevisions.Detail(request.ContentRevisionId)">@request.ContentRevisionId</a></dd>
+                <dt>Requested by</dt>
+                <dd>@request.RequestedBy</dd>
+                <dt>Requested at</dt>
+                <dd>@request.RequestedAt.LocalDateTime.ToString("f")</dd>
+                <dt>Reason</dt>
+                <dd>@request.Reason</dd>
+                <dt>Review note</dt>
+                <dd>@(string.IsNullOrWhiteSpace(request.ReviewNote) ? "None" : request.ReviewNote)</dd>
+            </dl>
+        </article>
+
+        <article class="panel">
+            <h2>Review</h2>
+            <label>
+                Note
+                <textarea rows="4" @bind="reviewNote"></textarea>
+            </label>
+            <div class="form-actions">
+                <button class="button" @onclick="ApproveAsync" disabled="@isSaving">Approve</button>
+                <button class="button secondary" @onclick="RejectAsync" disabled="@isSaving">Reject</button>
+                <button class="button secondary" @onclick="CompleteAsync" disabled="@isSaving">Complete</button>
+            </div>
+        </article>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private ContentRevisionRestoreRequestDto? request;
+    private string? reviewNote;
+    private bool isLoading = true;
+    private bool isSaving;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            request = await ContentRevisionApiClient.GetRestoreRequestAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ApproveAsync() => await SaveAsync(() => ContentRevisionApiClient.ApproveRestoreRequestAsync(Id, reviewNote, CancellationToken.None));
+
+    private async Task RejectAsync() => await SaveAsync(() => ContentRevisionApiClient.RejectRestoreRequestAsync(Id, reviewNote, CancellationToken.None));
+
+    private async Task CompleteAsync() => await SaveAsync(() => ContentRevisionApiClient.CompleteRestoreRequestAsync(Id, CancellationToken.None));
+
+    private async Task SaveAsync(Func<Task<ContentRevisionRestoreRequestDto>> action)
+    {
+        isSaving = true;
+        errorMessage = null;
+        try
+        {
+            request = await action();
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

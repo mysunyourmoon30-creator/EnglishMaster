@@ -1,0 +1,169 @@
+@using EnglishMaster.Web.Services.Quizzes
+
+<EditForm Model="Model" OnValidSubmit="SubmitAsync" class="word-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    @if (ValidationErrors.Count > 0)
+    {
+        <div class="alert error">
+            <ul>
+                @foreach (var error in ValidationErrors.SelectMany(item => item.Value))
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="form-grid">
+        <label class="span-2">
+            <span>Title</span>
+            <InputText class="input" @bind-Value="Model.Title" />
+            <ValidationMessage For="@(() => Model.Title)" />
+        </label>
+
+        <label class="span-2">
+            <span>Summary</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.Summary" />
+            <ValidationMessage For="@(() => Model.Summary)" />
+        </label>
+
+        <label class="span-2">
+            <span>Description</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.Description" />
+            <ValidationMessage For="@(() => Model.Description)" />
+        </label>
+
+        <label>
+            <span>CEFR</span>
+            <InputSelect class="input" @bind-Value="Model.CefrLevel">
+                <option value="">No level</option>
+                @foreach (var level in CefrLevels)
+                {
+                    <option value="@level">@level</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>Category</span>
+            <InputSelect class="input" @bind-Value="Model.CategoryId">
+                <option value="">No category</option>
+                @foreach (var category in Categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>Lesson</span>
+            <InputSelect class="input" @bind-Value="Model.LessonId">
+                <option value="">No lesson</option>
+                @foreach (var lesson in Lessons)
+                {
+                    <option value="@lesson.Id">@lesson.Title</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>Course</span>
+            <InputSelect class="input" @bind-Value="Model.CourseId">
+                <option value="">No course</option>
+                @foreach (var course in Courses)
+                {
+                    <option value="@course.Id">@course.Title</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>Book</span>
+            <InputSelect class="input" @bind-Value="Model.BookId">
+                <option value="">No book</option>
+                @foreach (var book in Books)
+                {
+                    <option value="@book.Id">@book.Title</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>Time Limit</span>
+            <InputNumber class="input" @bind-Value="Model.TimeLimitMinutes" />
+            <ValidationMessage For="@(() => Model.TimeLimitMinutes)" />
+        </label>
+
+        <label>
+            <span>Passing Score</span>
+            <InputNumber class="input" @bind-Value="Model.PassingScore" />
+            <ValidationMessage For="@(() => Model.PassingScore)" />
+        </label>
+
+        <label>
+            <span>Sort Order</span>
+            <InputNumber class="input" @bind-Value="Model.SortOrder" />
+            <ValidationMessage For="@(() => Model.SortOrder)" />
+        </label>
+
+        @if (ShowStatusToggles)
+        {
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="Model.IsPublished" />
+                <span>Published</span>
+            </label>
+
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="Model.IsActive" />
+                <span>Active</span>
+            </label>
+        }
+    </div>
+
+    <div class="actions">
+        <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
+        <a class="button" href="@AdminRoutes.Quizzes.Index">Cancel</a>
+    </div>
+</EditForm>
+
+@code {
+    private static readonly string[] CefrLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+    [Parameter, EditorRequired]
+    public QuizFormModel Model { get; set; } = new();
+
+    [Parameter]
+    public IReadOnlyCollection<CategoryDto> Categories { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyCollection<LessonDto> Lessons { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyCollection<CourseDto> Courses { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyCollection<BookDto> Books { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyDictionary<string, string[]> ValidationErrors { get; set; } =
+        new Dictionary<string, string[]>();
+
+    [Parameter]
+    public bool IsSaving { get; set; }
+
+    [Parameter]
+    public bool ShowStatusToggles { get; set; }
+
+    [Parameter]
+    public string SubmitText { get; set; } = "Save";
+
+    [Parameter]
+    public EventCallback OnValidSubmit { get; set; }
+
+    private async Task SubmitAsync()
+    {
+        await OnValidSubmit.InvokeAsync();
+    }
+}

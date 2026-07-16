@@ -1,0 +1,97 @@
+@page "/learn/motivation"
+@inject IMotivationApiClient MotivationApiClient
+
+<PageTitle>Motivation</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Motivation</h1>
+        <p class="muted">Track streaks, achievements, and recent learning activity.</p>
+    </div>
+    <div class="actions">
+        <a class="button secondary" href="/learn/achievements">Achievements</a>
+        <a class="button secondary" href="/learn/activity">Activity</a>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading motivation...</p>
+}
+else
+{
+    <section class="metrics-grid">
+        <article class="metric-card"><span>Current streak</span><strong>@summary.CurrentStreakDays</strong></article>
+        <article class="metric-card"><span>Longest streak</span><strong>@summary.LongestStreakDays</strong></article>
+        <article class="metric-card"><span>Achievements</span><strong>@summary.EarnedAchievementCount</strong></article>
+        <article class="metric-card"><span>Lessons completed</span><strong>@summary.TotalLessonsCompleted</strong></article>
+    </section>
+
+    <section class="content-section">
+        <h2>Recent Achievements</h2>
+        @if (summary.RecentAchievements.Count == 0)
+        {
+            <p class="muted">No achievements earned yet.</p>
+        }
+        else
+        {
+            <div class="card-grid">
+                @foreach (var achievement in summary.RecentAchievements)
+                {
+                    <article class="list-card">
+                        <span class="pill">@achievement.Status</span>
+                        <h3>@achievement.Name</h3>
+                        <p class="muted">@achievement.ProgressValue / @achievement.TargetValue</p>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="content-section">
+        <h2>Recent Activity</h2>
+        @if (summary.RecentActivity.Count == 0)
+        {
+            <p class="muted">Complete a lesson, quiz, practice session, or daily plan to start building momentum.</p>
+        }
+        else
+        {
+            <div class="card-grid">
+                @foreach (var activity in summary.RecentActivity)
+                {
+                    <article class="list-card">
+                        <span class="pill">@activity.ActivityType</span>
+                        <h3>@activity.Title</h3>
+                        <p class="muted">@activity.OccurredAt.ToString("yyyy-MM-dd")</p>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+}
+
+@code {
+    private MotivationSummaryDto summary = new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, [], []);
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            summary = await MotivationApiClient.GetSummaryAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Motivation summary is unavailable right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

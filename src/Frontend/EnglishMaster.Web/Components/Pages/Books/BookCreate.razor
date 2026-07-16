@@ -1,0 +1,94 @@
+@page "/admin/books/create"
+@rendermode InteractiveServer
+@inject IBookApiClient BookApiClient
+@inject ICategoriesApiClient CategoriesApiClient
+@inject ICourseApiClient CourseApiClient
+@inject IMediaApiClient MediaApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>New Book</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Books</p>
+        <h1>New Book</h1>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading...</p>
+}
+else
+{
+    <section class="panel">
+        <BookForm Model="model"
+                  Categories="categories"
+                  Courses="courses"
+                  CoverMediaOptions="coverMediaOptions"
+                  ValidationErrors="validationErrors"
+                  IsSaving="isSaving"
+                  SubmitText="Create"
+                  OnValidSubmit="SaveAsync" />
+    </section>
+}
+
+@code {
+    private readonly BookFormModel model = new();
+    private IReadOnlyCollection<CategoryDto> categories = [];
+    private IReadOnlyCollection<CourseDto> courses = [];
+    private IReadOnlyCollection<MediaDto> coverMediaOptions = [];
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            categories = (await CategoriesApiClient.SearchAsync(search: null, isActive: true, CancellationToken.None)).Items;
+            courses = (await CourseApiClient.SearchAsync(
+                new CourseSearchRequest(IsActive: true, PageSize: 100, SortBy: "Title", SortDirection: "Asc"),
+                CancellationToken.None)).Items;
+            coverMediaOptions = (await MediaApiClient.SearchAsync(
+                new MediaSearchRequest(MediaType: "Image", IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            var book = await BookApiClient.CreateAsync(model.ToCreateRequest(), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.Books.Detail(book.Id));
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

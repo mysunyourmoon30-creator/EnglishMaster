@@ -1,0 +1,128 @@
+@page "/admin/bulk-operations"
+@rendermode InteractiveServer
+@inject IBulkOperationApiClient BulkOperationApiClient
+
+<PageTitle>Bulk Operations</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Bulk Operations</h1>
+    </div>
+    <a class="button primary" href="@AdminRoutes.BulkOperations.Create">Create</a>
+</section>
+
+<section class="panel">
+    <div class="filters-grid">
+        <label>
+            Operation
+            <InputSelect class="input" @bind-Value="operationType">
+                <option value="">All</option>
+                @foreach (var option in OperationTypes)
+                {
+                    <option value="@option">@option</option>
+                }
+            </InputSelect>
+        </label>
+        <label>
+            Content
+            <InputSelect class="input" @bind-Value="contentType">
+                <option value="">All</option>
+                @foreach (var option in ContentTypes)
+                {
+                    <option value="@option">@option</option>
+                }
+            </InputSelect>
+        </label>
+        <label>
+            Status
+            <InputSelect class="input" @bind-Value="status">
+                <option value="">All</option>
+                @foreach (var option in Statuses)
+                {
+                    <option value="@option">@option</option>
+                }
+            </InputSelect>
+        </label>
+        <button class="button" @onclick="LoadAsync">Apply</button>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading bulk operations...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (operations.Count == 0)
+{
+    <div class="panel">No bulk operations found.</div>
+}
+else
+{
+    <section class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Operation</th>
+                    <th>Content</th>
+                    <th>Status</th>
+                    <th>Requested</th>
+                    <th>Items</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var operation in operations)
+                {
+                    <tr>
+                        <td>@operation.OperationType</td>
+                        <td>@operation.ContentType</td>
+                        <td>@operation.Status</td>
+                        <td>@operation.RequestedBy at @operation.RequestedAt.LocalDateTime.ToString("g")</td>
+                        <td>@operation.SucceededItems / @operation.TotalItems</td>
+                        <td><a class="button small" href="@AdminRoutes.BulkOperations.Detail(operation.Id)">Open</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private static readonly string[] OperationTypes = ["SubmitForReview", "Approve", "RequestChanges", "Publish", "Archive", "Activate", "Deactivate", "RunQualityCheck", "AssignCategory", "AddTags", "RemoveTags", "Export"];
+    private static readonly string[] ContentTypes = ["Word", "Pronunciation", "GrammarTopic", "GrammarRule", "Lesson", "Course", "Book", "Quiz"];
+    private static readonly string[] Statuses = ["Pending", "Running", "Completed", "Failed", "PartiallyCompleted", "Cancelled"];
+
+    private IReadOnlyCollection<BulkOperationDto> operations = [];
+    private string? operationType;
+    private string? contentType;
+    private string? status;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            operations = (await BulkOperationApiClient.SearchAsync(operationType, contentType, status, CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

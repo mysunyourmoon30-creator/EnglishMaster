@@ -1,0 +1,87 @@
+@page "/admin/grammar-rules/create"
+@rendermode InteractiveServer
+@inject IGrammarApiClient GrammarApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>New Grammar Rule</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Grammar</p>
+        <h1>New Grammar Rule</h1>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading grammar topics...</p>
+}
+else
+{
+    <section class="panel">
+        <GrammarRuleForm Model="model"
+                         Topics="topics"
+                         ValidationErrors="validationErrors"
+                         IsSaving="isSaving"
+                         SubmitText="Create"
+                         OnValidSubmit="SaveAsync" />
+    </section>
+}
+
+@code {
+    private readonly GrammarRuleFormModel model = new();
+    private IReadOnlyCollection<GrammarTopicDto> topics = [];
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSaving;
+
+    [SupplyParameterFromQuery(Name = "topicId")]
+    public Guid? TopicId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            model.GrammarTopicId = TopicId;
+            topics = (await GrammarApiClient.SearchTopicsAsync(
+                new GrammarTopicSearchRequest(IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            var rule = await GrammarApiClient.CreateRuleAsync(model.ToCreateRequest(), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.GrammarRules.Detail(rule.Id));
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

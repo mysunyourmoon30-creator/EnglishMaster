@@ -1,0 +1,55 @@
+@page "/admin/grammar-topics/create"
+@rendermode InteractiveServer
+@inject IGrammarApiClient GrammarApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>New Grammar Topic</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Grammar</p>
+        <h1>New Grammar Topic</h1>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+<section class="panel">
+    <GrammarTopicForm Model="model"
+                      ValidationErrors="validationErrors"
+                      IsSaving="isSaving"
+                      SubmitText="Create"
+                      OnValidSubmit="SaveAsync" />
+</section>
+
+@code {
+    private readonly GrammarTopicFormModel model = new();
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isSaving;
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            var topic = await GrammarApiClient.CreateTopicAsync(model.ToCreateRequest(), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.GrammarTopics.Detail(topic.Id));
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

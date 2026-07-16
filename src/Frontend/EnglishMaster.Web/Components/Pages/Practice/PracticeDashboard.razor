@@ -1,0 +1,95 @@
+@page "/learn/practice"
+@inject IPracticeApiClient PracticeApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Practice</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Practice</h1>
+        <p class="muted">Review due words, grammar, minimal pairs, and weak quiz areas.</p>
+    </div>
+    <div class="actions">
+        <button class="button" type="button" @onclick="GenerateAsync">Generate items</button>
+        <button class="button" type="button" @onclick="StartAsync">Start practice</button>
+        <a class="button secondary" href="/learn/practice/history">History</a>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading practice...</p>
+}
+else
+{
+    <section class="metrics-grid">
+        <article class="metric-card"><span>Due today</span><strong>@summary.DueTodayCount</strong></article>
+        <article class="metric-card"><span>New</span><strong>@summary.NewCount</strong></article>
+        <article class="metric-card"><span>Reviewing</span><strong>@summary.ReviewingCount</strong></article>
+        <article class="metric-card"><span>Mastered</span><strong>@summary.MasteredCount</strong></article>
+    </section>
+
+    <section class="content-section">
+        <h2>Due Items</h2>
+        @if (dueItems.Count == 0)
+        {
+            <p class="muted">No practice items due yet.</p>
+        }
+        else
+        {
+            <div class="card-grid">
+                @foreach (var item in dueItems)
+                {
+                    <article class="list-card">
+                        <span class="pill">@item.PracticeType</span>
+                        <h3>@item.ContentType</h3>
+                        <p class="muted">Reviews: @item.ReviewCount · Interval: @item.CurrentIntervalDays days</p>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+}
+
+@code {
+    private PracticeSummaryDto summary = new(0, 0, 0, 0);
+    private IReadOnlyCollection<PracticeItemDto> dueItems = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            summary = await PracticeApiClient.GetSummaryAsync(CancellationToken.None);
+            dueItems = await PracticeApiClient.GetDueAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Practice is unavailable right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task GenerateAsync()
+    {
+        await PracticeApiClient.GenerateAsync(CancellationToken.None);
+        await LoadAsync();
+    }
+
+    private async Task StartAsync()
+    {
+        var session = await PracticeApiClient.StartSessionAsync(CancellationToken.None);
+        NavigationManager.NavigateTo($"/learn/practice/session/{session.Id}");
+    }
+}
+

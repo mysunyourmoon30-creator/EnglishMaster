@@ -1,0 +1,123 @@
+@page "/admin/export"
+@rendermode InteractiveServer
+@inject IImportExportApiClient ImportExportApiClient
+
+<PageTitle>Export</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Content Operations</p>
+        <h1>Export</h1>
+    </div>
+</section>
+
+<section class="panel">
+    <form class="filters-grid" @onsubmit="ExportAsync" @onsubmit:preventDefault>
+        <label>
+            <span>Content</span>
+            <select class="input" @bind="selectedEntity">
+                @foreach (var entity in ExportEntities)
+                {
+                    <option value="@entity.Key">@entity.Label</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>Format</span>
+            <select class="input" @bind="selectedFormat">
+                <option value="csv">CSV</option>
+                <option value="json">JSON</option>
+            </select>
+        </label>
+        <button class="button primary" type="submit" disabled="@isExporting">
+            @(isExporting ? "Exporting..." : "Export")
+        </button>
+    </form>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (download is not null)
+{
+    <section class="panel">
+        <h2>Download</h2>
+        <p class="muted">@download.FileName (@download.Content.Length bytes)</p>
+        <a class="button primary" href="@download.DataUrl" download="@download.FileName">Download File</a>
+    </section>
+}
+
+<section class="panel">
+    <h2>Available Exports</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Content</th>
+                <th>Endpoint</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var entity in ExportEntities)
+            {
+                <tr>
+                    <td>@entity.Label</td>
+                    <td>/api/v1/export/@entity.Key</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
+
+@code {
+    private static readonly IReadOnlyCollection<ExportEntity> ExportEntities =
+    [
+        new("words", "Words"),
+        new("grammar-topics", "Grammar Topics"),
+        new("lessons", "Lessons"),
+        new("courses", "Courses"),
+        new("books", "Books"),
+        new("quizzes", "Quizzes")
+    ];
+
+    private string selectedEntity = "words";
+    private string selectedFormat = "csv";
+    private ExportDownload? download;
+    private string? errorMessage;
+    private bool isExporting;
+
+    private async Task ExportAsync()
+    {
+        isExporting = true;
+        download = null;
+        errorMessage = null;
+
+        try
+        {
+            var result = await ImportExportApiClient.ExportAsync(selectedEntity, selectedFormat, CancellationToken.None);
+            var base64 = Convert.ToBase64String(result.Content);
+            download = new ExportDownload(
+                result.FileName,
+                result.ContentType,
+                result.Content,
+                $"data:{result.ContentType};base64,{base64}");
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isExporting = false;
+        }
+    }
+
+    private sealed record ExportEntity(string Key, string Label);
+
+    private sealed record ExportDownload(
+        string FileName,
+        string ContentType,
+        byte[] Content,
+        string DataUrl);
+}

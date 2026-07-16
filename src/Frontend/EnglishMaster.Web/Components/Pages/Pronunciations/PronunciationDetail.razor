@@ -1,0 +1,336 @@
+@page "/admin/pronunciations/{Id:guid}"
+@rendermode InteractiveServer
+@inject IPronunciationsApiClient PronunciationsApiClient
+@inject IMediaApiClient MediaApiClient
+
+<PageTitle>@(pronunciation is null ? "Pronunciation" : FormatTitle(pronunciation))</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Pronunciation</p>
+        <h1>@(pronunciation is null ? "Pronunciation" : FormatTitle(pronunciation))</h1>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.Pronunciations.Index">Back</a>
+        @if (pronunciation is not null)
+        {
+            <a class="button" href="@AdminRoutes.Words.Detail(pronunciation.WordId)">Word</a>
+            <a class="button primary" href="@AdminRoutes.Pronunciations.Edit(pronunciation.Id)">Edit</a>
+        }
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading pronunciation...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Pronunciation was not found.</p>
+    </section>
+}
+else if (pronunciation is not null)
+{
+    <section class="panel">
+        @if (pronunciation.MouthImageMedia is not null && !string.IsNullOrWhiteSpace(pronunciation.MouthImageMedia.PublicUrl))
+        {
+            <img class="media-preview" src="@pronunciation.MouthImageMedia.PublicUrl" alt="@pronunciation.MouthImageMedia.AltText" />
+        }
+
+        @if (pronunciation.AudioSlowMedia is not null && !string.IsNullOrWhiteSpace(pronunciation.AudioSlowMedia.PublicUrl))
+        {
+            <p class="muted">Slow audio</p>
+            <audio class="media-player" controls src="@pronunciation.AudioSlowMedia.PublicUrl"></audio>
+        }
+
+        @if (pronunciation.AudioNormalMedia is not null && !string.IsNullOrWhiteSpace(pronunciation.AudioNormalMedia.PublicUrl))
+        {
+            <p class="muted">Normal audio</p>
+            <audio class="media-player" controls src="@pronunciation.AudioNormalMedia.PublicUrl"></audio>
+        }
+
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Word</span>
+                <strong>@(pronunciation.Word?.Text ?? pronunciation.WordId.ToString())</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Status</span>
+                <strong>@(pronunciation.IsActive ? "Active" : "Inactive")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">IPA UK</span>
+                <strong>@pronunciation.IpaUk</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">IPA US</span>
+                <strong>@pronunciation.IpaUs</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Thai Reading</span>
+                <strong>@pronunciation.ThaiReading</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Syllables</span>
+                <strong>@pronunciation.Syllables</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Stress Pattern</span>
+                <strong>@pronunciation.StressPattern</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Mouth Position</span>
+                <strong>@pronunciation.MouthPosition</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Tongue Position</span>
+                <strong>@pronunciation.TonguePosition</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Common Mistake</span>
+                <strong>@pronunciation.CommonMistake</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Practice Note</span>
+                <strong>@pronunciation.PracticeNote</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Created</span>
+                <strong>@FormatDate(pronunciation.CreatedAt)</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Updated</span>
+                <strong>@FormatDate(pronunciation.UpdatedAt)</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-header section-header">
+        <div>
+            <p class="eyebrow">Practice</p>
+            <h1>Minimal Pairs</h1>
+        </div>
+    </section>
+
+    @if (pronunciation.MinimalPairs.Count == 0)
+    {
+        <section class="panel">
+            <p class="muted">No minimal pairs yet.</p>
+        </section>
+    }
+    else
+    {
+        <section class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Pair Word</th>
+                        <th>IPA</th>
+                        <th>Thai Reading</th>
+                        <th>Difference</th>
+                        <th>Audio</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pair in pronunciation.MinimalPairs.OrderBy(item => item.SortOrder).ThenBy(item => item.PairWordText))
+                    {
+                        <tr>
+                            <td>
+                                <strong>@pair.PairWordText</strong>
+                                <span class="muted">#@pair.SortOrder</span>
+                            </td>
+                            <td>@pair.PairIpa</td>
+                            <td>@pair.PairThaiReading</td>
+                            <td>@pair.DifferenceNote</td>
+                            <td>
+                                @if (pair.AudioMedia is not null && !string.IsNullOrWhiteSpace(pair.AudioMedia.PublicUrl))
+                                {
+                                    <audio class="media-player compact" controls src="@pair.AudioMedia.PublicUrl"></audio>
+                                }
+                                else
+                                {
+                                    <span>-</span>
+                                }
+                            </td>
+                            <td>@(pair.IsActive ? "Active" : "Inactive")</td>
+                            <td class="row-actions">
+                                <button class="button small" type="button" @onclick="() => EditPair(pair)">Edit</button>
+                                <button class="button small danger" type="button" @onclick="() => DeletePairAsync(pair.Id)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+
+    <section class="panel pair-form-panel">
+        <h2>@(editingMinimalPairId.HasValue ? "Edit Minimal Pair" : "Add Minimal Pair")</h2>
+        @if (!string.IsNullOrWhiteSpace(pairErrorMessage))
+        {
+            <div class="alert error">@pairErrorMessage</div>
+        }
+        <MinimalPairForm Model="minimalPairModel"
+                         AudioMedia="audioMedia"
+                         ValidationErrors="pairValidationErrors"
+                         IsSaving="isPairSaving"
+                         ShowActiveToggle="@editingMinimalPairId.HasValue"
+                         SubmitText="@(editingMinimalPairId.HasValue ? "Save Pair" : "Add Pair")"
+                         OnValidSubmit="SavePairAsync"
+                         OnCancel="CancelPairEditAsync" />
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private PronunciationDto? pronunciation;
+    private IReadOnlyCollection<MediaDto> audioMedia = [];
+    private MinimalPairFormModel minimalPairModel = new();
+    private Guid? editingMinimalPairId;
+    private IReadOnlyDictionary<string, string[]> pairValidationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private string? pairErrorMessage;
+    private bool isLoading = true;
+    private bool isPairSaving;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            audioMedia = (await MediaApiClient.SearchAsync(
+                new MediaSearchRequest(MediaType: "Audio", IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+            pronunciation = await PronunciationsApiClient.GetAsync(Id, CancellationToken.None);
+            if (pronunciation is null)
+            {
+                notFound = true;
+                return;
+            }
+
+            if (!editingMinimalPairId.HasValue)
+            {
+                ResetPairForm();
+            }
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SavePairAsync()
+    {
+        if (pronunciation is null)
+        {
+            return;
+        }
+
+        isPairSaving = true;
+        pairErrorMessage = null;
+        pairValidationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            if (editingMinimalPairId.HasValue)
+            {
+                await PronunciationsApiClient.UpdateMinimalPairAsync(
+                    editingMinimalPairId.Value,
+                    minimalPairModel.ToUpdateRequest(),
+                    CancellationToken.None);
+            }
+            else
+            {
+                await PronunciationsApiClient.AddMinimalPairAsync(
+                    pronunciation.Id,
+                    minimalPairModel.ToCreateRequest(),
+                    CancellationToken.None);
+            }
+
+            editingMinimalPairId = null;
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            pairValidationErrors = exception.ValidationErrors;
+            pairErrorMessage = pairValidationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isPairSaving = false;
+        }
+    }
+
+    private void EditPair(MinimalPairDto pair)
+    {
+        editingMinimalPairId = pair.Id;
+        minimalPairModel = MinimalPairFormModel.FromDto(pair);
+        pairErrorMessage = null;
+        pairValidationErrors = new Dictionary<string, string[]>();
+    }
+
+    private async Task DeletePairAsync(Guid id)
+    {
+        pairErrorMessage = null;
+
+        try
+        {
+            await PronunciationsApiClient.DeleteMinimalPairAsync(id, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            pairErrorMessage = exception.Message;
+        }
+    }
+
+    private Task CancelPairEditAsync()
+    {
+        editingMinimalPairId = null;
+        ResetPairForm();
+        return Task.CompletedTask;
+    }
+
+    private void ResetPairForm()
+    {
+        minimalPairModel = new MinimalPairFormModel
+        {
+            SortOrder = pronunciation?.MinimalPairs.Count ?? 0
+        };
+        pairErrorMessage = null;
+        pairValidationErrors = new Dictionary<string, string[]>();
+    }
+
+    private static string FormatTitle(PronunciationDto pronunciation)
+    {
+        return pronunciation.Word?.Text ?? "Pronunciation";
+    }
+
+    private static string FormatDate(DateTimeOffset value)
+    {
+        return value.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+    }
+}

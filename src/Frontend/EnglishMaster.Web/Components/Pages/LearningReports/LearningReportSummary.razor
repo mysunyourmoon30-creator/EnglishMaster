@@ -1,0 +1,44 @@
+<section class="metrics-grid">
+    <article class="metric-card"><span>Study minutes</span><strong>@Report.TotalStudyMinutes</strong></article>
+    <article class="metric-card"><span>Active days</span><strong>@Report.ActiveStudyDays</strong></article>
+    <article class="metric-card"><span>Completed plans</span><strong>@Report.CompletedDailyPlans</strong></article>
+    <article class="metric-card"><span>Current streak</span><strong>@Report.CurrentStreakDays</strong></article>
+</section>
+
+<section class="metrics-grid">
+    <article class="metric-card"><span>Lessons</span><strong>@Report.LessonsCompleted</strong></article>
+    <article class="metric-card"><span>Practice sessions</span><strong>@Report.PracticeSessionsCompleted</strong></article>
+    <article class="metric-card"><span>Quiz attempts</span><strong>@Report.QuizAttempts</strong></article>
+    <article class="metric-card"><span>Quiz average</span><strong>@Report.AverageQuizScore.ToString("0.#")%</strong></article>
+</section>
+
+<section class="content-section">
+    <h2>@Report.WeekStartDate.ToString("yyyy-MM-dd") - @Report.WeekEndDate.ToString("yyyy-MM-dd")</h2>
+    <p class="muted">@Report.SummaryText</p>
+</section>
+
+<section class="content-section">
+    <h2>Insights</h2>
+    @if (Report.Insights.Count == 0)
+    {
+        <p class="muted">No insights for this report.</p>
+    }
+    else
+    {
+        <div class="card-grid">
+            @foreach (var insight in Report.Insights.OrderBy(insight => insight.SortOrder))
+            {
+                <article class="list-card">
+                    <span class="pill">@insight.Severity</span>
+                    <h3>@insight.Message</h3>
+                    <p class="muted">@insight.Recommendation</p>
+                </article>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public WeeklyLearningReportDto Report { get; set; } = default!;
+}

@@ -1,0 +1,117 @@
+@page "/learn/dashboard"
+@inject ILearningRecommendationApiClient RecommendationApiClient
+@inject ILearningGoalApiClient GoalApiClient
+@inject IDailyStudyPlanApiClient StudyPlanApiClient
+@inject IMotivationApiClient MotivationApiClient
+@inject ILearningReportApiClient LearningReportApiClient
+
+<PageTitle>Learning Dashboard</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Learning Dashboard</h1>
+        <p class="muted">Continue learning and review recommended content.</p>
+    </div>
+    <a class="button" href="/learn/recommendations">Recommendations</a>
+    <a class="button secondary" href="/learn/practice">Start Practice</a>
+    <button class="button secondary" type="button" @onclick="GeneratePlanAsync">Generate Today Plan</button>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading dashboard...</p>
+}
+else
+{
+    <RecommendationSection Title="Continue Learning" Items="summary.ContinueLearning" />
+    <section class="metrics-grid">
+        <article class="metric-card"><span>Active Goals</span><strong>@goalSummary.ActiveCount</strong></article>
+        <article class="metric-card"><span>Plans This Week</span><strong>@studyPlanSummary.PlansThisWeek</strong></article>
+        <article class="metric-card"><span>Study Minutes</span><strong>@studyPlanSummary.CompletedMinutes</strong></article>
+        <article class="metric-card"><span>Current Streak</span><strong>@motivationSummary.CurrentStreakDays</strong></article>
+        <article class="metric-card"><span>Achievements</span><strong>@motivationSummary.EarnedAchievementCount</strong></article>
+    </section>
+    <section class="content-section">
+        <h2>Today's Study Plan</h2>
+        @if (todayPlan is null)
+        {
+            <p class="muted">No study plan generated for today yet.</p>
+        }
+        else
+        {
+            <p class="muted">@todayPlan.CompletedItems / @todayPlan.TotalItems items completed.</p>
+            <a class="button secondary" href="/learn/study-plan">Open study plan</a>
+        }
+    </section>
+    <section class="content-section">
+        <h2>Weekly Report</h2>
+        @if (weeklyReport is null)
+        {
+            <p class="muted">No weekly report generated yet.</p>
+            <button class="button secondary" type="button" @onclick="GenerateWeeklyReportAsync">Generate report</button>
+        }
+        else
+        {
+            <section class="metrics-grid">
+                <article class="metric-card"><span>Study minutes</span><strong>@weeklyReport.TotalStudyMinutes</strong></article>
+                <article class="metric-card"><span>Lessons completed</span><strong>@weeklyReport.LessonsCompleted</strong></article>
+                <article class="metric-card"><span>Practice sessions</span><strong>@weeklyReport.PracticeSessionsCompleted</strong></article>
+                <article class="metric-card"><span>Quiz average</span><strong>@weeklyReport.AverageQuizScore.ToString("0.#")%</strong></article>
+            </section>
+            <a class="button secondary" href="/learn/reports/current-week">Open weekly report</a>
+        }
+    </section>
+    <RecommendationCards Title="Recommended Courses" Items="summary.RecommendedCourses" />
+    <RecommendationCards Title="Recommended Lessons" Items="summary.RecommendedLessons" />
+    <RecommendationCards Title="Recommended Words" Items="summary.RecommendedWords" />
+    <RecommendationCards Title="Recommended Grammar" Items="summary.RecommendedGrammar" />
+    <RecommendationCards Title="Recommended Quizzes" Items="summary.RecommendedQuizzes" />
+    <RecommendationCards Title="Review Weak Areas" Items="summary.ReviewRecommendations" />
+}
+
+@code {
+    private LearningRecommendationSummaryDto summary = new([], [], [], [], [], [], []);
+    private LearningGoalSummaryDto goalSummary = new(0, 0, 0, 0);
+    private DailyStudyPlanSummaryDto studyPlanSummary = new(0, 0, 0, 0);
+    private DailyStudyPlanDto? todayPlan;
+    private MotivationSummaryDto motivationSummary = new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, [], []);
+    private WeeklyLearningReportDto? weeklyReport;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            summary = await RecommendationApiClient.GetRecommendationsAsync(5, CancellationToken.None);
+            goalSummary = await GoalApiClient.GetSummaryAsync(CancellationToken.None);
+            studyPlanSummary = await StudyPlanApiClient.GetSummaryAsync(CancellationToken.None);
+            todayPlan = await StudyPlanApiClient.GetTodayAsync(CancellationToken.None);
+            motivationSummary = await MotivationApiClient.GetSummaryAsync(CancellationToken.None);
+            weeklyReport = await LearningReportApiClient.GetCurrentWeekAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Learning recommendations are unavailable right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task GeneratePlanAsync()
+    {
+        todayPlan = await StudyPlanApiClient.GenerateTodayAsync(CancellationToken.None);
+        studyPlanSummary = await StudyPlanApiClient.GetSummaryAsync(CancellationToken.None);
+    }
+
+    private async Task GenerateWeeklyReportAsync()
+    {
+        weeklyReport = await LearningReportApiClient.GenerateCurrentWeekAsync(CancellationToken.None);
+    }
+}

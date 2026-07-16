@@ -1,0 +1,97 @@
+@page "/admin/words/create"
+@rendermode InteractiveServer
+@inject IWordsApiClient WordsApiClient
+@inject ICategoriesApiClient CategoriesApiClient
+@inject ITagsApiClient TagsApiClient
+@inject IMediaApiClient MediaApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>New Word</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Vocabulary</p>
+        <h1>New Word</h1>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading word options...</p>
+}
+else
+{
+    <section class="panel">
+        <WordForm Model="model"
+                  Categories="categories"
+                  Tags="tags"
+                  ImageMediaOptions="imageMedia"
+                  AudioMediaOptions="audioMedia"
+                  ValidationErrors="validationErrors"
+                  IsSaving="isSaving"
+                  SubmitText="Create"
+                  OnValidSubmit="SaveAsync" />
+    </section>
+}
+
+@code {
+    private readonly WordFormModel model = new();
+    private IReadOnlyCollection<CategoryDto> categories = [];
+    private IReadOnlyCollection<TagDto> tags = [];
+    private IReadOnlyCollection<MediaDto> imageMedia = [];
+    private IReadOnlyCollection<MediaDto> audioMedia = [];
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            categories = (await CategoriesApiClient.SearchAsync(null, true, CancellationToken.None)).Items;
+            tags = (await TagsApiClient.SearchAsync(null, true, CancellationToken.None)).Items;
+            imageMedia = (await MediaApiClient.SearchAsync(
+                new MediaSearchRequest(MediaType: "Image", IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+            audioMedia = (await MediaApiClient.SearchAsync(
+                new MediaSearchRequest(MediaType: "Audio", IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            await WordsApiClient.CreateAsync(model.ToCreateRequest(), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.Words.Index);
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

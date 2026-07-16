@@ -1,0 +1,399 @@
+@page "/admin/grammar-rules/{Id:guid}"
+@rendermode InteractiveServer
+@inject IGrammarApiClient GrammarApiClient
+@inject IWordsApiClient WordsApiClient
+
+<PageTitle>@(rule is null ? "Grammar Rule" : rule.Title)</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Grammar</p>
+        <h1>@(rule is null ? "Grammar Rule" : rule.Title)</h1>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.GrammarRules.Index">Back</a>
+        @if (rule is not null)
+        {
+            <a class="button" href="@AdminRoutes.GrammarTopics.Detail(rule.GrammarTopicId)">Topic</a>
+            <a class="button primary" href="@AdminRoutes.GrammarRules.Edit(rule.Id)">Edit</a>
+        }
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading grammar rule...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Grammar rule was not found.</p>
+    </section>
+}
+else if (rule is not null)
+{
+    <section class="panel">
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Topic</span>
+                <strong>@(rule.Topic?.Title ?? rule.GrammarTopicId.ToString())</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Status</span>
+                <strong>@(rule.IsActive ? "Active" : "Inactive")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Slug</span>
+                <strong>@rule.Slug</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Sort Order</span>
+                <strong>@rule.SortOrder</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Rule Text</span>
+                <strong>@rule.RuleText</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Structure Pattern</span>
+                <strong>@rule.StructurePattern</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Thai Explanation</span>
+                <strong>@rule.ExplanationTh</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">English Explanation</span>
+                <strong>@rule.ExplanationEn</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Common Mistake</span>
+                <strong>@rule.CommonMistake</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Correct Usage Note</span>
+                <strong>@rule.CorrectUsageNote</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-header section-header">
+        <div>
+            <p class="eyebrow">Vocabulary</p>
+            <h1>Related Words</h1>
+        </div>
+    </section>
+
+    <section class="panel">
+        @if (!string.IsNullOrWhiteSpace(relatedWordErrorMessage))
+        {
+            <div class="alert error">@relatedWordErrorMessage</div>
+        }
+
+        <div class="filters-grid">
+            <label>
+                <span>Word</span>
+                <InputSelect class="input" @bind-Value="selectedWordId">
+                    <option value="">Select word</option>
+                    @foreach (var word in AvailableWords())
+                    {
+                        <option value="@word.Id">@word.Text</option>
+                    }
+                </InputSelect>
+            </label>
+            <button class="button" type="button" @onclick="AddRelatedWordAsync">Add Word</button>
+        </div>
+    </section>
+
+    @if (rule.RelatedWords.Count == 0)
+    {
+        <section class="panel nested-table">
+            <p class="muted">No related words yet.</p>
+        </section>
+    }
+    else
+    {
+        <section class="table-wrap nested-table">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Word</th>
+                        <th>Meaning TH</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var word in rule.RelatedWords)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@word.Text</strong>
+                                <span class="muted">@word.Slug</span>
+                            </td>
+                            <td>@word.MeaningTh</td>
+                            <td class="row-actions">
+                                <a class="button small" href="@AdminRoutes.Words.Detail(word.Id)">View</a>
+                                <button class="button small danger" type="button" @onclick="() => RemoveRelatedWordAsync(word.Id)">Remove</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+
+    <section class="page-header section-header">
+        <div>
+            <p class="eyebrow">Examples</p>
+            <h1>Grammar Examples</h1>
+        </div>
+    </section>
+
+    @if (examples.Count == 0)
+    {
+        <section class="panel">
+            <p class="muted">No grammar examples yet.</p>
+        </section>
+    }
+    else
+    {
+        <section class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Example</th>
+                        <th>Translation</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var example in examples.OrderBy(item => item.SortOrder).ThenBy(item => item.ExampleEn))
+                    {
+                        <tr>
+                            <td>
+                                <strong>@example.ExampleEn</strong>
+                                <span class="muted">@example.ExplanationTh</span>
+                            </td>
+                            <td>@example.TranslationTh</td>
+                            <td>@(example.IsCorrectExample ? "Correct" : "Mistake")</td>
+                            <td>@(example.IsActive ? "Active" : "Inactive")</td>
+                            <td class="row-actions">
+                                <button class="button small" type="button" @onclick="() => EditExample(example)">Edit</button>
+                                <button class="button small danger" type="button" @onclick="() => DeleteExampleAsync(example.Id)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+
+    <section class="panel pair-form-panel">
+        <h2>@(editingExampleId.HasValue ? "Edit Grammar Example" : "Add Grammar Example")</h2>
+        @if (!string.IsNullOrWhiteSpace(exampleErrorMessage))
+        {
+            <div class="alert error">@exampleErrorMessage</div>
+        }
+        <GrammarExampleForm Model="exampleModel"
+                            ValidationErrors="exampleValidationErrors"
+                            IsSaving="isExampleSaving"
+                            ShowActiveToggle="@editingExampleId.HasValue"
+                            SubmitText="@(editingExampleId.HasValue ? "Save Example" : "Add Example")"
+                            OnValidSubmit="SaveExampleAsync"
+                            OnCancel="CancelExampleEditAsync" />
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private GrammarRuleDto? rule;
+    private IReadOnlyCollection<GrammarExampleDto> examples = [];
+    private IReadOnlyCollection<WordDto> words = [];
+    private GrammarExampleFormModel exampleModel = new();
+    private Guid? editingExampleId;
+    private Guid? selectedWordId;
+    private IReadOnlyDictionary<string, string[]> exampleValidationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private string? exampleErrorMessage;
+    private string? relatedWordErrorMessage;
+    private bool isLoading = true;
+    private bool isExampleSaving;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            words = (await WordsApiClient.SearchAsync(
+                new WordSearchRequest(IsActive: true, PageSize: 100, SortBy: "Text", SortDirection: "Asc"),
+                CancellationToken.None)).Items;
+            rule = await GrammarApiClient.GetRuleAsync(Id, CancellationToken.None);
+            if (rule is null)
+            {
+                notFound = true;
+                return;
+            }
+
+            examples = await GrammarApiClient.GetExamplesByRuleIdAsync(Id, CancellationToken.None);
+            if (!editingExampleId.HasValue)
+            {
+                ResetExampleForm();
+            }
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private IEnumerable<WordDto> AvailableWords()
+    {
+        var relatedWordIds = rule?.RelatedWords.Select(word => word.Id).ToHashSet() ?? [];
+        return words.Where(word => !relatedWordIds.Contains(word.Id));
+    }
+
+    private async Task AddRelatedWordAsync()
+    {
+        if (rule is null || !selectedWordId.HasValue)
+        {
+            return;
+        }
+
+        relatedWordErrorMessage = null;
+
+        try
+        {
+            await GrammarApiClient.AddRelatedWordAsync(rule.Id, selectedWordId.Value, CancellationToken.None);
+            selectedWordId = null;
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            relatedWordErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task RemoveRelatedWordAsync(Guid wordId)
+    {
+        if (rule is null)
+        {
+            return;
+        }
+
+        relatedWordErrorMessage = null;
+
+        try
+        {
+            await GrammarApiClient.RemoveRelatedWordAsync(rule.Id, wordId, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            relatedWordErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task SaveExampleAsync()
+    {
+        if (rule is null)
+        {
+            return;
+        }
+
+        isExampleSaving = true;
+        exampleErrorMessage = null;
+        exampleValidationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            if (editingExampleId.HasValue)
+            {
+                await GrammarApiClient.UpdateExampleAsync(
+                    editingExampleId.Value,
+                    exampleModel.ToUpdateRequest(),
+                    CancellationToken.None);
+            }
+            else
+            {
+                await GrammarApiClient.AddExampleAsync(
+                    rule.Id,
+                    exampleModel.ToCreateRequest(),
+                    CancellationToken.None);
+            }
+
+            editingExampleId = null;
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            exampleValidationErrors = exception.ValidationErrors;
+            exampleErrorMessage = exampleValidationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isExampleSaving = false;
+        }
+    }
+
+    private void EditExample(GrammarExampleDto example)
+    {
+        editingExampleId = example.Id;
+        exampleModel = GrammarExampleFormModel.FromDto(example);
+        exampleErrorMessage = null;
+        exampleValidationErrors = new Dictionary<string, string[]>();
+    }
+
+    private async Task DeleteExampleAsync(Guid id)
+    {
+        exampleErrorMessage = null;
+
+        try
+        {
+            await GrammarApiClient.DeleteExampleAsync(id, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            exampleErrorMessage = exception.Message;
+        }
+    }
+
+    private Task CancelExampleEditAsync()
+    {
+        editingExampleId = null;
+        ResetExampleForm();
+        return Task.CompletedTask;
+    }
+
+    private void ResetExampleForm()
+    {
+        exampleModel = new GrammarExampleFormModel
+        {
+            SortOrder = examples.Count
+        };
+        exampleErrorMessage = null;
+        exampleValidationErrors = new Dictionary<string, string[]>();
+    }
+}

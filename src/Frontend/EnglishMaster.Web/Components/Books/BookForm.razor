@@ -1,0 +1,173 @@
+@using EnglishMaster.Web.Services.Books
+
+<EditForm Model="Model" OnValidSubmit="SubmitAsync" class="word-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    @if (ValidationErrors.Count > 0)
+    {
+        <div class="alert error">
+            <ul>
+                @foreach (var error in ValidationErrors.SelectMany(item => item.Value))
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="form-grid">
+        <label class="span-2">
+            <span>Title</span>
+            <InputText class="input" @bind-Value="Model.Title" />
+            <ValidationMessage For="@(() => Model.Title)" />
+        </label>
+
+        <label class="span-2">
+            <span>Subtitle</span>
+            <InputText class="input" @bind-Value="Model.Subtitle" />
+            <ValidationMessage For="@(() => Model.Subtitle)" />
+        </label>
+
+        <label class="span-2">
+            <span>Summary</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.Summary" />
+            <ValidationMessage For="@(() => Model.Summary)" />
+        </label>
+
+        <label class="span-2">
+            <span>Description</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.Description" />
+            <ValidationMessage For="@(() => Model.Description)" />
+        </label>
+
+        <label>
+            <span>CEFR</span>
+            <InputSelect class="input" @bind-Value="Model.CefrLevel">
+                <option value="">No level</option>
+                @foreach (var level in CefrLevels)
+                {
+                    <option value="@level">@level</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>Category</span>
+            <InputSelect class="input" @bind-Value="Model.CategoryId">
+                <option value="">No category</option>
+                @foreach (var category in Categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>Course</span>
+            <InputSelect class="input" @bind-Value="Model.CourseId">
+                <option value="">No course</option>
+                @foreach (var course in Courses)
+                {
+                    <option value="@course.Id">@course.Title</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>Cover</span>
+            <InputSelect class="input" @bind-Value="Model.CoverMediaId">
+                <option value="">No cover</option>
+                @foreach (var media in CoverMediaOptions)
+                {
+                    <option value="@media.Id">@media.OriginalFileName</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>Author</span>
+            <InputText class="input" @bind-Value="Model.AuthorName" />
+            <ValidationMessage For="@(() => Model.AuthorName)" />
+        </label>
+
+        <label>
+            <span>Edition</span>
+            <InputText class="input" @bind-Value="Model.Edition" />
+            <ValidationMessage For="@(() => Model.Edition)" />
+        </label>
+
+        <label>
+            <span>Version</span>
+            <InputText class="input" @bind-Value="Model.Version" />
+            <ValidationMessage For="@(() => Model.Version)" />
+        </label>
+
+        <label>
+            <span>Estimated Pages</span>
+            <InputNumber class="input" @bind-Value="Model.EstimatedPages" />
+            <ValidationMessage For="@(() => Model.EstimatedPages)" />
+        </label>
+
+        <label>
+            <span>Sort Order</span>
+            <InputNumber class="input" @bind-Value="Model.SortOrder" />
+            <ValidationMessage For="@(() => Model.SortOrder)" />
+        </label>
+
+        @if (ShowStatusToggles)
+        {
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="Model.IsPublished" />
+                <span>Published</span>
+            </label>
+
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="Model.IsActive" />
+                <span>Active</span>
+            </label>
+        }
+    </div>
+
+    <div class="actions">
+        <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
+        <a class="button" href="@AdminRoutes.Books.Index">Cancel</a>
+    </div>
+</EditForm>
+
+@code {
+    private static readonly string[] CefrLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+    [Parameter, EditorRequired]
+    public BookFormModel Model { get; set; } = new();
+
+    [Parameter]
+    public IReadOnlyCollection<CategoryDto> Categories { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyCollection<CourseDto> Courses { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyCollection<MediaDto> CoverMediaOptions { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyDictionary<string, string[]> ValidationErrors { get; set; } =
+        new Dictionary<string, string[]>();
+
+    [Parameter]
+    public bool IsSaving { get; set; }
+
+    [Parameter]
+    public bool ShowStatusToggles { get; set; }
+
+    [Parameter]
+    public string SubmitText { get; set; } = "Save";
+
+    [Parameter]
+    public EventCallback OnValidSubmit { get; set; }
+
+    private async Task SubmitAsync()
+    {
+        await OnValidSubmit.InvokeAsync();
+    }
+}

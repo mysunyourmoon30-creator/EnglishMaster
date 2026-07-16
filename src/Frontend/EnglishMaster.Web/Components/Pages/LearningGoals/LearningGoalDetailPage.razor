@@ -1,0 +1,72 @@
+@page "/learn/goals/{Id:guid}"
+@inject ILearningGoalApiClient GoalApiClient
+
+<PageTitle>Learning Goal</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>@(goal?.Title ?? "Learning Goal")</h1>
+        <p class="muted">Review progress and manage this goal.</p>
+    </div>
+    <a class="button secondary" href="/learn/goals">Back</a>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading goal...</p>
+}
+else if (goal is null)
+{
+    <p class="muted">Goal not found.</p>
+}
+else
+{
+    <section class="content-section">
+        <span class="pill">@goal.Status</span>
+        <h2>@goal.GoalType</h2>
+        <p>@goal.Description</p>
+        <p class="muted">@goal.CurrentValue / @goal.TargetValue @goal.Unit</p>
+        <div class="actions">
+            <button class="button secondary" type="button" @onclick="PauseAsync">Pause</button>
+            <button class="button secondary" type="button" @onclick="ResumeAsync">Resume</button>
+            <button class="button" type="button" @onclick="CompleteAsync">Complete</button>
+            <button class="button danger" type="button" @onclick="CancelAsync">Cancel</button>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private LearningGoalDto? goal;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            goal = await GoalApiClient.GetByIdAsync(Id, CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Goal is unavailable right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task PauseAsync() => goal = await GoalApiClient.PauseAsync(Id, CancellationToken.None);
+    private async Task ResumeAsync() => goal = await GoalApiClient.ResumeAsync(Id, CancellationToken.None);
+    private async Task CompleteAsync() => goal = await GoalApiClient.CompleteAsync(Id, CancellationToken.None);
+    private async Task CancelAsync() => goal = await GoalApiClient.CancelAsync(Id, CancellationToken.None);
+}

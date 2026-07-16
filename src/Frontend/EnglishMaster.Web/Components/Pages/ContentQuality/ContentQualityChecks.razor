@@ -1,0 +1,77 @@
+@page "/admin/content-quality/checks"
+@rendermode InteractiveServer
+@inject IContentQualityApiClient ContentQualityApiClient
+
+<PageTitle>Quality Checks</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Quality Checks</h1>
+    </div>
+</section>
+
+<section class="panel filter-bar">
+    <InputText @bind-Value="contentType" placeholder="Content type" />
+    <InputText @bind-Value="status" placeholder="Status" />
+    <button class="button" type="button" @onclick="SearchAsync">Search</button>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading checks...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (checks.Count == 0)
+{
+    <div class="panel">No quality checks found.</div>
+}
+else
+{
+    <section class="content-list">
+        @foreach (var check in checks)
+        {
+            <article class="panel">
+                <div class="item-header">
+                    <div>
+                        <h2>@check.ContentType</h2>
+                        <p class="muted">@check.ContentId · @check.CheckedAt.LocalDateTime.ToString("g")</p>
+                    </div>
+                    <span class="badge">@check.Status · @check.Score</span>
+                </div>
+                <a class="button small" href="@AdminRoutes.ContentQuality.CheckDetail(check.Id)">Open</a>
+            </article>
+        }
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<ContentQualityCheckDto> checks = [];
+    private string? contentType;
+    private string? status;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await SearchAsync();
+
+    private async Task SearchAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            checks = (await ContentQualityApiClient.SearchChecksAsync(contentType, status, CancellationToken.None)).Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

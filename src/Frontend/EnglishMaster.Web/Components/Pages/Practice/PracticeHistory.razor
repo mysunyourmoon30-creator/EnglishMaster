@@ -1,0 +1,59 @@
+@page "/learn/practice/history"
+@inject IPracticeApiClient PracticeApiClient
+
+<PageTitle>Practice History</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Practice History</h1>
+        <p class="muted">Previous practice sessions and scores.</p>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (isLoading)
+{
+    <p class="muted">Loading history...</p>
+}
+else if (sessions.Count == 0)
+{
+    <p class="muted">No practice sessions yet.</p>
+}
+else
+{
+    <section class="content-list">
+        @foreach (var item in sessions)
+        {
+            <article class="list-card">
+                <h2>@item.StartedAt.LocalDateTime</h2>
+                <p class="muted">@item.Status · @item.CorrectItems correct · @item.IncorrectItems again</p>
+            </article>
+        }
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<PracticeSessionDto> sessions = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            sessions = await PracticeApiClient.GetHistoryAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Practice history is unavailable.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
+

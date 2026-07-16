@@ -1,0 +1,139 @@
+@page "/admin/words/{Id:guid}/edit"
+@rendermode InteractiveServer
+@inject IWordsApiClient WordsApiClient
+@inject ICategoriesApiClient CategoriesApiClient
+@inject ITagsApiClient TagsApiClient
+@inject IMediaApiClient MediaApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Word</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Vocabulary</p>
+        <h1>Edit Word</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <p class="muted">Loading word...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Word was not found.</p>
+        <a class="button" href="@AdminRoutes.Words.Index">Back to Words</a>
+    </section>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert error">@errorMessage</div>
+    }
+
+    @if (word is not null)
+    {
+        <section class="panel pronunciation-link-panel">
+            <div class="pagination-summary">
+                <span class="muted">Pronunciation</span>
+                @if (word.Pronunciation is null)
+                {
+                    <a class="button small" href="@AdminRoutes.Pronunciations.CreateForWord(word.Id)">Create Pronunciation</a>
+                }
+                else
+                {
+                    <a class="button small" href="@AdminRoutes.Pronunciations.Edit(word.Pronunciation.Id)">Edit Pronunciation</a>
+                }
+            </div>
+        </section>
+    }
+
+    <section class="panel">
+        <WordForm Model="model"
+                  Categories="categories"
+                  Tags="tags"
+                  ImageMediaOptions="imageMedia"
+                  AudioMediaOptions="audioMedia"
+                  ValidationErrors="validationErrors"
+                  IsSaving="isSaving"
+                  ShowActiveToggle="true"
+                  SubmitText="Save"
+                  OnValidSubmit="SaveAsync" />
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private WordFormModel model = new();
+    private WordDto? word;
+    private IReadOnlyCollection<CategoryDto> categories = [];
+    private IReadOnlyCollection<TagDto> tags = [];
+    private IReadOnlyCollection<MediaDto> imageMedia = [];
+    private IReadOnlyCollection<MediaDto> audioMedia = [];
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSaving;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            categories = (await CategoriesApiClient.SearchAsync(null, true, CancellationToken.None)).Items;
+            tags = (await TagsApiClient.SearchAsync(null, true, CancellationToken.None)).Items;
+            imageMedia = (await MediaApiClient.SearchAsync(
+                new MediaSearchRequest(MediaType: "Image", IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+            audioMedia = (await MediaApiClient.SearchAsync(
+                new MediaSearchRequest(MediaType: "Audio", IsActive: true, PageSize: 100),
+                CancellationToken.None)).Items;
+            word = await WordsApiClient.GetAsync(Id, CancellationToken.None);
+            if (word is null)
+            {
+                notFound = true;
+                return;
+            }
+
+            model = WordFormModel.FromDto(word);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            await WordsApiClient.UpdateAsync(Id, model.ToUpdateRequest(), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.Words.Index);
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

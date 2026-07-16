@@ -1,0 +1,136 @@
+@page "/admin/tags"
+@rendermode InteractiveServer
+@inject ITagsApiClient TagsApiClient
+
+<PageTitle>Tags</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Vocabulary</p>
+        <h1>Tags</h1>
+    </div>
+    <a class="button primary" href="@AdminRoutes.Tags.Create">New Tag</a>
+</section>
+
+<section class="panel">
+    <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+        <label>
+            <span>Search</span>
+            <input class="input" @bind="search" @bind:event="oninput" />
+        </label>
+        <label>
+            <span>Status</span>
+            <select class="input" @bind="activeFilter">
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+            </select>
+        </label>
+        <button class="button" type="submit">Search</button>
+    </form>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading tags...</p>
+}
+else if (tags.Count == 0)
+{
+    <section class="panel">
+        <p class="muted">No tags found.</p>
+    </section>
+}
+else
+{
+    <section class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Slug</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var tag in tags)
+                {
+                    <tr>
+                        <td>
+                            <strong>@tag.Name</strong>
+                            <span class="muted">@tag.Description</span>
+                        </td>
+                        <td>@tag.Slug</td>
+                        <td>@(tag.IsActive ? "Active" : "Inactive")</td>
+                        <td class="row-actions">
+                            <a class="button small" href="@AdminRoutes.Tags.Detail(tag.Id)">View</a>
+                            <a class="button small" href="@AdminRoutes.Tags.Edit(tag.Id)">Edit</a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(tag.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<TagDto> tags = [];
+    private string? search;
+    private string activeFilter = "true";
+    private string? errorMessage;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task SearchAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await TagsApiClient.SearchAsync(
+                search,
+                activeFilter == "false" ? false : true,
+                CancellationToken.None);
+            tags = result.Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            tags = [];
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        errorMessage = null;
+
+        try
+        {
+            await TagsApiClient.DeleteAsync(id, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+}

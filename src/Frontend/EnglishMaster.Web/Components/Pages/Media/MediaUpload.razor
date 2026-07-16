@@ -1,0 +1,169 @@
+@page "/admin/media/upload"
+@rendermode InteractiveServer
+@inject IMediaApiClient MediaApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Upload Media</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Assets</p>
+        <h1>Upload Media</h1>
+    </div>
+    <a class="button" href="@AdminRoutes.Media.Index">Back</a>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (uploadedMedia is not null)
+{
+    <section class="panel">
+        @if (uploadedMedia.MediaType == "Image" && !string.IsNullOrWhiteSpace(uploadedMedia.PublicUrl))
+        {
+            <img class="media-preview" src="@uploadedMedia.PublicUrl" alt="@uploadedMedia.AltText" />
+        }
+        else if (uploadedMedia.MediaType == "Audio" && !string.IsNullOrWhiteSpace(uploadedMedia.PublicUrl))
+        {
+            <audio class="media-player" controls src="@uploadedMedia.PublicUrl"></audio>
+        }
+
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.Media.Detail(uploadedMedia.Id)">View Media</a>
+            <button class="button" type="button" @onclick="Reset">Upload Another</button>
+        </div>
+    </section>
+}
+else
+{
+    <section class="panel">
+        <EditForm Model="model" OnValidSubmit="UploadAsync" class="word-form">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            @if (validationErrors.Count > 0)
+            {
+                <div class="alert error">
+                    <ul>
+                        @foreach (var error in validationErrors.SelectMany(item => item.Value))
+                        {
+                            <li>@error</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <div class="form-grid">
+                <label class="span-2">
+                    <span>File</span>
+                    <InputFile OnChange="OnFileSelected" />
+                </label>
+
+                <label class="span-2">
+                    <span>Alt Text</span>
+                    <InputText class="input" @bind-Value="model.AltText" />
+                    <ValidationMessage For="@(() => model.AltText)" />
+                </label>
+
+                <label class="span-2">
+                    <span>Description</span>
+                    <InputTextArea class="input textarea" @bind-Value="model.Description" />
+                    <ValidationMessage For="@(() => model.Description)" />
+                </label>
+            </div>
+
+            @if (selectedFile is not null)
+            {
+                <p class="muted">@selectedFile.Name - @FormatSize(selectedFile.Size) - @selectedFile.ContentType</p>
+            }
+
+            <div class="actions">
+                <button class="button primary" type="submit" disabled="@IsUploadDisabled">Upload</button>
+                <button class="button" type="button" @onclick="Cancel">Cancel</button>
+            </div>
+        </EditForm>
+    </section>
+}
+
+@code {
+    private readonly UploadFormModel model = new();
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private IBrowserFile? selectedFile;
+    private MediaDto? uploadedMedia;
+    private string? errorMessage;
+    private bool isUploading;
+
+    private bool IsUploadDisabled => isUploading || selectedFile is null;
+
+    private void OnFileSelected(InputFileChangeEventArgs args)
+    {
+        selectedFile = args.File;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+    }
+
+    private async Task UploadAsync()
+    {
+        if (selectedFile is null)
+        {
+            validationErrors = new Dictionary<string, string[]>
+            {
+                ["file"] = ["File is required."]
+            };
+            return;
+        }
+
+        isUploading = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            uploadedMedia = await MediaApiClient.UploadAsync(
+                selectedFile,
+                model.AltText,
+                model.Description,
+                CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isUploading = false;
+        }
+    }
+
+    private void Reset()
+    {
+        selectedFile = null;
+        uploadedMedia = null;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo(AdminRoutes.Media.Index);
+    }
+
+    private static string FormatSize(long bytes)
+    {
+        return bytes < 1024
+            ? $"{bytes} B"
+            : $"{bytes / 1024d:0.##} KB";
+    }
+
+    private sealed class UploadFormModel
+    {
+        [StringLength(300)]
+        public string? AltText { get; set; }
+
+        [StringLength(1000)]
+        public string? Description { get; set; }
+    }
+}
