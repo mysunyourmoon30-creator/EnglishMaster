@@ -13,6 +13,7 @@ All endpoint files live under `src/Backend/EnglishMaster.Api/Endpoints/` and are
 | Module | Base path | File | Detailed docs |
 | --- | --- | --- | --- |
 | Word | `/api/v1/words` | `WordEndpoints.cs` | [word-api.md](word-api.md) |
+| Analytics | `/api/v1/admin/analytics`, `/api/v1/me/analytics` | `AnalyticsEndpoints.cs` | [analytics-api.md](analytics-api.md) |
 | Category | `/api/v1/categories` | `CategoryEndpoints.cs` | [category-api.md](category-api.md) |
 | Certificate | `/api/v1/admin/certificate-templates`, `/api/v1/me/certificates`, `/api/v1/public/certificates` | `CertificateEndpoints.cs` | [certificate-api.md](certificate-api.md) |
 | Tag | `/api/v1/tags` | `TagEndpoints.cs` | [tag-api.md](tag-api.md) |

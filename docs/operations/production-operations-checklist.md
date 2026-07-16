@@ -17,6 +17,8 @@
 - [ ] Failed imports reviewed.
 - [ ] Login/authentication issues reviewed.
 - [ ] Admin dashboard loads.
+- [ ] Admin analytics dashboard loads.
+- [ ] Student analytics dashboard loads for an authenticated learner.
 - [ ] Public learning pages load.
 
 ## Weekly Checks
@@ -36,6 +38,7 @@
 - [ ] Confirm login.
 - [ ] Confirm admin content list.
 - [ ] Confirm reports page.
+- [ ] Confirm analytics pages if analytics code changed.
 - [ ] Confirm notifications page.
 - [ ] Confirm email provider status.
 - [ ] Send staging/production-approved email test if provider delivery changed.
@@ -51,5 +54,6 @@
 - Login fails for all admins.
 - Publish jobs fail repeatedly.
 - Unexpected 500 errors increase.
+- Analytics dashboards fail or become noticeably slow.
 - Media or publishing files disappear.
 - Public certificate verification fails for valid issued certificates.
