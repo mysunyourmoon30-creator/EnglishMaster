@@ -131,6 +131,39 @@ public sealed class CertificateGenerationEndpointsTests(EnglishMasterApiFactory 
         Assert.DoesNotContain(certificates!, certificate => certificate.RecipientName == "Other");
     }
 
+    [Fact]
+    public async Task PublicCertificateVerification_ReturnsIssuedCertificateWithoutLogin()
+    {
+        var verificationCode = Unique("cert").ToLowerInvariant();
+        var courseTitle = Unique("Public Certificate");
+        await SeedAsync(dbContext =>
+        {
+            var template = CertificateTemplate.Create(Unique("public-template").ToLowerInvariant(), "Course Completion", string.Empty, "Body", DateTimeOffset.UtcNow);
+            var course = Course.Create(courseTitle, "summary", "description", CefrLevel.A2, null, null, 30, 1, DateTimeOffset.UtcNow);
+            dbContext.CertificateTemplates.Add(template);
+            dbContext.Courses.Add(course);
+            dbContext.IssuedCertificates.Add(IssuedCertificate.Create(Guid.NewGuid(), course.Id, template.Id, verificationCode, "Public Learner", course.Title, template.Code, "Body", DateTimeOffset.UtcNow));
+            return Task.CompletedTask;
+        });
+        using var client = factory.CreateClient(new() { HandleCookies = true });
+
+        var certificate = await client.GetFromJsonAsync<PublicCertificateVerificationDto>($"/api/v1/public/certificates/{verificationCode}");
+
+        Assert.NotNull(certificate);
+        Assert.Equal(courseTitle, certificate!.CourseTitle);
+        Assert.True(certificate.IsValid);
+    }
+
+    [Fact]
+    public async Task PublicCertificateVerification_ReturnsNotFoundForUnknownCode()
+    {
+        using var client = factory.CreateClient(new() { HandleCookies = true });
+
+        var response = await client.GetAsync($"/api/v1/public/certificates/{Unique("missing").ToLowerInvariant()}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
     private async Task<Guid> GetSuperAdminUserIdAsync()
     {
         using var scope = factory.Services.CreateScope();

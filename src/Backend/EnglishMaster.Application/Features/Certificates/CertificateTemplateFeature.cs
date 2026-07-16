@@ -9,6 +9,8 @@ public sealed record CertificateTemplateSearchResponse(IReadOnlyCollection<Certi
 
 public sealed record IssuedCertificateDto(Guid Id, Guid UserId, Guid CourseId, Guid TemplateId, string VerificationCode, string RecipientName, string CourseTitle, string TemplateCode, string RenderedBody, DateTimeOffset IssuedAt, bool IsRevoked);
 
+public sealed record PublicCertificateVerificationDto(string VerificationCode, string RecipientName, string CourseTitle, string TemplateCode, DateTimeOffset IssuedAt, bool IsRevoked, bool IsValid);
+
 public interface ICertificateTemplateRepository
 {
     Task<CertificateTemplateDto> AddAsync(CertificateTemplate template, CancellationToken cancellationToken);
@@ -26,11 +28,13 @@ public sealed record GetCertificateTemplateByIdQuery(Guid Id);
 public sealed record SearchCertificateTemplatesQuery(string? Search, bool? IsActive, int? PageNumber, int? PageSize);
 public sealed record GenerateCourseCertificateCommand(Guid UserId, Guid CourseId, Guid? TemplateId);
 public sealed record GetMyCertificatesQuery(Guid UserId, int? Limit);
+public sealed record VerifyCertificateQuery(string VerificationCode);
 
 public interface IIssuedCertificateRepository
 {
     Task<IssuedCertificateDto?> GetByUserAndCourseAsync(Guid userId, Guid courseId, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<IssuedCertificateDto>> GetByUserAsync(Guid userId, int limit, CancellationToken cancellationToken);
+    Task<PublicCertificateVerificationDto?> GetByVerificationCodeAsync(string verificationCode, CancellationToken cancellationToken);
     Task<CertificateGenerationCourse?> GetCompletedCourseAsync(Guid userId, Guid courseId, CancellationToken cancellationToken);
     Task<CertificateGenerationUser?> GetUserAsync(Guid userId, CancellationToken cancellationToken);
     Task<CertificateTemplate?> GetActiveTemplateAsync(Guid? templateId, CancellationToken cancellationToken);
@@ -197,6 +201,20 @@ public sealed class CertificateGenerationQueryHandler
     {
         var limit = Math.Clamp(query.Limit ?? 50, 1, 100);
         return Result<IReadOnlyCollection<IssuedCertificateDto>>.Success(await repository.GetByUserAsync(query.UserId, limit, cancellationToken));
+    }
+
+    public async Task<Result<PublicCertificateVerificationDto>> VerifyAsync(VerifyCertificateQuery query, CancellationToken cancellationToken)
+    {
+        var verificationCode = query.VerificationCode.Trim();
+        if (verificationCode.Length == 0)
+        {
+            return Result<PublicCertificateVerificationDto>.Validation(new ValidationError(nameof(query.VerificationCode), "Verification code is required."));
+        }
+
+        var certificate = await repository.GetByVerificationCodeAsync(verificationCode, cancellationToken);
+        return certificate is null
+            ? Result<PublicCertificateVerificationDto>.NotFound(nameof(query.VerificationCode), "Certificate was not found.")
+            : Result<PublicCertificateVerificationDto>.Success(certificate);
     }
 }
 

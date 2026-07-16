@@ -1,0 +1,113 @@
+@page "/certificates/verify"
+@page "/certificates/verify/{VerificationCode}"
+@inject ICertificateVerificationApiClient VerificationApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Certificate Verification</PageTitle>
+
+<section class="page-header">
+    <div>
+        <h1>Certificate Verification</h1>
+        <p class="muted">Confirm an EnglishMaster certificate by verification code.</p>
+    </div>
+</section>
+
+<form class="filters-grid" @onsubmit="SubmitAsync" @onsubmit:preventDefault>
+    <label>
+        <span>Verification code</span>
+        <input class="input" @bind="codeInput" @bind:event="oninput" />
+    </label>
+    <button class="button" type="submit" disabled="@isLoading">Verify</button>
+</form>
+
+@if (isLoading)
+{
+    <p class="muted">Checking certificate...</p>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (certificate is null && hasSearched)
+{
+    <section class="empty-state">
+        <h2>Certificate not found</h2>
+        <p class="muted">Check the verification code and try again.</p>
+    </section>
+}
+else if (certificate is not null)
+{
+    <section class="content-list">
+        <article class="list-card">
+            <div>
+                <span class="pill">Certificate</span>
+                <span class="pill">@(certificate.IsValid ? "Valid" : "Revoked")</span>
+            </div>
+            <h2>@certificate.CourseTitle</h2>
+            <p>Issued to @certificate.RecipientName on @certificate.IssuedAt.ToString("yyyy-MM-dd").</p>
+            <div class="meta-row">
+                <span>@certificate.VerificationCode</span>
+                <span>@certificate.TemplateCode</span>
+            </div>
+        </article>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public string? VerificationCode { get; set; }
+
+    private PublicCertificateVerificationDto? certificate;
+    private string? codeInput;
+    private string? errorMessage;
+    private bool isLoading;
+    private bool hasSearched;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.Equals(codeInput, VerificationCode, StringComparison.Ordinal))
+        {
+            codeInput = VerificationCode;
+        }
+
+        if (!string.IsNullOrWhiteSpace(VerificationCode))
+        {
+            await VerifyAsync(VerificationCode);
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        var code = codeInput?.Trim();
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            certificate = null;
+            hasSearched = false;
+            errorMessage = "Verification code is required.";
+            return;
+        }
+
+        NavigationManager.NavigateTo($"/certificates/verify/{Uri.EscapeDataString(code)}");
+        await VerifyAsync(code);
+    }
+
+    private async Task VerifyAsync(string code)
+    {
+        isLoading = true;
+        hasSearched = true;
+        errorMessage = null;
+        certificate = null;
+        try
+        {
+            certificate = await VerificationApiClient.VerifyAsync(code, CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Certificate verification is unavailable right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

@@ -11,3 +11,5 @@ public sealed record UpdateCertificateTemplateRequest(string Name, string Descri
 public sealed record IssuedCertificateDto(Guid Id, Guid CourseId, string VerificationCode, string RecipientName, string CourseTitle, string TemplateCode, string RenderedBody, DateTimeOffset IssuedAt, bool IsRevoked);
 
 public sealed record GenerateCourseCertificateRequest(Guid? TemplateId);
+
+public sealed record PublicCertificateVerificationDto(string VerificationCode, string RecipientName, string CourseTitle, string TemplateCode, DateTimeOffset IssuedAt, bool IsRevoked, bool IsValid);

@@ -34,6 +34,17 @@ public sealed class EfIssuedCertificateRepository : IIssuedCertificateRepository
         return certificates.Select(ToDto).ToArray();
     }
 
+    public async Task<PublicCertificateVerificationDto?> GetByVerificationCodeAsync(string verificationCode, CancellationToken cancellationToken)
+    {
+        var normalized = verificationCode.Trim();
+        var certificate = await dbContext.IssuedCertificates.AsNoTracking()
+            .Where(item => item.VerificationCode == normalized)
+            .Select(item => new PublicCertificateVerificationDto(item.VerificationCode, item.RecipientName, item.CourseTitle, item.TemplateCode, item.IssuedAt, item.RevokedAt.HasValue, !item.RevokedAt.HasValue))
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return certificate;
+    }
+
     public async Task<CertificateGenerationCourse?> GetCompletedCourseAsync(Guid userId, Guid courseId, CancellationToken cancellationToken)
     {
         var course = await dbContext.CourseProgress.AsNoTracking()

@@ -4,9 +4,11 @@ using EnglishMaster.Application.Features.Security;
 using EnglishMaster.Contracts.Certificates;
 using EnglishMaster.Shared.Results;
 using AppIssuedCertificateDto = EnglishMaster.Application.Features.Certificates.IssuedCertificateDto;
+using AppPublicCertificateVerificationDto = EnglishMaster.Application.Features.Certificates.PublicCertificateVerificationDto;
 using AppTemplateDto = EnglishMaster.Application.Features.Certificates.CertificateTemplateDto;
 using AppTemplateSearchResponse = EnglishMaster.Application.Features.Certificates.CertificateTemplateSearchResponse;
 using ContractIssuedCertificateDto = EnglishMaster.Contracts.Certificates.IssuedCertificateDto;
+using ContractPublicCertificateVerificationDto = EnglishMaster.Contracts.Certificates.PublicCertificateVerificationDto;
 using ContractTemplateDto = EnglishMaster.Contracts.Certificates.CertificateTemplateDto;
 using ContractTemplateSearchResponse = EnglishMaster.Contracts.Certificates.CertificateTemplateSearchResponse;
 
@@ -31,6 +33,10 @@ public static class CertificateEndpoints
             .RequireAuthorization();
         mine.MapGet("", GetMyCertificatesAsync);
         mine.MapPost("/courses/{courseId:guid}/generate", GenerateCourseCertificateAsync);
+
+        var publicCertificates = endpoints.MapGroup("/api/v1/public/certificates")
+            .WithTags("Public Certificates");
+        publicCertificates.MapGet("/{verificationCode}", VerifyCertificateAsync);
 
         return endpoints;
     }
@@ -73,6 +79,9 @@ public static class CertificateEndpoints
         return ToHttpResult(await handler.GenerateAsync(new GenerateCourseCertificateCommand(userId, courseId, request.TemplateId), cancellationToken));
     }
 
+    private static async Task<IResult> VerifyCertificateAsync(string verificationCode, CertificateGenerationQueryHandler handler, CancellationToken cancellationToken) =>
+        ToHttpResult(await handler.VerifyAsync(new VerifyCertificateQuery(verificationCode), cancellationToken));
+
     private static IResult ToHttpResult(Result<AppTemplateDto> result) =>
         result.Status switch
         {
@@ -101,11 +110,23 @@ public static class CertificateEndpoints
             ? Results.Ok(result.Value!.Select(ToContract).ToArray())
             : Results.Problem();
 
+    private static IResult ToHttpResult(Result<AppPublicCertificateVerificationDto> result) =>
+        result.Status switch
+        {
+            ResultStatus.Success => Results.Ok(ToContract(result.Value!)),
+            ResultStatus.NotFound => Results.NotFound(),
+            ResultStatus.ValidationError => Results.ValidationProblem(ToValidationDictionary(result.Errors)),
+            _ => Results.Problem()
+        };
+
     private static ContractTemplateDto ToContract(AppTemplateDto template) =>
         new(template.Id, template.Code, template.Name, template.Description, template.BodyTemplate, template.IsActive, template.CreatedAt, template.UpdatedAt);
 
     private static ContractIssuedCertificateDto ToContract(AppIssuedCertificateDto certificate) =>
         new(certificate.Id, certificate.CourseId, certificate.VerificationCode, certificate.RecipientName, certificate.CourseTitle, certificate.TemplateCode, certificate.RenderedBody, certificate.IssuedAt, certificate.IsRevoked);
+
+    private static ContractPublicCertificateVerificationDto ToContract(AppPublicCertificateVerificationDto certificate) =>
+        new(certificate.VerificationCode, certificate.RecipientName, certificate.CourseTitle, certificate.TemplateCode, certificate.IssuedAt, certificate.IsRevoked, certificate.IsValid);
 
     private static Dictionary<string, string[]> ToValidationDictionary(IEnumerable<ValidationError> errors) =>
         errors.GroupBy(error => error.Field).ToDictionary(group => group.Key, group => group.Select(error => error.Message).ToArray());
