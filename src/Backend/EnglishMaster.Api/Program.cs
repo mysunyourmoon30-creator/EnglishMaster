@@ -9,6 +9,7 @@ using EnglishMaster.Application.Features.BulkOperations.Commands;
 using EnglishMaster.Application.Features.BulkOperations.Queries;
 using EnglishMaster.Application.Features.Categories.Commands;
 using EnglishMaster.Application.Features.Categories.Queries;
+using EnglishMaster.Application.Features.Certificates;
 using EnglishMaster.Application.Features.ContentQuality.Commands;
 using EnglishMaster.Application.Features.ContentQuality.Queries;
 using EnglishMaster.Application.Features.ContentRevisionRestores.Commands;
@@ -111,6 +112,8 @@ builder.Services.AddAuthorization(options =>
     }
 });
 builder.Services.AddScoped<CreateCategoryCommandHandler>();
+builder.Services.AddScoped<CertificateTemplateCommandHandler>();
+builder.Services.AddScoped<CertificateTemplateQueryHandler>();
 builder.Services.AddScoped<UpdateCategoryCommandHandler>();
 builder.Services.AddScoped<DeleteCategoryCommandHandler>();
 builder.Services.AddScoped<GetCategoryByIdQueryHandler>();
@@ -405,6 +408,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 });
 app.MapSecurityEndpoints();
 app.MapCategoryEndpoints();
+app.MapCertificateEndpoints();
 app.MapTagEndpoints();
 app.MapMediaEndpoints();
 app.MapPronunciationEndpoints();

@@ -2,6 +2,7 @@ using EnglishMaster.Application.Features.BookChapters;
 using EnglishMaster.Application.Features.Books;
 using EnglishMaster.Application.Features.BulkOperations;
 using EnglishMaster.Application.Features.Categories;
+using EnglishMaster.Application.Features.Certificates;
 using EnglishMaster.Application.Features.ContentQuality;
 using EnglishMaster.Application.Features.ContentRevisions;
 using EnglishMaster.Application.Features.Courses;
@@ -38,6 +39,7 @@ using EnglishMaster.Application.Features.Words;
 using EnglishMaster.Infrastructure.Books;
 using EnglishMaster.Infrastructure.BulkOperations;
 using EnglishMaster.Infrastructure.Categories;
+using EnglishMaster.Infrastructure.Certificates;
 using EnglishMaster.Infrastructure.ContentQuality;
 using EnglishMaster.Infrastructure.ContentRevisions;
 using EnglishMaster.Infrastructure.Courses;
@@ -83,6 +85,7 @@ public static class DependencyInjection
                 : connectionString));
 
         services.AddScoped<ICategoryRepository, EfCategoryRepository>();
+        services.AddScoped<ICertificateTemplateRepository, EfCertificateTemplateRepository>();
         services.AddScoped<ITagRepository, EfTagRepository>();
         services.AddScoped<IMediaRepository, EfMediaRepository>();
         services.AddScoped<IMediaStorageService, LocalMediaStorageService>();
