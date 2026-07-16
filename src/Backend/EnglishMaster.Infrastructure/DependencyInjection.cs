@@ -1,3 +1,4 @@
+using EnglishMaster.Application.Features.Analytics;
 using EnglishMaster.Application.Features.BookChapters;
 using EnglishMaster.Application.Features.Books;
 using EnglishMaster.Application.Features.BulkOperations;
@@ -36,6 +37,7 @@ using EnglishMaster.Application.Features.Reports;
 using EnglishMaster.Application.Features.Security;
 using EnglishMaster.Application.Features.Tags;
 using EnglishMaster.Application.Features.Words;
+using EnglishMaster.Infrastructure.Analytics;
 using EnglishMaster.Infrastructure.Books;
 using EnglishMaster.Infrastructure.BulkOperations;
 using EnglishMaster.Infrastructure.Categories;
@@ -85,6 +87,7 @@ public static class DependencyInjection
                 : connectionString));
 
         services.AddScoped<ICategoryRepository, EfCategoryRepository>();
+        services.AddScoped<IAnalyticsRepository, EfAnalyticsRepository>();
         services.AddScoped<ICertificateTemplateRepository, EfCertificateTemplateRepository>();
         services.AddScoped<IIssuedCertificateRepository, EfIssuedCertificateRepository>();
         services.AddScoped<ITagRepository, EfTagRepository>();

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using EnglishMaster.Api.Endpoints;
 using EnglishMaster.Api.Health;
+using EnglishMaster.Application.Features.Analytics;
 using EnglishMaster.Application.Features.BookChapters.Commands;
 using EnglishMaster.Application.Features.BookChapters.Queries;
 using EnglishMaster.Application.Features.Books.Commands;
@@ -307,6 +308,7 @@ builder.Services.AddScoped<LearningReportCommandHandler>();
 builder.Services.AddScoped<LearningReportQueryHandler>();
 builder.Services.AddScoped<CertificateGenerationCommandHandler>();
 builder.Services.AddScoped<CertificateGenerationQueryHandler>();
+builder.Services.AddScoped<AnalyticsQueryHandler>();
 var defaultConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if ((builder.Environment.IsProduction() || builder.Environment.IsStaging()) &&
     string.IsNullOrWhiteSpace(defaultConnectionString))
@@ -409,6 +411,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
     Predicate = registration => registration.Tags.Contains("ready")
 });
 app.MapSecurityEndpoints();
+app.MapAnalyticsEndpoints();
 app.MapCategoryEndpoints();
 app.MapCertificateEndpoints();
 app.MapTagEndpoints();
