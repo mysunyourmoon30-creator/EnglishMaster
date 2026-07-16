@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Globalization;
 using EnglishMaster.Contracts.LearningReports;
 
 namespace EnglishMaster.Web.Services.LearningReports;
@@ -46,7 +47,8 @@ public sealed class LearningReportApiClient : ILearningReportApiClient
 
     public async Task<WeeklyLearningReportDto?> GetByDateAsync(DateTimeOffset date, CancellationToken cancellationToken)
     {
-        var response = await httpClient.GetAsync($"api/v1/me/learning-reports/by-date/{Uri.EscapeDataString(date.ToString("yyyy-MM-dd"))}", cancellationToken);
+        var reportDate = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var response = await httpClient.GetAsync($"api/v1/me/learning-reports/by-date/{Uri.EscapeDataString(reportDate)}", cancellationToken);
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
             return null;

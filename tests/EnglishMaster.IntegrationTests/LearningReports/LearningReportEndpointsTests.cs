@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Globalization;
 using System.Text.Json;
 using EnglishMaster.Contracts.LearningReports;
 using EnglishMaster.Contracts.Security;
@@ -87,7 +88,8 @@ public sealed class LearningReportEndpointsTests(EnglishMasterApiFactory factory
         await ResetReportsAsync();
         var generated = await PostReadAsync<WeeklyLearningReportDto>(client, "/api/v1/me/learning-reports/current-week/generate");
 
-        var byDate = await client.GetFromJsonAsync<WeeklyLearningReportDto>($"/api/v1/me/learning-reports/by-date/{generated.WeekStartDate:yyyy-MM-dd}");
+        var reportDate = generated.WeekStartDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var byDate = await client.GetFromJsonAsync<WeeklyLearningReportDto>($"/api/v1/me/learning-reports/by-date/{reportDate}");
         var invalid = await client.GetAsync("/api/v1/me/learning-reports/by-date/not-a-date");
 
         Assert.Equal(generated.Id, byDate!.Id);
