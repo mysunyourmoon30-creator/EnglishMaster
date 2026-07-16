@@ -45,13 +45,8 @@ public sealed class EfAnalyticsRepository : IAnalyticsRepository
             .Select(profile => (Guid?)profile.Id)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (!profileId.HasValue)
-        {
-            return new StudentAnalyticsOverviewDto(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-        }
-
         var activityQuery = dbContext.LearningActivityLogs.AsNoTracking()
-            .Where(activity => activity.StudentProfileId == profileId.Value && activity.OccurredAt >= range.FromDate && activity.OccurredAt <= range.ToDate);
+            .Where(activity => profileId.HasValue && activity.StudentProfileId == profileId.Value && activity.OccurredAt >= range.FromDate && activity.OccurredAt <= range.ToDate);
         var quizQuery = dbContext.QuizAttempts.AsNoTracking()
             .Where(attempt => attempt.UserId == userId && attempt.AttemptedAt >= range.FromDate && attempt.AttemptedAt <= range.ToDate);
 
@@ -65,14 +60,18 @@ public sealed class EfAnalyticsRepository : IAnalyticsRepository
             .CountAsync(progress => progress.UserId == userId && progress.Status == LearningProgressStatus.Completed && progress.UpdatedAt >= range.FromDate && progress.UpdatedAt <= range.ToDate, cancellationToken);
         var quizAttempts = await quizQuery.CountAsync(cancellationToken);
         var averageQuizScore = await quizQuery.AverageAsync(attempt => (decimal?)attempt.Score, cancellationToken) ?? 0;
-        var practiceSessionsCompleted = await dbContext.PracticeSessions.AsNoTracking()
-            .CountAsync(session => session.StudentProfileId == profileId.Value && session.Status == PracticeSessionStatus.Completed && session.CompletedAt >= range.FromDate && session.CompletedAt <= range.ToDate, cancellationToken);
+        var practiceSessionsCompleted = profileId.HasValue
+            ? await dbContext.PracticeSessions.AsNoTracking()
+                .CountAsync(session => session.StudentProfileId == profileId.Value && session.Status == PracticeSessionStatus.Completed && session.CompletedAt >= range.FromDate && session.CompletedAt <= range.ToDate, cancellationToken)
+            : 0;
         var certificatesEarned = await dbContext.IssuedCertificates.AsNoTracking()
             .CountAsync(certificate => certificate.UserId == userId && certificate.IssuedAt >= range.FromDate && certificate.IssuedAt <= range.ToDate, cancellationToken);
-        var streak = await dbContext.StudentStreaks.AsNoTracking()
-            .Where(item => item.StudentProfileId == profileId.Value)
-            .Select(item => new { item.CurrentStreakDays, item.LongestStreakDays })
-            .SingleOrDefaultAsync(cancellationToken);
+        var streak = profileId.HasValue
+            ? await dbContext.StudentStreaks.AsNoTracking()
+                .Where(item => item.StudentProfileId == profileId.Value)
+                .Select(item => new { item.CurrentStreakDays, item.LongestStreakDays })
+                .SingleOrDefaultAsync(cancellationToken)
+            : null;
 
         return new StudentAnalyticsOverviewDto(
             studyMinutes,
