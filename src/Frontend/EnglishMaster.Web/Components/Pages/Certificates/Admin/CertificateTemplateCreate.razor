@@ -1,0 +1,55 @@
+@page "/admin/certificate-templates/create"
+@rendermode InteractiveServer
+@inject ICertificateTemplateApiClient CertificateTemplateApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>New Certificate Template</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Certificates</p>
+        <h1>New Certificate Template</h1>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+<section class="panel">
+    <CertificateTemplateForm Model="model"
+                              ValidationErrors="validationErrors"
+                              IsSaving="isSaving"
+                              SubmitText="Create"
+                              OnValidSubmit="SaveAsync" />
+</section>
+
+@code {
+    private readonly CertificateTemplateFormModel model = new();
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isSaving;
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            await CertificateTemplateApiClient.CreateAsync(model.ToCreateRequest(), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.CertificateTemplates.Index);
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

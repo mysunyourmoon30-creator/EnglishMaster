@@ -29,6 +29,10 @@
             <NavLink href="@AdminRoutes.Courses.Index">Courses</NavLink>
             <NavLink href="@AdminRoutes.Books.Index">Books</NavLink>
             <NavLink href="@AdminRoutes.Quizzes.Index">Quizzes</NavLink>
+            @if (HasPermission("certificates.read"))
+            {
+                <NavLink href="@AdminRoutes.CertificateTemplates.Index">Certificate Templates</NavLink>
+            }
             @if (HasPermission("reports.read"))
             {
                 <NavLink href="@AdminRoutes.Reports.Index">Reports</NavLink>

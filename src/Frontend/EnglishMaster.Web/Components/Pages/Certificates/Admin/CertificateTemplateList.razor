@@ -1,0 +1,157 @@
+@page "/admin/certificate-templates"
+@rendermode InteractiveServer
+@inject ICertificateTemplateApiClient CertificateTemplateApiClient
+
+<PageTitle>Certificate Templates</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Certificates</p>
+        <h1>Certificate Templates</h1>
+    </div>
+    <a class="button primary" href="@AdminRoutes.CertificateTemplates.Create">New Template</a>
+</section>
+
+<section class="panel">
+    <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+        <label>
+            <span>Search</span>
+            <input class="input" @bind="search" @bind:event="oninput" />
+        </label>
+        <label>
+            <span>Status</span>
+            <select class="input" @bind="activeFilter">
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+            </select>
+        </label>
+        <button class="button" type="submit">Search</button>
+    </form>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading certificate templates...</p>
+}
+else if (templates.Count == 0)
+{
+    <section class="panel">
+        <p class="muted">No certificate templates found.</p>
+    </section>
+}
+else
+{
+    <section class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var template in templates)
+                {
+                    <tr>
+                        <td><strong>@template.Code</strong></td>
+                        <td>@template.Name</td>
+                        <td>@template.Description</td>
+                        <td>@(template.IsActive ? "Active" : "Inactive")</td>
+                        <td class="row-actions">
+                            <a class="button small" href="@AdminRoutes.CertificateTemplates.Detail(template.Id)">View</a>
+                            <a class="button small" href="@AdminRoutes.CertificateTemplates.Edit(template.Id)">Edit</a>
+                            @if (template.IsActive)
+                            {
+                                <button class="button small" type="button" @onclick="() => DeactivateAsync(template.Id)">Deactivate</button>
+                            }
+                            else
+                            {
+                                <button class="button small" type="button" @onclick="() => ActivateAsync(template.Id)">Activate</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private IReadOnlyCollection<CertificateTemplateDto> templates = [];
+    private string? search;
+    private string activeFilter = "true";
+    private string? errorMessage;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task SearchAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await CertificateTemplateApiClient.SearchAsync(
+                search,
+                activeFilter == "false" ? false : true,
+                CancellationToken.None);
+            templates = result.Items;
+        }
+        catch (ApiRequestException exception)
+        {
+            templates = [];
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ActivateAsync(Guid id)
+    {
+        errorMessage = null;
+
+        try
+        {
+            await CertificateTemplateApiClient.ActivateAsync(id, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+
+    private async Task DeactivateAsync(Guid id)
+    {
+        errorMessage = null;
+
+        try
+        {
+            await CertificateTemplateApiClient.DeactivateAsync(id, CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+}

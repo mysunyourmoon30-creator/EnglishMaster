@@ -94,6 +94,7 @@ builder.Services.AddScoped<IReportsApiClient, ReportsApiClient>();
 builder.Services.AddScoped<IPublishingApiClient, PublishingApiClient>();
 builder.Services.AddScoped<IPublicSearchApiClient, PublicSearchApiClient>();
 builder.Services.AddScoped<ICertificateVerificationApiClient, CertificateVerificationApiClient>();
+builder.Services.AddScoped<ICertificateTemplateApiClient, CertificateTemplateApiClient>();
 builder.Services.AddScoped<INotificationsApiClient, NotificationsApiClient>();
 builder.Services.AddScoped<IEmailMessagesApiClient, EmailMessagesApiClient>();
 builder.Services.AddScoped<IAuthApiClient, AuthApiClient>();
