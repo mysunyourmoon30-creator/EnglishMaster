@@ -48,6 +48,14 @@ This folder tracks the planned v0.3.0 implementation prompt sequence. It is plan
 - 195: v0.3.0 Release Closure.
 - 196: v0.4.0 Planning Gate.
 - 197: v0.3.0 UAT Execution Record.
+- 198: v0.3.0 Staging Validation Results.
+- 199: v0.3.0 Defect Fix Decision.
+- 200: v0.3.0 Final Release Decision.
+- 201: v0.3.0 Final Tag Execution.
+- 202: v0.3.0 Production Deployment Record.
+- 203: v0.3.0 Production Smoke Test Results.
+- 204: v0.3.0 Monitoring Execution Record.
+- 205: v0.3.0 Go-Live Closure.
 
 ## Guardrails
 
