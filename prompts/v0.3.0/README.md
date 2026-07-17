@@ -47,6 +47,7 @@ This folder tracks the planned v0.3.0 implementation prompt sequence. It is plan
 - 194: v0.3.0 Post-Release Monitoring Plan.
 - 195: v0.3.0 Release Closure.
 - 196: v0.4.0 Planning Gate.
+- 197: v0.3.0 UAT Execution Record.
 
 ## Guardrails
 
