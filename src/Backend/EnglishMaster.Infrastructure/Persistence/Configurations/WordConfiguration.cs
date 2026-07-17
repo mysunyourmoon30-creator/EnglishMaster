@@ -92,10 +92,12 @@ internal sealed class WordConfiguration : IEntityTypeConfiguration<Word>
             .HasForeignKey(word => word.CategoryId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // ClientSetNull avoids SQL Server error 1785 (multiple cascade paths): two SetNull FKs
+        // from Words to Media would both try to null out on delete, which SQL Server rejects.
         builder.HasOne<MediaEntity>()
             .WithMany()
             .HasForeignKey(word => word.ImageMediaId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
 
         builder.HasOne<MediaEntity>()
             .WithMany()

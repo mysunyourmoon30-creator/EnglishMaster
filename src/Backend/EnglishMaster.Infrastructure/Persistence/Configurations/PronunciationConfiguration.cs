@@ -88,15 +88,17 @@ internal sealed class PronunciationConfiguration : IEntityTypeConfiguration<Pron
             .HasForeignKey(pronunciation => pronunciation.AudioSlowMediaId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // ClientSetNull avoids SQL Server error 1785 (multiple cascade paths): three SetNull FKs
+        // from Pronunciations to Media would all try to null out on delete, which SQL Server rejects.
         builder.HasOne<MediaEntity>()
             .WithMany()
             .HasForeignKey(pronunciation => pronunciation.AudioNormalMediaId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
 
         builder.HasOne<MediaEntity>()
             .WithMany()
             .HasForeignKey(pronunciation => pronunciation.MouthImageMediaId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
 
         builder.HasMany(pronunciation => pronunciation.MinimalPairs)
             .WithOne()

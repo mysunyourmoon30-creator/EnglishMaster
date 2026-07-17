@@ -96,7 +96,7 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
                 column: "ImageMediaId",
                 principalTable: "Media",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.NoAction);
         }
 
         /// <inheritdoc />

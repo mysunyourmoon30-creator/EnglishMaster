@@ -10,10 +10,19 @@ internal sealed class AuthApiClient(HttpClient httpClient) : IAuthApiClient
         var response = await httpClient.PostAsJsonAsync("api/v1/auth/login", request, cancellationToken);
         await ApiClientResponseHandler.EnsureSuccessAsync(response, cancellationToken);
         var value = await ApiClientResponseHandler.ReadRequiredAsync<LoginResponse>(response, cancellationToken);
+
+        // A large claim set (e.g. SuperAdmin's full permission list) can exceed the single-cookie
+        // size limit, so ASP.NET Core's cookie auth splits it into ".EnglishMaster.Admin=chunks-N"
+        // plus ".EnglishMaster.AdminC1", "...AdminC2", etc. All parts must be forwarded together;
+        // forwarding only the base cookie leaves the ticket incomplete and every request 401s.
         var cookie = response.Headers.TryGetValues("Set-Cookie", out var cookies)
-            ? cookies.Select(item => item.Split(';', 2)[0]).FirstOrDefault(item => item.StartsWith(".EnglishMaster.Admin=", StringComparison.Ordinal))
+            ? string.Join(
+                "; ",
+                cookies
+                    .Select(item => item.Split(';', 2)[0])
+                    .Where(nameValue => nameValue.Split('=', 2)[0].StartsWith(".EnglishMaster.Admin", StringComparison.Ordinal)))
             : null;
-        return (value, cookie);
+        return (value, string.IsNullOrEmpty(cookie) ? null : cookie);
     }
 
     public async Task LogoutAsync(string? apiCookie, CancellationToken cancellationToken)

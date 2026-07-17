@@ -107,7 +107,7 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
                         column: x => x.WordId,
                         principalTable: "Words",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
