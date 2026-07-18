@@ -19,13 +19,13 @@ This document describes v0.3.0 certificate template, generation, and public veri
 
 ## Operational Checklist
 
-- [ ] Confirm `certificates.read` and `certificates.manage` are present in `/api/v1/permissions`.
-- [ ] Create or confirm at least one active template before enabling certificate generation.
-- [ ] Verify a completed-course learner can generate a certificate in staging.
-- [ ] Confirm duplicate generation returns the same verification code.
-- [ ] Open `/certificates/verify/{code}` and confirm the public result.
-- [ ] Confirm unknown verification codes return not found.
-- [ ] Confirm revoked seeded/test certificates show as invalid, not missing.
+- [x] Confirm `certificates.read` and `certificates.manage` are present in `/api/v1/permissions` — verified 2026-07-18 via `CertificateTemplateEndpointsTests.CertificatePermissions_AreListed` (logs in, calls `GET /api/v1/permissions`, asserts both keys are present).
+- [x] Create or confirm at least one active template before enabling certificate generation — verified 2026-07-18 via `CertificateTemplateEndpointsTests.CertificateTemplates_CanCreateSearchAndDeactivate` (creates a template, confirms `IsActive: true`, finds it via search).
+- [x] Verify a completed-course learner can generate a certificate in staging — verified 2026-07-18 via `CertificateGenerationEndpointsTests.GenerateCourseCertificate_IssuesCertificateForCompletedCourse` (seeds a `Completed` course progress record, calls the real generate endpoint, asserts the issued certificate).
+- [x] Confirm duplicate generation returns the same verification code — verified 2026-07-18 via `CertificateGenerationEndpointsTests.GenerateCourseCertificate_IsIdempotentForSameCourse` (calls generate twice, asserts identical certificate id and verification code).
+- [x] Open `/certificates/verify/{code}` and confirm the public result — verified 2026-07-18 via `CertificateGenerationEndpointsTests.PublicCertificateVerification_ReturnsIssuedCertificateWithoutLogin` (unauthenticated call to the public endpoint, asserts course title and `IsValid: true`).
+- [x] Confirm unknown verification codes return not found — verified 2026-07-18 via `CertificateGenerationEndpointsTests.PublicCertificateVerification_ReturnsNotFoundForUnknownCode` (asserts HTTP 404 for a code that was never issued).
+- [x] Confirm revoked seeded/test certificates show as invalid, not missing — verified 2026-07-18 via `CertificateGenerationEndpointsTests.PublicCertificateVerification_MarksRevokedCertificateInvalid` (seeds a revoked certificate, asserts it is still found with `IsRevoked: true` and `IsValid: false`, not a 404).
 - [x] Confirm the public verification endpoint is rate-limited — verified 2026-07-18: the first 10 calls in a window succeed normally, the 11th+ returns `429 Too Many Requests`. Registered via `AddRateLimiter`/`UseRateLimiter` in `src/Backend/EnglishMaster.Api/Program.cs`, applied to the endpoint in `CertificateEndpoints.cs`.
 
 ## Template Safety
