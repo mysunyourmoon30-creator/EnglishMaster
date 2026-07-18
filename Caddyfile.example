@@ -1,0 +1,7 @@
+app.your-domain.example {
+	reverse_proxy englishmaster-production-web:8080
+}
+
+api.your-domain.example {
+	reverse_proxy englishmaster-production-api:8080
+}
