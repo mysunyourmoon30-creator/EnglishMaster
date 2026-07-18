@@ -105,6 +105,7 @@ public static class Permissions
     public const string RolesDelete = "roles.delete";
     public const string PermissionsRead = "permissions.read";
     public const string PermissionsUpdate = "permissions.update";
+    public const string SystemHealthRead = "system-health.read";
 
     public static readonly PermissionDefinition[] All =
     [
@@ -130,7 +131,8 @@ public static class Permissions
         P(CertificatesRead, "Certificates Read", "Certificates"), P(CertificatesManage, "Certificates Manage", "Certificates"),
         P(UsersRead, "Users Read", "Administration"), P(UsersCreate, "Users Create", "Administration"), P(UsersUpdate, "Users Update", "Administration"), P(UsersDelete, "Users Delete", "Administration"),
         P(RolesRead, "Roles Read", "Administration"), P(RolesCreate, "Roles Create", "Administration"), P(RolesUpdate, "Roles Update", "Administration"), P(RolesDelete, "Roles Delete", "Administration"),
-        P(PermissionsRead, "Permissions Read", "Administration"), P(PermissionsUpdate, "Permissions Update", "Administration")
+        P(PermissionsRead, "Permissions Read", "Administration"), P(PermissionsUpdate, "Permissions Update", "Administration"),
+        P(SystemHealthRead, "System Health Read", "System Health")
     ];
 
     public static readonly string[] ContentRead =

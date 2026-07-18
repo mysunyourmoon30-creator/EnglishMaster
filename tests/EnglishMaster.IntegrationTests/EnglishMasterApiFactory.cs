@@ -24,7 +24,8 @@ public sealed class EnglishMasterApiFactory : WebApplicationFactory<Program>
             {
                 ["Auth:InitialSuperAdmin:Email"] = "superadmin@englishmaster.test",
                 ["Auth:InitialSuperAdmin:Password"] = "TestPassword1",
-                ["EmailDeliveryWorker:Enabled"] = "false"
+                ["EmailDeliveryWorker:Enabled"] = "false",
+                ["SystemHealthWorker:Enabled"] = "false"
             });
         });
         builder.ConfigureServices(services =>

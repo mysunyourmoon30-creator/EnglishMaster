@@ -176,6 +176,11 @@ public static class AdminRoutes
         public const string Index = "/admin/analytics";
     }
 
+    public static class SystemHealth
+    {
+        public const string Index = "/admin/system-health";
+    }
+
     public static class Notifications
     {
         public const string Mine = "/learn/notifications";

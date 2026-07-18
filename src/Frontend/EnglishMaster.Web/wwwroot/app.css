@@ -173,6 +173,14 @@ a {
     font-weight: 700;
 }
 
+.stat-card.status-ok .stat-value {
+    color: #1a7f3c;
+}
+
+.stat-card.status-bad .stat-value {
+    color: #8f241f;
+}
+
 .word-form {
     display: grid;
     gap: 1rem;

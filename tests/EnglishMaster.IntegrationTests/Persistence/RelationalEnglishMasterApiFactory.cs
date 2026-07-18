@@ -39,7 +39,8 @@ public sealed class RelationalEnglishMasterApiFactory : WebApplicationFactory<Pr
             {
                 ["Auth:InitialSuperAdmin:Email"] = "superadmin@englishmaster.migrationtest",
                 ["Auth:InitialSuperAdmin:Password"] = "TestPassword1",
-                ["EmailDeliveryWorker:Enabled"] = "false"
+                ["EmailDeliveryWorker:Enabled"] = "false",
+                ["SystemHealthWorker:Enabled"] = "false"
             });
         });
         builder.ConfigureServices(services =>

@@ -38,6 +38,10 @@
                 <NavLink href="@AdminRoutes.Reports.Index">Reports</NavLink>
                 <NavLink href="@AdminRoutes.Analytics.Index">Analytics</NavLink>
             }
+            @if (HasPermission("system-health.read"))
+            {
+                <NavLink href="@AdminRoutes.SystemHealth.Index">System Health</NavLink>
+            }
             @if (IsAuthenticated)
             {
                 <NavLink href="@AdminRoutes.Notifications.Mine">Notifications@if (unreadNotificationCount > 0)
