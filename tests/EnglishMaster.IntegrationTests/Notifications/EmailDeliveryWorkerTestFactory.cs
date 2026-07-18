@@ -10,9 +10,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 
-namespace EnglishMaster.IntegrationTests;
+namespace EnglishMaster.IntegrationTests.Notifications;
 
-public sealed class EnglishMasterApiFactory : WebApplicationFactory<Program>
+/// <summary>
+/// Unlike <see cref="EnglishMasterApiFactory"/>, this fixture leaves the email delivery
+/// background worker enabled with a short polling interval, so tests can prove the queue
+/// drains automatically without calling the manual admin endpoint.
+/// </summary>
+public sealed class EmailDeliveryWorkerTestFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -22,9 +27,10 @@ public sealed class EnglishMasterApiFactory : WebApplicationFactory<Program>
         {
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Auth:InitialSuperAdmin:Email"] = "superadmin@englishmaster.test",
+                ["Auth:InitialSuperAdmin:Email"] = "superadmin@englishmaster.workertest",
                 ["Auth:InitialSuperAdmin:Password"] = "TestPassword1",
-                ["EmailDeliveryWorker:Enabled"] = "false"
+                ["EmailDeliveryWorker:Enabled"] = "true",
+                ["EmailDeliveryWorker:PollingInterval"] = "00:00:01"
             });
         });
         builder.ConfigureServices(services =>

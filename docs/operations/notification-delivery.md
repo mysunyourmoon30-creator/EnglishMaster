@@ -17,7 +17,10 @@ This document describes v0.3.0 notification email delivery operations.
 
 ## Queue Processing
 
-`POST /api/v1/admin/email-delivery/process` accepts:
+Pending messages are drained two ways:
+
+1. **Automatic (background worker).** `EmailDeliveryWorker` (`src/Backend/EnglishMaster.Infrastructure/Notifications/EmailDeliveryWorker.cs`) runs inside the API process and polls the pending queue on a timer — no manual trigger needed in any long-running environment. Configure via `EmailDeliveryWorker__Enabled` (default `true`) and `EmailDeliveryWorker__PollingInterval` (default `00:01:00`, i.e. 60 seconds); see `docs/deployment/production-environment-variables.md`.
+2. **Manual (admin endpoint).** `POST /api/v1/admin/email-delivery/process` accepts:
 
 ```json
 {
@@ -25,13 +28,16 @@ This document describes v0.3.0 notification email delivery operations.
 }
 ```
 
-Rules:
+Useful for processing immediately (e.g. right after seeding a test fixture) rather than waiting for the next automatic tick.
+
+Rules (apply to both paths — the worker calls the same command handler):
 
 - `maxItems` defaults to 10.
 - `maxItems` is clamped between 1 and 50.
 - Pending messages are processed oldest first.
 - Successful sends become `Sent`.
 - Provider failures become `Failed` with sanitized error text.
+- Neither path auto-retries `Failed` messages — failures require a deliberate retry (see below), by design.
 
 ## Retry
 
@@ -58,7 +64,8 @@ Retry outcomes:
 
 - [ ] Confirm provider status after deployment.
 - [ ] Send a test email from staging before production go-live.
-- [ ] Process a small queue batch first.
+- [ ] Confirm the background worker is enabled (`EmailDeliveryWorker__Enabled=true`) and its polling interval is appropriate for expected volume.
+- [ ] Process a small queue batch manually first, before relying on the automatic worker, to validate the provider end-to-end.
 - [ ] Review failed email messages after queue processing.
 - [ ] Retry only confirmed transient failures.
 - [ ] Switch provider to `Development` if external delivery must be disabled.
@@ -71,4 +78,4 @@ Set:
 Email:Provider=Development
 ```
 
-This stops external SMTP delivery while preserving queued email records for later review or retry.
+This stops external SMTP delivery while preserving queued email records for later review or retry. To also stop the background worker from ticking (e.g. during an incident), set `EmailDeliveryWorker__Enabled=false` — pending messages remain queued and can still be processed manually via `POST /api/v1/admin/email-delivery/process` once ready.

@@ -38,7 +38,8 @@ public sealed class RelationalEnglishMasterApiFactory : WebApplicationFactory<Pr
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Auth:InitialSuperAdmin:Email"] = "superadmin@englishmaster.migrationtest",
-                ["Auth:InitialSuperAdmin:Password"] = "TestPassword1"
+                ["Auth:InitialSuperAdmin:Password"] = "TestPassword1",
+                ["EmailDeliveryWorker:Enabled"] = "false"
             });
         });
         builder.ConfigureServices(services =>

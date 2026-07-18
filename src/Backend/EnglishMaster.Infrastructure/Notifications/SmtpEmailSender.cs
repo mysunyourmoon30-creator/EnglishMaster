@@ -1,8 +1,10 @@
-using System.Net;
-using System.Net.Mail;
+using System.Net.Sockets;
 using EnglishMaster.Application.Features.EmailMessages;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MimeKit;
 
 namespace EnglishMaster.Infrastructure.Notifications;
 
@@ -26,7 +28,8 @@ public sealed class SmtpEmailSender : IEmailSender
 
         try
         {
-            await SendCoreAsync(request, cancellationToken);
+            var message = BuildMessage(options, request);
+            await SendCoreAsync(message, cancellationToken);
             logger.LogInformation("SMTP email sent to {ToEmail} with subject {Subject}.", request.ToEmail, request.Subject);
         }
         catch (FormatException exception)
@@ -34,36 +37,54 @@ public sealed class SmtpEmailSender : IEmailSender
             logger.LogWarning(exception, "SMTP email delivery failed because an address was invalid.");
             throw new InvalidOperationException("Email provider configuration or recipient address is invalid.");
         }
-        catch (SmtpException exception)
+        catch (Exception exception) when (
+            exception is AuthenticationException
+            or SmtpCommandException
+            or SmtpProtocolException
+            or SocketException
+            or IOException)
         {
             logger.LogWarning(exception, "SMTP email delivery failed for {ToEmail}.", request.ToEmail);
             throw new InvalidOperationException("Email provider failed to send the message.");
         }
     }
 
-    private async Task SendCoreAsync(EmailSendRequest request, CancellationToken cancellationToken)
+    internal static MimeMessage BuildMessage(EmailOptions options, EmailSendRequest request)
     {
-        using var message = new MailMessage
-        {
-            From = new MailAddress(options.FromEmail, options.FromName),
-            Subject = request.Subject,
-            Body = request.Body,
-            IsBodyHtml = request.IsHtml
-        };
-        message.To.Add(new MailAddress(request.ToEmail, request.ToName));
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress(options.FromName, options.FromEmail));
+        message.To.Add(new MailboxAddress(request.ToName, request.ToEmail));
+        message.Subject = request.Subject;
 
-#pragma warning disable SYSLIB0014
-        using var client = new SmtpClient(options.Smtp.Host, options.Smtp.Port)
+        var builder = new BodyBuilder();
+        if (request.IsHtml)
         {
-            EnableSsl = options.Smtp.UseSsl
-        };
-#pragma warning restore SYSLIB0014
+            builder.HtmlBody = request.Body;
+        }
+        else
+        {
+            builder.TextBody = request.Body;
+        }
+
+        message.Body = builder.ToMessageBody();
+        return message;
+    }
+
+    private async Task SendCoreAsync(MimeMessage message, CancellationToken cancellationToken)
+    {
+        using var client = new SmtpClient();
+        await client.ConnectAsync(
+            options.Smtp.Host,
+            options.Smtp.Port,
+            options.Smtp.UseSsl ? SecureSocketOptions.StartTlsWhenAvailable : SecureSocketOptions.None,
+            cancellationToken);
 
         if (!string.IsNullOrWhiteSpace(options.Smtp.UserName))
         {
-            client.Credentials = new NetworkCredential(options.Smtp.UserName, options.Smtp.Password);
+            await client.AuthenticateAsync(options.Smtp.UserName, options.Smtp.Password, cancellationToken);
         }
 
-        await client.SendMailAsync(message, cancellationToken);
+        await client.SendAsync(message, cancellationToken);
+        await client.DisconnectAsync(true, cancellationToken);
     }
 }

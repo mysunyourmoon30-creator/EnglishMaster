@@ -119,6 +119,8 @@ public static class DependencyInjection
         services.AddScoped<SmtpEmailSender>();
         services.AddScoped<IEmailSender, ConfiguredEmailSender>();
         services.AddScoped<IEmailProviderStatusService, EmailProviderStatusService>();
+        services.Configure<EmailDeliveryWorkerOptions>(configuration.GetSection("EmailDeliveryWorker"));
+        services.AddHostedService<EmailDeliveryWorker>();
         services.AddScoped<IContentQualityRepository, EfContentQualityRepository>();
         services.AddScoped<IContentQualityService, ContentQualityService>();
         services.AddScoped<IContentQualityRuleProvider, DefaultContentQualityRuleProvider>();
