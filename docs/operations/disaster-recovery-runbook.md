@@ -31,6 +31,8 @@
 4. Fix the migration or app code in a new release.
 5. Restore production from backup only if data integrity was affected.
 
+For the current release, check `docs/release/v0.3.0-rollback-plan.md` first if the failing migration is one of the three FK cascade-path fixes from this cycle (`AddMediaModule`, `AddPronunciationModule`, `AddQuizModule`) — do not attempt a down-migration through them without reading that caution.
+
 ## Bad Deployment Rollback
 
 1. Disable traffic to the bad release.
