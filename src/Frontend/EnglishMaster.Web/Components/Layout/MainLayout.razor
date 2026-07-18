@@ -16,6 +16,7 @@
                 <NavLink href="/learn/study-plan">Study Plan</NavLink>
                 <NavLink href="/learn/motivation">Motivation</NavLink>
                 <NavLink href="/learn/reports">Reports</NavLink>
+                <NavLink href="/learn/analytics">Analytics</NavLink>
             }
             <NavLink href="@AdminRoutes.Words.Index">Words</NavLink>
             <NavLink href="@AdminRoutes.Categories.Index">Categories</NavLink>
@@ -28,9 +29,18 @@
             <NavLink href="@AdminRoutes.Courses.Index">Courses</NavLink>
             <NavLink href="@AdminRoutes.Books.Index">Books</NavLink>
             <NavLink href="@AdminRoutes.Quizzes.Index">Quizzes</NavLink>
+            @if (HasPermission("certificates.read"))
+            {
+                <NavLink href="@AdminRoutes.CertificateTemplates.Index">Certificate Templates</NavLink>
+            }
             @if (HasPermission("reports.read"))
             {
                 <NavLink href="@AdminRoutes.Reports.Index">Reports</NavLink>
+                <NavLink href="@AdminRoutes.Analytics.Index">Analytics</NavLink>
+            }
+            @if (HasPermission("system-health.read"))
+            {
+                <NavLink href="@AdminRoutes.SystemHealth.Index">System Health</NavLink>
             }
             @if (IsAuthenticated)
             {

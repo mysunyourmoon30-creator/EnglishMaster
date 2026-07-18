@@ -386,6 +386,112 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
                     b.ToTable("Categories", (string)null);
                 });
 
+            modelBuilder.Entity("EnglishMaster.Domain.Certificates.CertificateTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BodyTemplate")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive");
+
+                    b.ToTable("CertificateTemplates");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.Certificates.IssuedCertificate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CourseTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("IssuedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("RecipientName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("RenderedBody")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("TemplateCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<Guid>("TemplateId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("VerificationCode")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("VerificationCode")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "CourseId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "IssuedAt");
+
+                    b.ToTable("IssuedCertificates");
+                });
+
             modelBuilder.Entity("EnglishMaster.Domain.ContentQuality.ContentQualityCheck", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1201,6 +1307,492 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
                     b.ToTable("ImportValidationErrors", (string)null);
                 });
 
+            modelBuilder.Entity("EnglishMaster.Domain.Learning.BookProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("LastAccessedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("ProgressPercent")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "BookId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Status", "LastAccessedAt");
+
+                    b.ToTable("BookProgress");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.Learning.CourseProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("LastAccessedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("ProgressPercent")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CourseId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Status", "LastAccessedAt");
+
+                    b.ToTable("CourseProgress");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.Learning.LessonProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("LastAccessedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ProgressPercent")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "LessonId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Status", "LastAccessedAt");
+
+                    b.ToTable("LessonProgress");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.Learning.QuizAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AttemptedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("Passed")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("QuizId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Score")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Passed");
+
+                    b.HasIndex("UserId", "QuizId", "AttemptedAt");
+
+                    b.ToTable("QuizAttempts");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.Learning.StudentProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CurrentCefrLevel")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("StudentProfiles");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.LearningGoals.DailyStudyPlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("CompletedItems")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CompletedMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("PlanDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TargetMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalItems")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentProfileId", "PlanDate")
+                        .IsUnique();
+
+                    b.HasIndex("StudentProfileId", "Status");
+
+                    b.ToTable("DailyStudyPlans");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.LearningGoals.DailyStudyPlanItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ContentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("DailyStudyPlanId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("EstimatedMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DailyStudyPlanId", "SortOrder");
+
+                    b.ToTable("DailyStudyPlanItems");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.LearningGoals.LearningGoal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("CurrentValue")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("GoalType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("TargetDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("TargetValue")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentProfileId", "GoalType");
+
+                    b.HasIndex("StudentProfileId", "Status");
+
+                    b.ToTable("LearningGoals");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.LearningReports.WeeklyLearningReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AchievementsEarned")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ActiveStudyDays")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("AverageQuizScore")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("BooksCompleted")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BooksStarted")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CompletedDailyPlans")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CoursesCompleted")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CoursesStarted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("CurrentStreakDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("GeneratedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("GoalsCompleted")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LessonsCompleted")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LessonsStarted")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LongestStreakDays")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PracticeItemsCompleted")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PracticeSessionsCompleted")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuizAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuizzesPassed")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SummaryText")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("TotalStudyMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("WeekEndDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("WeekStartDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentProfileId", "GeneratedAt");
+
+                    b.HasIndex("StudentProfileId", "WeekStartDate")
+                        .IsUnique();
+
+                    b.ToTable("WeeklyLearningReports");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.LearningReports.WeeklyLearningReportInsight", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("InsightType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Recommendation")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("WeeklyLearningReportId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WeeklyLearningReportId", "SortOrder");
+
+                    b.ToTable("WeeklyLearningReportInsights");
+                });
+
             modelBuilder.Entity("EnglishMaster.Domain.Lessons.Lesson", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1447,6 +2039,197 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
                     b.ToTable("Media", (string)null);
                 });
 
+            modelBuilder.Entity("EnglishMaster.Domain.Motivation.AchievementDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AchievementType")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("IconName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TargetValue")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AchievementType");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive");
+
+                    b.ToTable("AchievementDefinitions");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.Motivation.LearningActivityLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActivityType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<Guid?>("ContentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("MetadataJson")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("MinutesSpent")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityType");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("StudentProfileId");
+
+                    b.ToTable("LearningActivityLogs");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.Motivation.StudentAchievement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AchievementDefinitionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("EarnedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("ProgressValue")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EarnedAt");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("StudentProfileId");
+
+                    b.HasIndex("StudentProfileId", "AchievementDefinitionId")
+                        .IsUnique();
+
+                    b.ToTable("StudentAchievements");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.Motivation.StudentStreak", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("CurrentStreakDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("LastActivityDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("LongestStreakDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("StreakStartDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentProfileId")
+                        .IsUnique();
+
+                    b.ToTable("StudentStreaks");
+                });
+
             modelBuilder.Entity("EnglishMaster.Domain.Notifications.EmailMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1574,6 +2357,182 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("Notifications", (string)null);
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.Practice.PracticeItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ContentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<int>("CorrectCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("CurrentIntervalDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("DueAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("IncorrectCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("LastPracticedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("NextReviewAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PracticeType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<int>("ReviewCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentProfileId", "Status", "DueAt");
+
+                    b.HasIndex("StudentProfileId", "ContentType", "ContentId", "PracticeType")
+                        .IsUnique();
+
+                    b.ToTable("PracticeItems");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.Practice.PracticeSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("CompletedItems")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CorrectItems")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("IncorrectItems")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TotalItems")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentProfileId", "StartedAt");
+
+                    b.HasIndex("StudentProfileId", "Status");
+
+                    b.ToTable("PracticeSessions");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.Practice.PracticeSessionItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AnswerText")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("ContentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool?>("IsCorrect")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("PracticeItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PracticeSessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PracticeType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTimeOffset?>("PracticedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PromptText")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Result")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UserAnswer")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PracticeItemId");
+
+                    b.HasIndex("PracticeSessionId");
+
+                    b.ToTable("PracticeSessionItems");
                 });
 
             modelBuilder.Entity("EnglishMaster.Domain.Pronunciations.MinimalPair", b =>
@@ -2596,6 +3555,24 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("EnglishMaster.Domain.LearningGoals.DailyStudyPlanItem", b =>
+                {
+                    b.HasOne("EnglishMaster.Domain.LearningGoals.DailyStudyPlan", null)
+                        .WithMany("Items")
+                        .HasForeignKey("DailyStudyPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.LearningReports.WeeklyLearningReportInsight", b =>
+                {
+                    b.HasOne("EnglishMaster.Domain.LearningReports.WeeklyLearningReport", null)
+                        .WithMany("Insights")
+                        .HasForeignKey("WeeklyLearningReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("EnglishMaster.Domain.Lessons.Lesson", b =>
                 {
                     b.HasOne("EnglishMaster.Domain.Categories.Category", null)
@@ -2653,6 +3630,15 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("EnglishMaster.Domain.Practice.PracticeSessionItem", b =>
+                {
+                    b.HasOne("EnglishMaster.Domain.Practice.PracticeSession", null)
+                        .WithMany("Items")
+                        .HasForeignKey("PracticeSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("EnglishMaster.Domain.Pronunciations.MinimalPair", b =>
                 {
                     b.HasOne("EnglishMaster.Domain.Media.Media", null)
@@ -2671,8 +3657,7 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("EnglishMaster.Domain.Media.Media", null)
                         .WithMany()
-                        .HasForeignKey("AudioNormalMediaId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("AudioNormalMediaId");
 
                     b.HasOne("EnglishMaster.Domain.Media.Media", null)
                         .WithMany()
@@ -2681,8 +3666,7 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
 
                     b.HasOne("EnglishMaster.Domain.Media.Media", null)
                         .WithMany()
-                        .HasForeignKey("MouthImageMediaId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("MouthImageMediaId");
 
                     b.HasOne("EnglishMaster.Domain.Words.Word", null)
                         .WithOne()
@@ -2752,8 +3736,7 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
 
                     b.HasOne("EnglishMaster.Domain.Words.Word", null)
                         .WithMany()
-                        .HasForeignKey("WordId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("WordId");
                 });
 
             modelBuilder.Entity("EnglishMaster.Domain.Security.AppRolePermission", b =>
@@ -2808,8 +3791,7 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
 
                     b.HasOne("EnglishMaster.Domain.Media.Media", null)
                         .WithMany()
-                        .HasForeignKey("ImageMediaId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("ImageMediaId");
                 });
 
             modelBuilder.Entity("EnglishMaster.Domain.Words.WordTag", b =>
@@ -2874,6 +3856,16 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
                     b.Navigation("ValidationErrors");
                 });
 
+            modelBuilder.Entity("EnglishMaster.Domain.LearningGoals.DailyStudyPlan", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.LearningReports.WeeklyLearningReport", b =>
+                {
+                    b.Navigation("Insights");
+                });
+
             modelBuilder.Entity("EnglishMaster.Domain.Lessons.Lesson", b =>
                 {
                     b.Navigation("GrammarRules");
@@ -2881,6 +3873,11 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
                     b.Navigation("Sections");
 
                     b.Navigation("Words");
+                });
+
+            modelBuilder.Entity("EnglishMaster.Domain.Practice.PracticeSession", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("EnglishMaster.Domain.Pronunciations.Pronunciation", b =>

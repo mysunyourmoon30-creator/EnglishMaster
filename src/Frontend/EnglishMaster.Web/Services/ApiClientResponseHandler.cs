@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -34,7 +35,12 @@ internal static class ApiClientResponseHandler
         HttpResponseMessage response,
         CancellationToken cancellationToken)
     {
-        var message = $"Request failed with status {(int)response.StatusCode}.";
+        var message = response.StatusCode switch
+        {
+            HttpStatusCode.Unauthorized => "Please sign in to continue.",
+            HttpStatusCode.Forbidden => "You don't have permission to view this page.",
+            _ => $"Request failed with status {(int)response.StatusCode}.",
+        };
         var validationErrors = new Dictionary<string, string[]>();
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
 

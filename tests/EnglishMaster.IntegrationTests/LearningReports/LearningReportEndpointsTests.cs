@@ -157,7 +157,7 @@ public sealed class LearningReportEndpointsTests(EnglishMasterApiFactory factory
         var report = await GenerateWithSeedAsync(dbContext =>
         {
             var profileId = GetSuperAdminProfileId(dbContext);
-            var now = DateTimeOffset.UtcNow;
+            var now = UtcNoonToday();
             dbContext.LearningActivityLogs.Add(LearningActivityLog.Create(profileId, "LessonStarted", "lesson", Guid.NewGuid(), "One", now, 20, null, now));
             dbContext.LearningActivityLogs.Add(LearningActivityLog.Create(profileId, "QuizAttempted", "quiz", Guid.NewGuid(), "Two", now.AddHours(1), 25, null, now));
             return Task.CompletedTask;
@@ -391,4 +391,7 @@ public sealed class LearningReportEndpointsTests(EnglishMasterApiFactory factory
 
     private static string Unique(string prefix) =>
         $"{prefix}-{Guid.NewGuid():N}";
+
+    private static DateTimeOffset UtcNoonToday() =>
+        new(DateTime.UtcNow.Date.AddHours(12), TimeSpan.Zero);
 }

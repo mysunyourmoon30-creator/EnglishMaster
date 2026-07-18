@@ -54,10 +54,12 @@ internal sealed class QuizQuestionConfiguration : IEntityTypeConfiguration<QuizQ
         builder.HasIndex(question => question.QuestionType);
         builder.HasIndex(question => question.SortOrder);
 
+        // ClientSetNull avoids SQL Server error 1785 (multiple cascade paths): Word is also
+        // reachable via QuizQuestion -> Pronunciation -> Word (Pronunciation.WordId cascades).
         builder.HasOne<Word>()
             .WithMany()
             .HasForeignKey(question => question.WordId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
 
         builder.HasOne<GrammarRule>()
             .WithMany()

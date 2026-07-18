@@ -23,7 +23,9 @@ public sealed class EnglishMasterApiFactory : WebApplicationFactory<Program>
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Auth:InitialSuperAdmin:Email"] = "superadmin@englishmaster.test",
-                ["Auth:InitialSuperAdmin:Password"] = "TestPassword1"
+                ["Auth:InitialSuperAdmin:Password"] = "TestPassword1",
+                ["EmailDeliveryWorker:Enabled"] = "false",
+                ["SystemHealthWorker:Enabled"] = "false"
             });
         });
         builder.ConfigureServices(services =>

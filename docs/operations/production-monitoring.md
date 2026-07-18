@@ -27,18 +27,20 @@ Database connectivity is checked by API readiness. Startup issues usually show u
 
 ## Admin Health Page
 
-No dedicated system health admin dashboard exists yet. Keep this as a TODO unless a future prompt adds a small read-only operations page.
+**Implemented.** `/admin/system-health` (gated by the `system-health.read` permission) shows live database connectivity status and current failed-email/failed-publish-job/failed-import-job counts, backed by `GET /api/v1/admin/system-health`. Each page load performs a fresh on-demand check — it does not depend on the background worker's internal state.
 
-## Alerting TODO
+## Alerting
 
-Future simple alerting options:
+**Implemented (self-contained, no external service):** `SystemHealthWorker` (`src/Backend/EnglishMaster.Infrastructure/Monitoring/SystemHealthWorker.cs`) polls DB connectivity and failed-job counts on a timer (default every 5 minutes) and queues an alert email — through the existing email queue/`EmailDeliveryWorker`, so no separate send path — when:
+- DB connectivity fails `SystemHealthWorker__ConsecutiveFailuresBeforeAlert` times in a row (default 3), or
+- failed email/publish-job/import-job counts cross their configured thresholds (defaults 10/5/5).
 
-- Email alert when `/health/ready` fails.
+Each alert type has an independent cooldown (`SystemHealthWorker__AlertCooldown`, default 60 minutes) to avoid repeat-alert spam. Alerting is a no-op until `SystemHealthWorker__AlertRecipientEmail` is set — see `docs/deployment/production-environment-variables.md`.
+
+**Still future, not built** (not requested, and would need a separate operations decision on tooling/budget per the caution below):
+
 - Slack or Teams webhook alert for P0/P1 incidents.
-- Cloud platform uptime checks.
-- External uptime monitor.
-- Failed publish job count threshold.
-- Failed email message count threshold.
-- Backup missing or verification failed alert.
+- Cloud platform native uptime checks / external uptime monitor (e.g. UptimeRobot).
+- Backup missing or verification failed alert (the backup/restore *mechanism* is verified — see `docs/testing/v0.3.0-backup-restore-verification.md` — but no automated check-and-alert exists for it yet).
 
 Do not add paid services or a complex observability stack without a separate operations decision.

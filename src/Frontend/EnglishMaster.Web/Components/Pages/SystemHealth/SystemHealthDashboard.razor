@@ -1,0 +1,79 @@
+@page "/admin/system-health"
+@rendermode InteractiveServer
+@inject ISystemHealthApiClient SystemHealthApiClient
+
+<PageTitle>System Health</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>System Health</h1>
+        @if (health is not null)
+        {
+            <p class="muted">Last checked @health.CheckedAt.ToLocalTime()</p>
+        }
+    </div>
+    <button class="button" type="button" @onclick="LoadAsync" disabled="@isLoading">Refresh</button>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading system health...</p>
+}
+else if (health is not null)
+{
+    <section class="stat-grid">
+        <div class="panel stat-card @(health.DatabaseHealthy ? "status-ok" : "status-bad")">
+            <span class="stat-label">Database</span>
+            <span class="stat-value">@(health.DatabaseHealthy ? "Healthy" : "Unhealthy")</span>
+        </div>
+        <div class="panel stat-card">
+            <span class="stat-label">Failed Emails</span>
+            <span class="stat-value">@health.FailedEmailCount</span>
+        </div>
+        <div class="panel stat-card">
+            <span class="stat-label">Failed Publish Jobs</span>
+            <span class="stat-value">@health.FailedPublishJobCount</span>
+        </div>
+        <div class="panel stat-card">
+            <span class="stat-label">Failed Import Jobs</span>
+            <span class="stat-value">@health.FailedImportJobCount</span>
+        </div>
+    </section>
+}
+
+@code {
+    private SystemHealthResponse? health;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            health = await SystemHealthApiClient.GetAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            health = null;
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

@@ -1,0 +1,89 @@
+@page "/admin/certificate-templates/{Id:guid}"
+@rendermode InteractiveServer
+@inject ICertificateTemplateApiClient CertificateTemplateApiClient
+
+<PageTitle>@(template is null ? "Certificate Template" : template.Name)</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Certificates</p>
+        <h1>@(template is null ? "Certificate Template" : template.Name)</h1>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.CertificateTemplates.Index">Back</a>
+        @if (template is not null)
+        {
+            <a class="button primary" href="@AdminRoutes.CertificateTemplates.Edit(template.Id)">Edit</a>
+        }
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+
+@if (isLoading)
+{
+    <p class="muted">Loading certificate template...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Certificate template was not found.</p>
+    </section>
+}
+else if (template is not null)
+{
+    <section class="panel">
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Code</span>
+                <strong>@template.Code</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Status</span>
+                <strong>@(template.IsActive ? "Active" : "Inactive")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Description</span>
+                <strong>@template.Description</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Body Template</span>
+                <pre>@template.BodyTemplate</pre>
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private CertificateTemplateDto? template;
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            template = await CertificateTemplateApiClient.GetAsync(Id, CancellationToken.None);
+            notFound = template is null;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

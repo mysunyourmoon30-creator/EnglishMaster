@@ -31,3 +31,25 @@ public sealed record QueueEmailMessageRequest(
     bool IsHtml);
 
 public sealed record MarkEmailFailedRequest(string ErrorMessage);
+
+public sealed record EmailProviderStatusDto(
+    string Provider,
+    bool IsConfigured,
+    string FromEmail,
+    string FromName,
+    bool SupportsTestSend);
+
+public sealed record SendTestEmailRequest(
+    string ToEmail,
+    string ToName,
+    string Subject,
+    string Body,
+    bool IsHtml);
+
+public sealed record ProcessEmailQueueRequest(int? MaxItems);
+
+public sealed record EmailDeliveryQueueProcessResponse(
+    int Requested,
+    int Processed,
+    int Sent,
+    int Failed);

@@ -93,6 +93,8 @@ public static class Permissions
     public const string MotivationRead = "motivation.read";
     public const string AchievementsRead = "achievements.read";
     public const string AchievementsManage = "achievements.manage";
+    public const string CertificatesRead = "certificates.read";
+    public const string CertificatesManage = "certificates.manage";
     public const string UsersRead = "users.read";
     public const string UsersCreate = "users.create";
     public const string UsersUpdate = "users.update";
@@ -103,6 +105,7 @@ public static class Permissions
     public const string RolesDelete = "roles.delete";
     public const string PermissionsRead = "permissions.read";
     public const string PermissionsUpdate = "permissions.update";
+    public const string SystemHealthRead = "system-health.read";
 
     public static readonly PermissionDefinition[] All =
     [
@@ -125,9 +128,11 @@ public static class Permissions
         P(BulkOperationsRead, "Bulk Operations Read", "Bulk Operations"), P(BulkOperationsRun, "Bulk Operations Run", "Bulk Operations"), P(BulkOperationsCancel, "Bulk Operations Cancel", "Bulk Operations"),
         P(ImportRead, "Import Read", "Import"), P(ImportUpload, "Import Upload", "Import"), P(ImportValidate, "Import Validate", "Import"), P(ImportRun, "Import Run", "Import"), P(ImportRollback, "Import Rollback", "Import"),
         P(MotivationRead, "Motivation Read", "Motivation"), P(AchievementsRead, "Achievements Read", "Achievements"), P(AchievementsManage, "Achievements Manage", "Achievements"),
+        P(CertificatesRead, "Certificates Read", "Certificates"), P(CertificatesManage, "Certificates Manage", "Certificates"),
         P(UsersRead, "Users Read", "Administration"), P(UsersCreate, "Users Create", "Administration"), P(UsersUpdate, "Users Update", "Administration"), P(UsersDelete, "Users Delete", "Administration"),
         P(RolesRead, "Roles Read", "Administration"), P(RolesCreate, "Roles Create", "Administration"), P(RolesUpdate, "Roles Update", "Administration"), P(RolesDelete, "Roles Delete", "Administration"),
-        P(PermissionsRead, "Permissions Read", "Administration"), P(PermissionsUpdate, "Permissions Update", "Administration")
+        P(PermissionsRead, "Permissions Read", "Administration"), P(PermissionsUpdate, "Permissions Update", "Administration"),
+        P(SystemHealthRead, "System Health Read", "System Health")
     ];
 
     public static readonly string[] ContentRead =

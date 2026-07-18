@@ -41,7 +41,7 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
                         column: x => x.AudioNormalMediaId,
                         principalTable: "Media",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.NoAction);
                     table.ForeignKey(
                         name: "FK_Pronunciations_Media_AudioSlowMediaId",
                         column: x => x.AudioSlowMediaId,
@@ -53,7 +53,7 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
                         column: x => x.MouthImageMediaId,
                         principalTable: "Media",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.NoAction);
                     table.ForeignKey(
                         name: "FK_Pronunciations_Words_WordId",
                         column: x => x.WordId,

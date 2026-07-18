@@ -1,5 +1,37 @@
 # Changelog
 
+## v0.3.0 - 2026-07-18
+
+### Added
+
+- External email provider boundary (MailKit-based SMTP adapter, Gmail-compatible) with an automatic notification delivery queue (`EmailDeliveryWorker`), retry handling, and failure/admin review documentation.
+- Certificate template management with a full admin CRUD UI, learner certificate generation, and public certificate verification.
+- Admin advanced analytics and student analytics dashboards, with learning analytics aggregation.
+- Self-contained system health monitoring dashboard and threshold-based email alerting (`SystemHealthWorker`), built without dependency on any specific hosting platform.
+
+### Fixed
+
+- Fixed release-blocking database migration and authentication/authorization defects found during the first staging validation pass (10 defects total: 8 Blocker, 2 Low/High — all fixed and verified).
+- Added a `FreshDatabaseMigrationTests` regression test to close the gap that let those migration defects through undetected.
+
+### Security
+
+- Public certificate verification is now rate-limited (10 requests/minute per IP), verified against real HTTP 429 responses.
+
+### Documentation
+
+- Added v0.3.0 release candidate, UAT, staging validation, defect log, production go-live checklist, release closure, final tag execution, monitoring/alerting setup, and backup/restore verification documentation.
+
+### Known Limitations
+
+- Production **deployment** is not yet approved (the tag is not the same as deployment) — no hosting platform has been chosen, and no named operations owner or on-call rotation exists yet.
+- Docker Compose staging re-validation was attempted but not completed, due to a hardware/firmware boot-stability issue on the development machine.
+- File storage backup was verified with a single small test file, not against a production-scale media library.
+- No admin-wide "list all issued certificates" browser exists yet — only the self-scoped `/me/certificates` view.
+- Analytics rollups/warehouse integration are not included (not needed at current data volume).
+- No production-scale email provider (e.g. SendGrid/SES/Mailgun with SPF/DKIM) is set up; Gmail SMTP is used for low volume.
+- v0.4.0 candidate scope was approved by the release owner, but no v0.4.0 implementation has started.
+
 ## v0.2.0 - TBD
 
 ### Added

@@ -1,0 +1,103 @@
+@page "/admin/certificate-templates/{Id:guid}/edit"
+@rendermode InteractiveServer
+@inject ICertificateTemplateApiClient CertificateTemplateApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Certificate Template</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Certificates</p>
+        <h1>Edit Certificate Template</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <p class="muted">Loading certificate template...</p>
+}
+else if (notFound)
+{
+    <section class="panel">
+        <p class="muted">Certificate template was not found.</p>
+        <a class="button" href="@AdminRoutes.CertificateTemplates.Index">Back to Certificate Templates</a>
+    </section>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert error">@errorMessage</div>
+    }
+
+    <section class="panel">
+        <CertificateTemplateForm Model="model"
+                                  ValidationErrors="validationErrors"
+                                  IsSaving="isSaving"
+                                  ShowActiveToggle="true"
+                                  IsCodeEditable="false"
+                                  SubmitText="Save"
+                                  OnValidSubmit="SaveAsync" />
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private CertificateTemplateFormModel model = new();
+    private IReadOnlyDictionary<string, string[]> validationErrors = new Dictionary<string, string[]>();
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSaving;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+
+        try
+        {
+            var template = await CertificateTemplateApiClient.GetAsync(Id, CancellationToken.None);
+            if (template is null)
+            {
+                notFound = true;
+                return;
+            }
+
+            model = CertificateTemplateFormModel.FromDto(template);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        isSaving = true;
+        errorMessage = null;
+        validationErrors = new Dictionary<string, string[]>();
+
+        try
+        {
+            await CertificateTemplateApiClient.UpdateAsync(Id, model.ToUpdateRequest(), CancellationToken.None);
+            Navigation.NavigateTo(AdminRoutes.CertificateTemplates.Index);
+        }
+        catch (ApiRequestException exception)
+        {
+            validationErrors = exception.ValidationErrors;
+            errorMessage = validationErrors.Count == 0 ? exception.Message : null;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

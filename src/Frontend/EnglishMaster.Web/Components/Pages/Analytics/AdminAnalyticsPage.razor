@@ -1,0 +1,104 @@
+@page "/admin/analytics"
+@rendermode InteractiveServer
+@inject IAnalyticsApiClient AnalyticsApiClient
+
+<PageTitle>Analytics</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Analytics</h1>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <div class="panel">Loading analytics...</div>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+}
+else if (overview is not null)
+{
+    <section class="stat-grid">
+        <div class="panel stat-card">
+            <span class="stat-label">Active learners</span>
+            <span class="stat-value">@overview.ActiveLearners</span>
+        </div>
+        <div class="panel stat-card">
+            <span class="stat-label">Study minutes</span>
+            <span class="stat-value">@overview.StudyMinutes</span>
+        </div>
+        <div class="panel stat-card">
+            <span class="stat-label">Activities</span>
+            <span class="stat-value">@overview.LearningActivities</span>
+        </div>
+        <div class="panel stat-card">
+            <span class="stat-label">Certificates</span>
+            <span class="stat-value">@overview.CertificatesIssued</span>
+        </div>
+    </section>
+
+    <section class="content-grid">
+        <article class="panel">
+            <h2>Learning</h2>
+            <dl class="metric-list">
+                <dt>Course completions</dt>
+                <dd>@overview.CourseCompletions</dd>
+                <dt>Practice sessions</dt>
+                <dd>@overview.PracticeSessionsCompleted</dd>
+                <dt>Study minutes per learner</dt>
+                <dd>@PerLearnerStudyMinutes</dd>
+            </dl>
+        </article>
+
+        <article class="panel">
+            <h2>Assessments</h2>
+            <dl class="metric-list">
+                <dt>Quiz attempts</dt>
+                <dd>@overview.QuizAttempts</dd>
+                <dt>Average score</dt>
+                <dd>@overview.AverageQuizScore.ToString("0.##")</dd>
+            </dl>
+        </article>
+
+        <article class="panel">
+            <h2>Certificates</h2>
+            <dl class="metric-list">
+                <dt>Issued</dt>
+                <dd>@overview.CertificatesIssued</dd>
+                <dt>Completion to certificate ratio</dt>
+                <dd>@CertificateRatio</dd>
+            </dl>
+        </article>
+    </section>
+}
+
+@code {
+    private AdminAnalyticsOverviewDto? overview;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    private string PerLearnerStudyMinutes =>
+        overview is null || overview.ActiveLearners == 0 ? "0" : (overview.StudyMinutes / (decimal)overview.ActiveLearners).ToString("0.##");
+
+    private string CertificateRatio =>
+        overview is null || overview.CourseCompletions == 0 ? "0%" : (overview.CertificatesIssued / (decimal)overview.CourseCompletions).ToString("P0");
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            overview = await AnalyticsApiClient.GetAdminOverviewAsync(CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

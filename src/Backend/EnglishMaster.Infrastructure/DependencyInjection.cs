@@ -1,7 +1,9 @@
+using EnglishMaster.Application.Features.Analytics;
 using EnglishMaster.Application.Features.BookChapters;
 using EnglishMaster.Application.Features.Books;
 using EnglishMaster.Application.Features.BulkOperations;
 using EnglishMaster.Application.Features.Categories;
+using EnglishMaster.Application.Features.Certificates;
 using EnglishMaster.Application.Features.ContentQuality;
 using EnglishMaster.Application.Features.ContentRevisions;
 using EnglishMaster.Application.Features.Courses;
@@ -33,11 +35,14 @@ using EnglishMaster.Application.Features.QuizQuestions;
 using EnglishMaster.Application.Features.Quizzes;
 using EnglishMaster.Application.Features.Reports;
 using EnglishMaster.Application.Features.Security;
+using EnglishMaster.Application.Features.SystemHealth;
 using EnglishMaster.Application.Features.Tags;
 using EnglishMaster.Application.Features.Words;
+using EnglishMaster.Infrastructure.Analytics;
 using EnglishMaster.Infrastructure.Books;
 using EnglishMaster.Infrastructure.BulkOperations;
 using EnglishMaster.Infrastructure.Categories;
+using EnglishMaster.Infrastructure.Certificates;
 using EnglishMaster.Infrastructure.ContentQuality;
 using EnglishMaster.Infrastructure.ContentRevisions;
 using EnglishMaster.Infrastructure.Courses;
@@ -49,6 +54,7 @@ using EnglishMaster.Infrastructure.LearningRecommendations;
 using EnglishMaster.Infrastructure.LearningGoals;
 using EnglishMaster.Infrastructure.LearningReports;
 using EnglishMaster.Infrastructure.Media;
+using EnglishMaster.Infrastructure.Monitoring;
 using EnglishMaster.Infrastructure.Motivation;
 using EnglishMaster.Infrastructure.Notifications;
 using EnglishMaster.Infrastructure.Persistence;
@@ -62,6 +68,7 @@ using EnglishMaster.Infrastructure.Security;
 using EnglishMaster.Infrastructure.Tags;
 using EnglishMaster.Infrastructure.Words;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EnglishMaster.Infrastructure;
@@ -73,7 +80,8 @@ public static class DependencyInjection
 
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
-        string? connectionString)
+        string? connectionString,
+        IConfiguration configuration)
     {
         services.AddDbContext<EnglishMasterDbContext>(options =>
             options.UseSqlServer(string.IsNullOrWhiteSpace(connectionString)
@@ -81,6 +89,9 @@ public static class DependencyInjection
                 : connectionString));
 
         services.AddScoped<ICategoryRepository, EfCategoryRepository>();
+        services.AddScoped<IAnalyticsRepository, EfAnalyticsRepository>();
+        services.AddScoped<ICertificateTemplateRepository, EfCertificateTemplateRepository>();
+        services.AddScoped<IIssuedCertificateRepository, EfIssuedCertificateRepository>();
         services.AddScoped<ITagRepository, EfTagRepository>();
         services.AddScoped<IMediaRepository, EfMediaRepository>();
         services.AddScoped<IMediaStorageService, LocalMediaStorageService>();
@@ -105,7 +116,16 @@ public static class DependencyInjection
         services.AddScoped<INotificationRepository, EfNotificationRepository>();
         services.AddScoped<INotificationService, EnglishMaster.Application.Features.Notifications.Commands.NotificationService>();
         services.AddScoped<IEmailMessageRepository, EfEmailMessageRepository>();
-        services.AddScoped<IEmailSender, DevelopmentEmailSender>();
+        services.Configure<EmailOptions>(configuration.GetSection("Email"));
+        services.AddScoped<DevelopmentEmailSender>();
+        services.AddScoped<SmtpEmailSender>();
+        services.AddScoped<IEmailSender, ConfiguredEmailSender>();
+        services.AddScoped<IEmailProviderStatusService, EmailProviderStatusService>();
+        services.Configure<EmailDeliveryWorkerOptions>(configuration.GetSection("EmailDeliveryWorker"));
+        services.AddHostedService<EmailDeliveryWorker>();
+        services.AddScoped<IDatabaseHealthChecker, EfDatabaseHealthChecker>();
+        services.Configure<SystemHealthWorkerOptions>(configuration.GetSection("SystemHealthWorker"));
+        services.AddHostedService<SystemHealthWorker>();
         services.AddScoped<IContentQualityRepository, EfContentQualityRepository>();
         services.AddScoped<IContentQualityService, ContentQualityService>();
         services.AddScoped<IContentQualityRuleProvider, DefaultContentQualityRuleProvider>();

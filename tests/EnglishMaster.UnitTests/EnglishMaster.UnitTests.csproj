@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\src\Backend\EnglishMaster.Application\EnglishMaster.Application.csproj" />
     <ProjectReference Include="..\..\src\Backend\EnglishMaster.Contracts\EnglishMaster.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Backend\EnglishMaster.Shared\EnglishMaster.Shared.csproj" />
+    <ProjectReference Include="..\..\src\Backend\EnglishMaster.Infrastructure\EnglishMaster.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

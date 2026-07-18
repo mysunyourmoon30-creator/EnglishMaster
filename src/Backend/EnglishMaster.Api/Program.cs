@@ -1,6 +1,8 @@
 using System.Security.Claims;
+using System.Threading.RateLimiting;
 using EnglishMaster.Api.Endpoints;
 using EnglishMaster.Api.Health;
+using EnglishMaster.Application.Features.Analytics;
 using EnglishMaster.Application.Features.BookChapters.Commands;
 using EnglishMaster.Application.Features.BookChapters.Queries;
 using EnglishMaster.Application.Features.Books.Commands;
@@ -9,6 +11,7 @@ using EnglishMaster.Application.Features.BulkOperations.Commands;
 using EnglishMaster.Application.Features.BulkOperations.Queries;
 using EnglishMaster.Application.Features.Categories.Commands;
 using EnglishMaster.Application.Features.Categories.Queries;
+using EnglishMaster.Application.Features.Certificates;
 using EnglishMaster.Application.Features.ContentQuality.Commands;
 using EnglishMaster.Application.Features.ContentQuality.Queries;
 using EnglishMaster.Application.Features.ContentRevisionRestores.Commands;
@@ -66,6 +69,7 @@ using EnglishMaster.Application.Features.Quizzes.Commands;
 using EnglishMaster.Application.Features.Quizzes.Queries;
 using EnglishMaster.Application.Features.Reports.Queries;
 using EnglishMaster.Application.Features.Security;
+using EnglishMaster.Application.Features.SystemHealth;
 using EnglishMaster.Application.Features.Tags.Commands;
 using EnglishMaster.Application.Features.Tags.Queries;
 using EnglishMaster.Application.Features.Words.Commands;
@@ -111,6 +115,8 @@ builder.Services.AddAuthorization(options =>
     }
 });
 builder.Services.AddScoped<CreateCategoryCommandHandler>();
+builder.Services.AddScoped<CertificateTemplateCommandHandler>();
+builder.Services.AddScoped<CertificateTemplateQueryHandler>();
 builder.Services.AddScoped<UpdateCategoryCommandHandler>();
 builder.Services.AddScoped<DeleteCategoryCommandHandler>();
 builder.Services.AddScoped<GetCategoryByIdQueryHandler>();
@@ -268,6 +274,8 @@ builder.Services.AddScoped<NotificationCommandHandler>();
 builder.Services.AddScoped<NotificationQueryHandler>();
 builder.Services.AddScoped<EmailMessageCommandHandler>();
 builder.Services.AddScoped<EmailMessageQueryHandler>();
+builder.Services.AddScoped<EmailProviderQueryHandler>();
+builder.Services.AddScoped<SystemHealthQueryHandler>();
 builder.Services.AddScoped<CreatePublishJobCommandHandler>();
 builder.Services.AddScoped<StartPublishJobCommandHandler>();
 builder.Services.AddScoped<CompletePublishJobCommandHandler>();
@@ -301,6 +309,9 @@ builder.Services.AddScoped<AchievementCommandHandler>();
 builder.Services.AddScoped<AchievementQueryHandler>();
 builder.Services.AddScoped<LearningReportCommandHandler>();
 builder.Services.AddScoped<LearningReportQueryHandler>();
+builder.Services.AddScoped<CertificateGenerationCommandHandler>();
+builder.Services.AddScoped<CertificateGenerationQueryHandler>();
+builder.Services.AddScoped<AnalyticsQueryHandler>();
 var defaultConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if ((builder.Environment.IsProduction() || builder.Environment.IsStaging()) &&
     string.IsNullOrWhiteSpace(defaultConnectionString))
@@ -308,10 +319,24 @@ if ((builder.Environment.IsProduction() || builder.Environment.IsStaging()) &&
     throw new InvalidOperationException("ConnectionStrings:DefaultConnection must be configured for staging and production.");
 }
 
-builder.Services.AddInfrastructure(defaultConnectionString);
+builder.Services.AddInfrastructure(defaultConnectionString, builder.Configuration);
 builder.Services.AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])
     .AddCheck<DatabaseHealthCheck>("database", tags: ["ready"]);
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("certificate-verification", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
 
 var app = builder.Build();
 
@@ -371,6 +396,7 @@ app.Use(async (context, next) =>
     await next(context);
 });
 app.UseAuthorization();
+app.UseRateLimiter();
 
 var mediaRoot = builder.Configuration["Media:LocalStoragePath"] is { Length: > 0 } configuredMediaRoot
     ? configuredMediaRoot
@@ -403,7 +429,9 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
     Predicate = registration => registration.Tags.Contains("ready")
 });
 app.MapSecurityEndpoints();
+app.MapAnalyticsEndpoints();
 app.MapCategoryEndpoints();
+app.MapCertificateEndpoints();
 app.MapTagEndpoints();
 app.MapMediaEndpoints();
 app.MapPronunciationEndpoints();
@@ -418,6 +446,7 @@ app.MapBookEndpoints();
 app.MapQuizEndpoints();
 app.MapReportEndpoints();
 app.MapNotificationEndpoints();
+app.MapSystemHealthEndpoints();
 app.MapContentQualityEndpoints();
 app.MapContentRevisionEndpoints();
 app.MapBulkOperationEndpoints();

@@ -1,6 +1,7 @@
 using EnglishMaster.Domain.Books;
 using EnglishMaster.Domain.BulkOperations;
 using EnglishMaster.Domain.Categories;
+using EnglishMaster.Domain.Certificates;
 using EnglishMaster.Domain.ContentQuality;
 using EnglishMaster.Domain.ContentRevisions;
 using EnglishMaster.Domain.Courses;
@@ -34,6 +35,10 @@ public sealed class EnglishMasterDbContext : DbContext
     public DbSet<Word> Words => Set<Word>();
 
     public DbSet<Category> Categories => Set<Category>();
+
+    public DbSet<CertificateTemplate> CertificateTemplates => Set<CertificateTemplate>();
+
+    public DbSet<IssuedCertificate> IssuedCertificates => Set<IssuedCertificate>();
 
     public DbSet<Tag> Tags => Set<Tag>();
 

@@ -32,6 +32,18 @@ public static class AdminRoutes
         public static string Edit(Guid id) => $"/admin/categories/{id}/edit";
     }
 
+    public static class CertificateTemplates
+    {
+        public const string Index = "/admin/certificate-templates";
+        public const string Create = "/admin/certificate-templates/create";
+        public const string DetailTemplate = "/admin/certificate-templates/{id:guid}";
+        public const string EditTemplate = "/admin/certificate-templates/{id:guid}/edit";
+
+        public static string Detail(Guid id) => $"/admin/certificate-templates/{id}";
+
+        public static string Edit(Guid id) => $"/admin/certificate-templates/{id}/edit";
+    }
+
     public static class Tags
     {
         public const string Index = "/admin/tags";
@@ -157,6 +169,16 @@ public static class AdminRoutes
     public static class Reports
     {
         public const string Index = "/admin/reports";
+    }
+
+    public static class Analytics
+    {
+        public const string Index = "/admin/analytics";
+    }
+
+    public static class SystemHealth
+    {
+        public const string Index = "/admin/system-health";
     }
 
     public static class Notifications

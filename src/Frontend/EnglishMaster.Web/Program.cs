@@ -1,8 +1,11 @@
 using System.Security.Claims;
 using EnglishMaster.Web.Components;
+using EnglishMaster.Web.Services.Analytics;
 using EnglishMaster.Web.Services.Books;
 using EnglishMaster.Web.Services.BulkOperations;
 using EnglishMaster.Web.Services.Categories;
+using EnglishMaster.Web.Services.Certificates;
+using EnglishMaster.Web.Services.SystemHealth;
 using EnglishMaster.Web.Services.ContentQuality;
 using EnglishMaster.Web.Services.ContentRevisions;
 using EnglishMaster.Web.Services.Courses;
@@ -58,10 +61,16 @@ builder.Services.AddHttpClient("EnglishMaster.Api", client =>
 {
     var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7001/";
     client.BaseAddress = new Uri(apiBaseUrl);
-}).AddHttpMessageHandler<AuthCookieHandler>();
+})
+    // UseCookies = false: the default handler silently consumes Set-Cookie into its own
+    // CookieContainer, so AuthApiClient.LoginAsync would never see the API's session cookie
+    // to forward it via AuthCookieHandler, and every subsequent request would come back 401.
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseCookies = false })
+    .AddHttpMessageHandler<AuthCookieHandler>();
 builder.Services.AddScoped(provider =>
     provider.GetRequiredService<IHttpClientFactory>().CreateClient("EnglishMaster.Api"));
 builder.Services.AddScoped<IWordsApiClient, WordsApiClient>();
+builder.Services.AddScoped<IAnalyticsApiClient, AnalyticsApiClient>();
 builder.Services.AddScoped<ICategoriesApiClient, CategoriesApiClient>();
 builder.Services.AddScoped<IContentQualityApiClient, ContentQualityApiClient>();
 builder.Services.AddScoped<IContentRevisionApiClient, ContentRevisionApiClient>();
@@ -85,6 +94,9 @@ builder.Services.AddScoped<IQuizApiClient, QuizApiClient>();
 builder.Services.AddScoped<IReportsApiClient, ReportsApiClient>();
 builder.Services.AddScoped<IPublishingApiClient, PublishingApiClient>();
 builder.Services.AddScoped<IPublicSearchApiClient, PublicSearchApiClient>();
+builder.Services.AddScoped<ICertificateVerificationApiClient, CertificateVerificationApiClient>();
+builder.Services.AddScoped<ICertificateTemplateApiClient, CertificateTemplateApiClient>();
+builder.Services.AddScoped<ISystemHealthApiClient, SystemHealthApiClient>();
 builder.Services.AddScoped<INotificationsApiClient, NotificationsApiClient>();
 builder.Services.AddScoped<IEmailMessagesApiClient, EmailMessagesApiClient>();
 builder.Services.AddScoped<IAuthApiClient, AuthApiClient>();
@@ -116,7 +128,9 @@ app.Use(async (context, next) =>
 });
 app.UseAntiforgery();
 
-app.MapPost("/login", async (
+// Mapped away from "/login" itself: Login.razor's own @page "/login" route also matches
+// POST, so mapping the form handler at the same path causes an AmbiguousMatchException.
+app.MapPost("/account/login", async (
     HttpContext httpContext,
     IAuthApiClient authApiClient,
     CancellationToken cancellationToken) =>
