@@ -15,7 +15,7 @@ This document describes v0.3.0 certificate template, generation, and public veri
 | `POST /api/v1/admin/certificate-templates/{id}/deactivate` | `certificates.manage` | Disable a template for generation. |
 | `GET /api/v1/me/certificates` | Authenticated | List current learner certificates. |
 | `POST /api/v1/me/certificates/courses/{courseId}/generate` | Authenticated | Generate a completed-course certificate. |
-| `GET /api/v1/public/certificates/{verificationCode}` | Public | Verify certificate validity. |
+| `GET /api/v1/public/certificates/{verificationCode}` | Public, rate-limited (10 requests/minute per IP) | Verify certificate validity. |
 
 ## Operational Checklist
 
@@ -26,6 +26,7 @@ This document describes v0.3.0 certificate template, generation, and public veri
 - [ ] Open `/certificates/verify/{code}` and confirm the public result.
 - [ ] Confirm unknown verification codes return not found.
 - [ ] Confirm revoked seeded/test certificates show as invalid, not missing.
+- [x] Confirm the public verification endpoint is rate-limited — verified 2026-07-18: the first 10 calls in a window succeed normally, the 11th+ returns `429 Too Many Requests`. Registered via `AddRateLimiter`/`UseRateLimiter` in `src/Backend/EnglishMaster.Api/Program.cs`, applied to the endpoint in `CertificateEndpoints.cs`.
 
 ## Template Safety
 

@@ -36,7 +36,8 @@ public static class CertificateEndpoints
 
         var publicCertificates = endpoints.MapGroup("/api/v1/public/certificates")
             .WithTags("Public Certificates");
-        publicCertificates.MapGet("/{verificationCode}", VerifyCertificateAsync);
+        publicCertificates.MapGet("/{verificationCode}", VerifyCertificateAsync)
+            .RequireRateLimiting("certificate-verification");
 
         return endpoints;
     }
