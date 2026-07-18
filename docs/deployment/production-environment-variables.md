@@ -13,6 +13,7 @@
 | `Auth__InitialSuperAdmin__Password` | Temporary | Optional one-time bootstrap password. Rotate/remove after setup. |
 | `Media__LocalStoragePath` | Yes | Durable uploaded media storage path. |
 | `Publishing__LocalStoragePath` | Yes | Durable published artifact storage path. |
+| `Logging__FilePath` | No | Directory for rolling structured log files (Serilog, one file per day, 14-day retention). Defaults to a `logs` folder next to the app binary if unset — point this at durable storage in production so logs survive container restarts. Logs also always go to the console for platform-level log collection. |
 | `Email__Provider` | Yes for production | Set to `Smtp` to send real email via the SMTP adapter (`src/Backend/EnglishMaster.Infrastructure/Notifications/SmtpEmailSender.cs`, MailKit-based). Defaults to `Development` (log-only, no real send) if unset — leaving it unset in production means no email is actually delivered. |
 | `Email__FromEmail` | Yes if `Provider=Smtp` | Sender address used on outgoing mail. |
 | `Email__FromName` | No | Sender display name. Defaults to `EnglishMaster`. |
@@ -51,6 +52,7 @@
 | `ASPNETCORE_URLS` | Platform-specific | Bind address inside the host/container. |
 | `AllowedHosts` | Yes | Production Web host names. Avoid `*` in production. |
 | `ApiBaseUrl` | Yes | Production HTTPS API base URL. |
+| `Logging__FilePath` | No | Directory for rolling structured log files. Same behavior as the API's variable of the same name above. |
 
 ## Secret Rules
 

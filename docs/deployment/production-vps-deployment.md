@@ -108,6 +108,10 @@ Once you've confirmed SuperAdmin login works, remove `ENGLISHMASTER_PRODUCTION_S
 
 Fill in `docs/release/v0.3.0-production-deployment-record.md`'s Environment table (Production URL, deployment revision, timestamps) and Deployment Steps table with what actually happened.
 
+## Logs
+
+Structured logs (Serilog) go to both the container's console (`docker compose -f docker-compose.production.yml logs -f`) and a durable rolling file volume at `/app/logs` inside each container — one file per day, 14-day retention, mounted to `englishmaster-production-api-logs` / `englishmaster-production-web-logs` so they survive container restarts.
+
 ## Backups
 
 Before the first production migration and on an ongoing schedule, follow `docs/operations/database-backup-restore.md` and `docs/operations/backup-restore-checklist.md`. `docker exec` into `englishmaster-production-sqlserver` to run `BACKUP DATABASE`, or use `docker cp` to pull the volume contents off the container.

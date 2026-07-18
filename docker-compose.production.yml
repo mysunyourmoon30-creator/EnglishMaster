@@ -36,6 +36,7 @@ services:
       Auth__InitialSuperAdmin__Password: "${ENGLISHMASTER_PRODUCTION_SUPERADMIN_PASSWORD:-}"
       Media__LocalStoragePath: /app/media
       Publishing__LocalStoragePath: /app/publishing
+      Logging__FilePath: /app/logs
       Email__Provider: "${ENGLISHMASTER_PRODUCTION_EMAIL_PROVIDER:-Development}"
       Email__FromEmail: "${ENGLISHMASTER_PRODUCTION_EMAIL_FROM:-}"
       Email__Smtp__Host: "${ENGLISHMASTER_PRODUCTION_SMTP_HOST:-}"
@@ -46,6 +47,7 @@ services:
     volumes:
       - englishmaster-production-api-media:/app/media
       - englishmaster-production-api-publishing:/app/publishing
+      - englishmaster-production-api-logs:/app/logs
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080; printf \"GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3; head -n 1 <&3 | grep \"200\"'"]
       interval: 15s
@@ -68,6 +70,9 @@ services:
       ASPNETCORE_URLS: http://+:8080
       AllowedHosts: "${ENGLISHMASTER_PRODUCTION_ALLOWED_HOSTS:?Set ENGLISHMASTER_PRODUCTION_ALLOWED_HOSTS to your Web domain}"
       ApiBaseUrl: http://englishmaster-production-api:8080/
+      Logging__FilePath: /app/logs
+    volumes:
+      - englishmaster-production-web-logs:/app/logs
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080; printf \"GET /health/live HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3; head -n 1 <&3 | grep \"200\"'"]
       interval: 15s
@@ -95,5 +100,7 @@ volumes:
   englishmaster-production-sqlserver-data:
   englishmaster-production-api-media:
   englishmaster-production-api-publishing:
+  englishmaster-production-api-logs:
+  englishmaster-production-web-logs:
   englishmaster-production-caddy-data:
   englishmaster-production-caddy-config:
