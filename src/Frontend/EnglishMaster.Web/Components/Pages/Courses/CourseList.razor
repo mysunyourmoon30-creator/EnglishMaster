@@ -7,22 +7,31 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Courses</p>
+        <p class="eyebrow">COURSES / คอร์ส</p>
         <h1>Courses</h1>
+        <p class="page-subtitle">Optional learning paths that group lessons into a guided sequence. / คอร์สเป็นเส้นทางเรียนเสริม ใช้จัดบทเรียนหลายบทให้เรียนตามลำดับ</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.Courses.Create">New Course</a>
+    <a class="button primary" href="@AdminRoutes.Courses.Create"><Icon Name="plus" Size="16" /> New Course / เพิ่มคอร์ส</a>
+</section>
+
+<section class="panel release-note">
+    <div>
+        <strong>Current role / บทบาทตอนนี้</strong>
+        <p class="muted">Courses are optional. The current core content is still the 2,500 words and 50 common word lessons.</p>
+        <p class="muted">คอร์สยังเป็นส่วนเสริม เนื้อหาหลักตอนนี้คือคำศัพท์ 2,500 คำและบทเรียน Common Words 50 บท</p>
+    </div>
 </section>
 
 <section class="panel">
     <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
         <label>
-            <span>Search</span>
+            <span>Search / ค้นหา</span>
             <input class="input" @bind="search" @bind:event="oninput" />
         </label>
         <label>
             <span>CEFR</span>
             <select class="input" @bind="cefrLevel">
-                <option value="">All</option>
+                <option value="">All / ทุกระดับ</option>
                 @foreach (var level in CefrLevels)
                 {
                     <option value="@level">@level</option>
@@ -30,9 +39,9 @@
             </select>
         </label>
         <label>
-            <span>Category</span>
+            <span>Category / หมวดหมู่</span>
             <select class="input" @bind="categoryId">
-                <option value="">All</option>
+                <option value="">All / ทั้งหมด</option>
                 @foreach (var category in categories)
                 {
                     <option value="@category.Id">@category.Name</option>
@@ -40,30 +49,30 @@
             </select>
         </label>
         <label>
-            <span>Published</span>
+            <span>Published / เผยแพร่</span>
             <select class="input" @bind="publishedFilter">
-                <option value="">All</option>
-                <option value="true">Published</option>
-                <option value="false">Draft</option>
+                <option value="">All / ทั้งหมด</option>
+                <option value="true">Published / เผยแพร่แล้ว</option>
+                <option value="false">Draft / ร่าง</option>
             </select>
         </label>
         <label>
-            <span>Status</span>
+            <span>Status / สถานะ</span>
             <select class="input" @bind="activeFilter">
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-                <option value="">All</option>
+                <option value="true">Active / ใช้งาน</option>
+                <option value="false">Inactive / ปิด</option>
+                <option value="">All / ทั้งหมด</option>
             </select>
         </label>
         <label>
-            <span>Page Size</span>
+            <span>Page Size / จำนวนต่อหน้า</span>
             <select class="input" @bind="pageSize">
                 <option value="10">10</option>
                 <option value="20">20</option>
                 <option value="50">50</option>
             </select>
         </label>
-        <button class="button" type="submit">Search</button>
+        <button class="button" type="submit">Search / ค้นหา</button>
     </form>
 </section>
 
@@ -74,58 +83,61 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading courses...</p>
+    <p class="muted">Loading courses... / กำลังโหลดคอร์ส</p>
 }
 else if (courses.Count == 0)
 {
-    <section class="panel">
-        <p class="muted">No courses found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="course" Size="22" /></span>
+        <strong>No courses found / ยังไม่พบคอร์ส</strong>
+        <p>Courses are optional. You can keep using lessons and practice first. / คอร์สเป็นส่วนเสริม สามารถใช้บทเรียนและแบบฝึกก่อนได้</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.Courses.Create"><Icon Name="plus" Size="16" /> New Course / เพิ่มคอร์ส</a>
+        </div>
     </section>
 }
 else
 {
     <section class="table-wrap">
         <div class="pagination-summary">
-            <span class="muted">Showing page @searchResult.PageNumber of @searchResult.TotalPages (@searchResult.TotalCount courses)</span>
+            <span class="muted">Page @searchResult.PageNumber of @searchResult.TotalPages / หน้า @searchResult.PageNumber จาก @searchResult.TotalPages</span>
+            <span class="status-badge neutral">@searchResult.TotalCount courses / @searchResult.TotalCount คอร์ส</span>
         </div>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>CEFR</th>
-                    <th>Category</th>
-                    <th>Lessons</th>
-                    <th>Published</th>
-                    <th>Status</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var course in courses)
-                {
-                    <tr>
-                        <td>
-                            <strong>@course.Title</strong>
-                            <span class="muted">@course.Summary</span>
-                        </td>
-                        <td>@(course.CefrLevel ?? "-")</td>
-                        <td>@(course.Category?.Name ?? "-")</td>
-                        <td>@course.Lessons.Count</td>
-                        <td>@(course.IsPublished ? "Published" : "Draft")</td>
-                        <td>@(course.IsActive ? "Active" : "Inactive")</td>
-                        <td class="row-actions">
-                            <a class="button small" href="@AdminRoutes.Courses.Detail(course.Id)">View</a>
-                            <a class="button small" href="@AdminRoutes.Courses.Edit(course.Id)">Edit</a>
-                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(course.Id)">Delete</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <div class="card-grid">
+            @foreach (var course in courses)
+            {
+                <div class="entity-card">
+                    <a class="entity-card-link" href="@AdminRoutes.Courses.Detail(course.Id)">
+                        <div class="entity-card-media">
+                            @if (course.ThumbnailMedia is not null && !string.IsNullOrWhiteSpace(course.ThumbnailMedia.PublicUrl))
+                            {
+                                <img src="@course.ThumbnailMedia.PublicUrl" alt="@course.ThumbnailMedia.AltText" />
+                            }
+                            else
+                            {
+                                <Icon Name="course" Size="28" />
+                            }
+                        </div>
+                        <div class="entity-card-body">
+                            <h3>@course.Title</h3>
+                            <span class="muted">@(course.CefrLevel ?? "-") &middot; @course.Lessons.Count lessons / @course.Lessons.Count บทเรียน</span>
+                        </div>
+                    </a>
+                    <div class="entity-card-footer">
+                        <span class="status-badge @(course.IsPublished ? "success" : "warning")">@(course.IsPublished ? "Published / เผยแพร่แล้ว" : "Draft / ร่าง")</span>
+                        <span class="row-actions">
+                            <a class="button small" href="@AdminRoutes.Courses.Detail(course.Id)" aria-label="View @course.Title" title="View"><Icon Name="eye" Size="15" /></a>
+                            <a class="button small" href="@AdminRoutes.Courses.Edit(course.Id)" aria-label="Edit @course.Title" title="Edit"><Icon Name="edit" Size="15" /></a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(course.Id)" aria-label="Delete @course.Title" title="Delete"><Icon Name="trash" Size="15" /></button>
+                        </span>
+                    </div>
+                </div>
+            }
+        </div>
         <div class="pagination-row">
-            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous</button>
-            <span class="muted">Page @searchResult.PageNumber</span>
-            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next</button>
+            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous / ก่อนหน้า</button>
+            <span class="muted">Page @searchResult.PageNumber / หน้า @searchResult.PageNumber</span>
+            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next / ถัดไป</button>
         </div>
     </section>
 }

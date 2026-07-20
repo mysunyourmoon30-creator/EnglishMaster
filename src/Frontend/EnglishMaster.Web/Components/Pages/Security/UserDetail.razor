@@ -6,26 +6,42 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading user...</p>
+    <p class="muted">Loading user... / กำลังโหลดผู้ใช้</p>
 }
 else if (user is null)
 {
-    <section class="panel"><p class="muted">User was not found.</p></section>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="users" Size="22" /></span>
+        <strong>User was not found / ไม่พบผู้ใช้</strong>
+        <p>It may have been deleted or the link is incorrect. / อาจถูกลบแล้ว หรือลิงก์ไม่ถูกต้อง</p>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.Users.Index">Back to Users / กลับรายการผู้ใช้</a>
+        </div>
+    </section>
 }
 else
 {
     <section class="page-header">
         <div>
-            <p class="eyebrow">Administration</p>
+            <p class="eyebrow">USER / ผู้ใช้</p>
             <h1>@user.DisplayName</h1>
         </div>
-        <a class="button primary" href="@AdminRoutes.Users.Edit(user.Id)">Edit</a>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.Users.Index">Back / กลับ</a>
+            <a class="button primary" href="@AdminRoutes.Users.Edit(user.Id)"><Icon Name="edit" Size="15" /> Edit / แก้ไข</a>
+        </div>
     </section>
-    <section class="panel detail-grid">
-        <div><span class="muted">Email</span><strong>@user.Email</strong></div>
-        <div><span class="muted">User Name</span><strong>@user.UserName</strong></div>
-        <div><span class="muted">Status</span><strong>@(user.IsActive ? "Active" : "Inactive")</strong></div>
-        <div><span class="muted">Roles</span><strong>@string.Join(", ", user.Roles.Select(role => role.Name))</strong></div>
+    <section class="panel">
+        <h3 class="detail-section-heading">Account / บัญชี</h3>
+        <div class="detail-grid">
+            <div class="detail-item"><span class="muted">Email / อีเมล</span><strong>@user.Email</strong></div>
+            <div class="detail-item"><span class="muted">User Name / ชื่อผู้ใช้</span><strong>@user.UserName</strong></div>
+            <div class="detail-item"><span class="muted">Status / สถานะ</span><strong>@(user.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")</strong></div>
+        </div>
+        <h3 class="detail-section-heading">Access / สิทธิ์เข้าใช้งาน</h3>
+        <div class="detail-grid">
+            <div class="detail-item full"><span class="muted">Roles / สิทธิ์</span><strong>@string.Join(", ", user.Roles.Select(role => role.Name))</strong></div>
+        </div>
     </section>
 }
 

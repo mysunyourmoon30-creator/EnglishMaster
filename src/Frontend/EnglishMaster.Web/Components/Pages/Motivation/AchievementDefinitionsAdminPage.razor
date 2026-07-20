@@ -5,10 +5,11 @@
 
 <section class="page-header">
     <div>
-        <h1>Achievement Definitions</h1>
-        <p class="muted">Admin endpoint coverage for achievement definition management.</p>
+        <p class="eyebrow">Motivation</p>
+        <h1><Icon Name="certificate" Size="22" /> Achievement Definitions</h1>
+        <p class="page-subtitle">Admin endpoint coverage for achievement definition management.</p>
     </div>
-    <a class="button secondary" href="/learn/achievements">Learner Achievements</a>
+    <a class="button secondary" href="/learn/achievements"><Icon Name="certificate" Size="16" /> Learner Achievements</a>
 </section>
 
 @if (!HasPermission("achievements.manage"))
@@ -17,7 +18,7 @@
 }
 else
 {
-    <section class="content-section">
+    <section class="panel">
         <h2>Management</h2>
         <p class="muted">Achievement definition management is available through the protected API. A full admin editing UI is deferred.</p>
     </section>

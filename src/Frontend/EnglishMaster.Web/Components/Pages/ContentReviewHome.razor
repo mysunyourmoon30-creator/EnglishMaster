@@ -4,16 +4,17 @@
 
 <section class="page-header">
     <div>
+        <p class="eyebrow">Admin</p>
         <h1>Content Review</h1>
-        <p class="muted">Open content quality and revision workflows.</p>
+        <p class="page-subtitle">Open content quality and revision workflows.</p>
     </div>
-    <a class="button" href="/admin/content-quality">Quality</a>
+    <a class="button primary" href="@AdminRoutes.ContentQuality.Index"><Icon Name="quality" Size="16" /> Quality</a>
 </section>
 
 <section class="content-section">
     <div class="card-grid">
-        <a class="list-card" href="/admin/content-quality"><h3>Content Quality</h3><p class="muted">Run and review quality checks.</p></a>
-        <a class="list-card" href="/admin/content-revisions"><h3>Content Revisions</h3><p class="muted">Review revision history.</p></a>
-        <a class="list-card" href="/admin/content-revision-restores"><h3>Restore Requests</h3><p class="muted">Review restore workflow state.</p></a>
+        <a class="list-card" href="@AdminRoutes.ContentQuality.Index"><h3><Icon Name="quality" Size="17" /> Content Quality</h3><p class="muted">Run and review quality checks.</p></a>
+        <a class="list-card" href="@AdminRoutes.ContentRevisions.Index"><h3><Icon Name="revision" Size="17" /> Content Revisions</h3><p class="muted">Review revision history.</p></a>
+        <a class="list-card" href="@AdminRoutes.ContentRevisions.Restores"><h3><Icon Name="revision" Size="17" /> Restore Requests</h3><p class="muted">Review restore workflow state.</p></a>
     </div>
 </section>

@@ -10,7 +10,7 @@
         <p class="eyebrow">Publishing</p>
         <h1>Create Publish Job</h1>
     </div>
-    <a class="button" href="@AdminRoutes.Publishing.Jobs.Index">Back</a>
+    <a class="button" href="@AdminRoutes.Publishing.Jobs.Index">Back to Publish Jobs</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -60,7 +60,7 @@
         </div>
 
         <div class="form-actions">
-            <button class="button primary" type="submit" disabled="@isSaving">@(isSaving ? "Saving..." : "Create")</button>
+            <button class="button primary" type="submit" disabled="@isSaving"><Icon Name="plus" Size="16" /> @(isSaving ? "Saving..." : "Create")</button>
         </div>
     </EditForm>
 </section>

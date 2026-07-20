@@ -14,6 +14,7 @@
         </div>
     }
 
+    <h3 class="detail-section-heading">Identity</h3>
     <div class="form-grid">
         <label>
             <span>Code</span>
@@ -27,6 +28,17 @@
             <ValidationMessage For="@(() => Model.Name)" />
         </label>
 
+        @if (ShowActiveToggle)
+        {
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="Model.IsActive" />
+                <span>Active</span>
+            </label>
+        }
+    </div>
+
+    <h3 class="detail-section-heading">Content</h3>
+    <div class="form-grid">
         <label class="span-2">
             <span>Description</span>
             <InputTextArea class="input textarea" @bind-Value="Model.Description" />
@@ -39,14 +51,6 @@
             <InputTextArea class="input textarea" @bind-Value="Model.BodyTemplate" />
             <ValidationMessage For="@(() => Model.BodyTemplate)" />
         </label>
-
-        @if (ShowActiveToggle)
-        {
-            <label class="checkbox-row">
-                <InputCheckbox @bind-Value="Model.IsActive" />
-                <span>Active</span>
-            </label>
-        }
     </div>
 
     <div class="actions">

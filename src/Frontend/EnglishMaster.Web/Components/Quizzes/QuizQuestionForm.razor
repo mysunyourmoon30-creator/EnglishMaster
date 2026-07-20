@@ -18,13 +18,13 @@
 
     <div class="form-grid">
         <label class="span-2">
-            <span>Question</span>
+            <span>Question / คำถาม</span>
             <InputTextArea class="input textarea" @bind-Value="Model.QuestionText" />
             <ValidationMessage For="@(() => Model.QuestionText)" />
         </label>
 
         <label>
-            <span>Type</span>
+            <span>Type / ประเภทคำถาม</span>
             <InputSelect class="input" @bind-Value="Model.QuestionType">
                 @foreach (var type in QuestionTypes)
                 {
@@ -34,33 +34,33 @@
         </label>
 
         <label>
-            <span>Points</span>
+            <span>Points / คะแนน</span>
             <InputNumber class="input" @bind-Value="Model.Points" />
             <ValidationMessage For="@(() => Model.Points)" />
         </label>
 
         <label>
-            <span>Sort Order</span>
+            <span>Sort Order / ลำดับ</span>
             <InputNumber class="input" @bind-Value="Model.SortOrder" />
             <ValidationMessage For="@(() => Model.SortOrder)" />
         </label>
 
         <label class="span-2">
-            <span>Thai Explanation</span>
+            <span>Thai Explanation / คำอธิบายภาษาไทย</span>
             <InputTextArea class="input textarea" @bind-Value="Model.ExplanationTh" />
             <ValidationMessage For="@(() => Model.ExplanationTh)" />
         </label>
 
         <label class="span-2">
-            <span>English Explanation</span>
+            <span>English Explanation / คำอธิบายภาษาอังกฤษ</span>
             <InputTextArea class="input textarea" @bind-Value="Model.ExplanationEn" />
             <ValidationMessage For="@(() => Model.ExplanationEn)" />
         </label>
 
         <label>
-            <span>Word</span>
+            <span>Word / คำศัพท์ที่เกี่ยวข้อง</span>
             <InputSelect class="input" @bind-Value="Model.WordId">
-                <option value="">No word</option>
+                <option value="">No word / ไม่ระบุคำศัพท์</option>
                 @foreach (var word in Words)
                 {
                     <option value="@word.Id">@word.Text</option>
@@ -69,9 +69,9 @@
         </label>
 
         <label>
-            <span>Grammar Rule</span>
+            <span>Grammar Rule / ไวยากรณ์ที่เกี่ยวข้อง</span>
             <InputSelect class="input" @bind-Value="Model.GrammarRuleId">
-                <option value="">No grammar rule</option>
+                <option value="">No grammar rule / ไม่ระบุไวยากรณ์</option>
                 @foreach (var rule in GrammarRules)
                 {
                     <option value="@rule.Id">@rule.Title</option>
@@ -80,9 +80,9 @@
         </label>
 
         <label>
-            <span>Pronunciation</span>
+            <span>Pronunciation / การออกเสียงที่เกี่ยวข้อง</span>
             <InputSelect class="input" @bind-Value="Model.PronunciationId">
-                <option value="">No pronunciation</option>
+                <option value="">No pronunciation / ไม่ระบุการออกเสียง</option>
                 @foreach (var pronunciation in Pronunciations)
                 {
                     <option value="@pronunciation.Id">@(pronunciation.Word?.Text ?? pronunciation.Id.ToString())</option>
@@ -94,16 +94,16 @@
         {
             <label class="checkbox-row">
                 <InputCheckbox @bind-Value="Model.IsActive" />
-                <span>Active</span>
+                <span>Active / ใช้งาน</span>
             </label>
         }
     </div>
 
     <div class="actions">
-        <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
+        <button class="button primary" type="submit" disabled="@IsSaving"><Icon Name="plus" Size="15" /> @SubmitText</button>
         @if (OnCancel.HasDelegate)
         {
-            <button class="button" type="button" @onclick="CancelAsync">Cancel</button>
+            <button class="button" type="button" @onclick="CancelAsync">Cancel / ยกเลิก</button>
         }
     </div>
 </EditForm>

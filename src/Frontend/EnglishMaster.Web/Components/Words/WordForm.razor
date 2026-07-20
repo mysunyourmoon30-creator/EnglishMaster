@@ -16,39 +16,18 @@
         </div>
     }
 
+    <h3 class="detail-section-heading">Identity / ข้อมูลหลัก</h3>
     <div class="form-grid">
         <label>
-            <span>Text</span>
+            <span>Text / คำศัพท์</span>
             <InputText class="input" @bind-Value="Model.Text" />
             <ValidationMessage For="@(() => Model.Text)" />
         </label>
 
         <label>
-            <span>Part of Speech</span>
-            <InputSelect class="input" @bind-Value="Model.PartOfSpeech">
-                @foreach (var option in PartOfSpeechOptions)
-                {
-                    <option value="@option">@option</option>
-                }
-            </InputSelect>
-            <ValidationMessage For="@(() => Model.PartOfSpeech)" />
-        </label>
-
-        <label>
-            <span>CEFR Level</span>
-            <InputSelect class="input" @bind-Value="Model.CefrLevel">
-                @foreach (var option in CefrLevelOptions)
-                {
-                    <option value="@option">@option</option>
-                }
-            </InputSelect>
-            <ValidationMessage For="@(() => Model.CefrLevel)" />
-        </label>
-
-        <label>
-            <span>Category</span>
+            <span>Category / หมวดหมู่</span>
             <InputSelect class="input" @bind-Value="Model.CategoryId">
-                <option value="">No category</option>
+                <option value="">No category / ไม่ระบุหมวดหมู่</option>
                 @foreach (var category in Categories)
                 {
                     <option value="@category.Id">@category.Name</option>
@@ -57,10 +36,10 @@
         </label>
 
         <div class="span-2">
-            <span class="field-label">Tags</span>
+            <span class="field-label">Tags / ป้ายกำกับ</span>
             @if (Tags.Count == 0)
             {
-                <p class="muted">No tags available.</p>
+                <p class="muted">No tags available. / ยังไม่มีป้ายกำกับ</p>
             }
             else
             {
@@ -78,26 +57,37 @@
             }
         </div>
 
+        @if (ShowActiveToggle)
+        {
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="Model.IsActive" />
+                <span>Active / ใช้งาน</span>
+            </label>
+        }
+    </div>
+
+    <h3 class="detail-section-heading">Linguistics / ข้อมูลภาษา</h3>
+    <div class="form-grid">
         <label>
-            <span>Image</span>
-            <InputSelect class="input" @bind-Value="Model.ImageMediaId">
-                <option value="">No image</option>
-                @foreach (var media in ImageMediaOptions)
+            <span>Part of Speech / ชนิดคำ</span>
+            <InputSelect class="input" @bind-Value="Model.PartOfSpeech">
+                @foreach (var option in PartOfSpeechOptions)
                 {
-                    <option value="@media.Id">@media.OriginalFileName</option>
+                    <option value="@option">@option</option>
                 }
             </InputSelect>
+            <ValidationMessage For="@(() => Model.PartOfSpeech)" />
         </label>
 
         <label>
-            <span>Audio</span>
-            <InputSelect class="input" @bind-Value="Model.AudioMediaId">
-                <option value="">No audio</option>
-                @foreach (var media in AudioMediaOptions)
+            <span>CEFR Level / ระดับ</span>
+            <InputSelect class="input" @bind-Value="Model.CefrLevel">
+                @foreach (var option in CefrLevelOptions)
                 {
-                    <option value="@media.Id">@media.OriginalFileName</option>
+                    <option value="@option">@option</option>
                 }
             </InputSelect>
+            <ValidationMessage For="@(() => Model.CefrLevel)" />
         </label>
 
         <label>
@@ -113,47 +103,67 @@
         </label>
 
         <label>
-            <span>Thai Reading</span>
+            <span>Thai Reading / คำอ่านไทย</span>
             <InputText class="input" @bind-Value="Model.ThaiReading" />
             <ValidationMessage For="@(() => Model.ThaiReading)" />
         </label>
+    </div>
 
+    <h3 class="detail-section-heading">Media / สื่อประกอบ</h3>
+    <div class="form-grid">
+        <label>
+            <span>Image / รูปภาพ</span>
+            <InputSelect class="input" @bind-Value="Model.ImageMediaId">
+                <option value="">No image / ไม่มีรูปภาพ</option>
+                @foreach (var media in ImageMediaOptions)
+                {
+                    <option value="@media.Id">@media.OriginalFileName</option>
+                }
+            </InputSelect>
+        </label>
+
+        <label>
+            <span>Audio / เสียง</span>
+            <InputSelect class="input" @bind-Value="Model.AudioMediaId">
+                <option value="">No audio / ไม่มีเสียง</option>
+                @foreach (var media in AudioMediaOptions)
+                {
+                    <option value="@media.Id">@media.OriginalFileName</option>
+                }
+            </InputSelect>
+        </label>
+    </div>
+
+    <h3 class="detail-section-heading">Meanings &amp; Examples / ความหมายและตัวอย่าง</h3>
+    <div class="form-grid">
         <label class="span-2">
-            <span>Meaning TH</span>
+            <span>Meaning TH / ความหมายไทย</span>
             <InputTextArea class="input textarea" @bind-Value="Model.MeaningTh" />
             <ValidationMessage For="@(() => Model.MeaningTh)" />
         </label>
 
         <label class="span-2">
-            <span>Meaning EN</span>
+            <span>Meaning EN / ความหมายอังกฤษ</span>
             <InputTextArea class="input textarea" @bind-Value="Model.MeaningEn" />
             <ValidationMessage For="@(() => Model.MeaningEn)" />
         </label>
 
         <label class="span-2">
-            <span>Example EN</span>
+            <span>Example EN / ตัวอย่างอังกฤษ</span>
             <InputTextArea class="input textarea" @bind-Value="Model.ExampleEn" />
             <ValidationMessage For="@(() => Model.ExampleEn)" />
         </label>
 
         <label class="span-2">
-            <span>Example TH</span>
+            <span>Example TH / ตัวอย่างไทย</span>
             <InputTextArea class="input textarea" @bind-Value="Model.ExampleTh" />
             <ValidationMessage For="@(() => Model.ExampleTh)" />
         </label>
-
-        @if (ShowActiveToggle)
-        {
-            <label class="checkbox-row">
-                <InputCheckbox @bind-Value="Model.IsActive" />
-                <span>Active</span>
-            </label>
-        }
     </div>
 
     <div class="actions">
         <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
-        <a class="button" href="@AdminRoutes.Words.Index">Cancel</a>
+        <a class="button" href="@AdminRoutes.Words.Index">Cancel / ยกเลิก</a>
     </div>
 </EditForm>
 

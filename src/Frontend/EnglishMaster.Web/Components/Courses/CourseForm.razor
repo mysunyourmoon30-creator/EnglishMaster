@@ -16,29 +16,18 @@
         </div>
     }
 
+    <h3 class="detail-section-heading">Overview / ภาพรวม</h3>
     <div class="form-grid">
         <label class="span-2">
-            <span>Title</span>
+            <span>Title / ชื่อคอร์ส</span>
             <InputText class="input" @bind-Value="Model.Title" />
             <ValidationMessage For="@(() => Model.Title)" />
-        </label>
-
-        <label class="span-2">
-            <span>Summary</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.Summary" />
-            <ValidationMessage For="@(() => Model.Summary)" />
-        </label>
-
-        <label class="span-2">
-            <span>Description</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.Description" />
-            <ValidationMessage For="@(() => Model.Description)" />
         </label>
 
         <label>
             <span>CEFR</span>
             <InputSelect class="input" @bind-Value="Model.CefrLevel">
-                <option value="">No level</option>
+                <option value="">No level / ไม่ระบุระดับ</option>
                 @foreach (var level in CefrLevels)
                 {
                     <option value="@level">@level</option>
@@ -47,9 +36,9 @@
         </label>
 
         <label>
-            <span>Category</span>
+            <span>Category / หมวดหมู่</span>
             <InputSelect class="input" @bind-Value="Model.CategoryId">
-                <option value="">No category</option>
+                <option value="">No category / ไม่ระบุหมวดหมู่</option>
                 @foreach (var category in Categories)
                 {
                     <option value="@category.Id">@category.Name</option>
@@ -58,9 +47,9 @@
         </label>
 
         <label>
-            <span>Thumbnail</span>
+            <span>Thumbnail / รูปหน้าปก</span>
             <InputSelect class="input" @bind-Value="Model.ThumbnailMediaId">
-                <option value="">No thumbnail</option>
+                <option value="">No thumbnail / ไม่มีรูปหน้าปก</option>
                 @foreach (var media in ThumbnailMediaOptions)
                 {
                     <option value="@media.Id">@media.OriginalFileName</option>
@@ -69,13 +58,16 @@
         </label>
 
         <label>
-            <span>Estimated Minutes</span>
+            <span>Estimated Minutes / เวลาประมาณ</span>
             <InputNumber class="input" @bind-Value="Model.EstimatedMinutes" />
             <ValidationMessage For="@(() => Model.EstimatedMinutes)" />
         </label>
+    </div>
 
+    <h3 class="detail-section-heading">Publishing Status / สถานะเผยแพร่</h3>
+    <div class="form-grid">
         <label>
-            <span>Sort Order</span>
+            <span>Sort Order / ลำดับแสดงผล</span>
             <InputNumber class="input" @bind-Value="Model.SortOrder" />
             <ValidationMessage For="@(() => Model.SortOrder)" />
         </label>
@@ -84,19 +76,34 @@
         {
             <label class="checkbox-row">
                 <InputCheckbox @bind-Value="Model.IsPublished" />
-                <span>Published</span>
+                <span>Published / เผยแพร่</span>
             </label>
 
             <label class="checkbox-row">
                 <InputCheckbox @bind-Value="Model.IsActive" />
-                <span>Active</span>
+                <span>Active / ใช้งาน</span>
             </label>
         }
     </div>
 
+    <h3 class="detail-section-heading">Description / คำอธิบาย</h3>
+    <div class="form-grid">
+        <label class="span-2">
+            <span>Summary / สรุป</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.Summary" />
+            <ValidationMessage For="@(() => Model.Summary)" />
+        </label>
+
+        <label class="span-2">
+            <span>Description / รายละเอียด</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.Description" />
+            <ValidationMessage For="@(() => Model.Description)" />
+        </label>
+    </div>
+
     <div class="actions">
         <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
-        <a class="button" href="@AdminRoutes.Courses.Index">Cancel</a>
+        <a class="button" href="@AdminRoutes.Courses.Index">Cancel / ยกเลิก</a>
     </div>
 </EditForm>
 

@@ -10,7 +10,14 @@
 }
 else if (role is null)
 {
-    <section class="panel"><p class="muted">Role was not found.</p></section>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="shield" Size="22" /></span>
+        <strong>Role was not found</strong>
+        <p>It may have been deleted or the link is incorrect.</p>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.Roles.Index">Back to Roles</a>
+        </div>
+    </section>
 }
 else
 {
@@ -19,17 +26,33 @@ else
             <p class="eyebrow">Administration</p>
             <h1>@role.Name</h1>
         </div>
-        <a class="button primary" href="@AdminRoutes.Roles.Edit(role.Id)">Edit</a>
-    </section>
-    <section class="panel detail-grid">
-        <div><span class="muted">Slug</span><strong>@role.Slug</strong></div>
-        <div><span class="muted">System</span><strong>@(role.IsSystem ? "Yes" : "No")</strong></div>
-        <div><span class="muted">Status</span><strong>@(role.IsActive ? "Active" : "Inactive")</strong></div>
-        <div><span class="muted">Permissions</span><strong>@role.Permissions.Count</strong></div>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.Roles.Index">Back</a>
+            <a class="button primary" href="@AdminRoutes.Roles.Edit(role.Id)"><Icon Name="edit" Size="15" /> Edit</a>
+        </div>
     </section>
     <section class="panel">
-        <h2>Permissions</h2>
-        <p class="muted">@string.Join(", ", role.Permissions)</p>
+        <h3 class="detail-section-heading">Overview</h3>
+        <div class="detail-grid">
+            <div class="detail-item"><span class="muted">Slug</span><strong>@role.Slug</strong></div>
+            <div class="detail-item"><span class="muted">System</span><strong>@(role.IsSystem ? "Yes" : "No")</strong></div>
+            <div class="detail-item"><span class="muted">Status</span><strong>@(role.IsActive ? "Active" : "Inactive")</strong></div>
+            <div class="detail-item"><span class="muted">Permissions</span><strong>@role.Permissions.Count</strong></div>
+        </div>
+        <h3 class="detail-section-heading">Permissions</h3>
+        @if (role.Permissions.Count == 0)
+        {
+            <p class="muted">No permissions assigned.</p>
+        }
+        else
+        {
+            <div class="actions">
+                @foreach (var permission in role.Permissions)
+                {
+                    <span class="pill">@permission</span>
+                }
+            </div>
+        }
     </section>
 }
 

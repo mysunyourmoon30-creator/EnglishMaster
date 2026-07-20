@@ -2,18 +2,18 @@
 @rendermode InteractiveServer
 @inject ICategoriesApiClient CategoriesApiClient
 
-<PageTitle>@(category is null ? "Category" : category.Name)</PageTitle>
+<PageTitle>@(category is null ? "Category / หมวดหมู่" : category.Name)</PageTitle>
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Vocabulary</p>
+        <p class="eyebrow">CONTENT CATEGORY / หมวดหมู่เนื้อหา</p>
         <h1>@(category is null ? "Category" : category.Name)</h1>
     </div>
     <div class="actions">
-        <a class="button" href="@AdminRoutes.Categories.Index">Back</a>
+        <a class="button" href="@AdminRoutes.Categories.Index">Back / กลับ</a>
         @if (category is not null)
         {
-            <a class="button primary" href="@AdminRoutes.Categories.Edit(category.Id)">Edit</a>
+            <a class="button primary" href="@AdminRoutes.Categories.Edit(category.Id)"><Icon Name="edit" Size="15" /> Edit / แก้ไข</a>
         }
     </div>
 </section>
@@ -25,20 +25,26 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading category...</p>
+    <p class="muted">Loading category... / กำลังโหลดหมวดหมู่</p>
 }
 else if (notFound)
 {
-    <section class="panel">
-        <p class="muted">Category was not found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="category" Size="22" /></span>
+        <strong>Category was not found / ไม่พบหมวดหมู่</strong>
+        <p>It may have been deleted or the link is incorrect. / หมวดนี้อาจถูกลบ หรือลิงก์ไม่ถูกต้อง</p>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.Categories.Index">Back to Categories / กลับไปหน้าหมวดหมู่</a>
+        </div>
     </section>
 }
 else if (category is not null)
 {
     <section class="panel">
+        <h3 class="detail-section-heading">Identity / ข้อมูลหลัก</h3>
         <div class="detail-grid">
             <div class="detail-item">
-                <span class="muted">Name</span>
+                <span class="muted">Name / ชื่อ</span>
                 <strong>@category.Name</strong>
             </div>
             <div class="detail-item">
@@ -46,22 +52,33 @@ else if (category is not null)
                 <strong>@category.Slug</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Sort Order</span>
+                <span class="muted">Status / สถานะ</span>
+                <strong>@(category.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")</strong>
+            </div>
+        </div>
+
+        <h3 class="detail-section-heading">Usage / การใช้งาน</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Sort Order / ลำดับ</span>
                 <strong>@category.SortOrder</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Status</span>
-                <strong>@(category.IsActive ? "Active" : "Inactive")</strong>
+                <span class="muted">Page / หน้า</span>
+                <strong>@GetPageSummary(category.Description)</strong>
             </div>
             <div class="detail-item full">
-                <span class="muted">Description</span>
-                <strong>@category.Description</strong>
+                <span class="muted">Use / ใช้สำหรับ</span>
+                <strong>@GetUsageSummary(category.Description)</strong>
             </div>
         </div>
     </section>
 }
 
 @code {
+    private const string PageMarker = "Page / หน้า:";
+    private const string UseMarker = "Use / ใช้สำหรับ:";
+
     [Parameter]
     public Guid Id { get; set; }
 
@@ -89,5 +106,31 @@ else if (category is not null)
         {
             isLoading = false;
         }
+    }
+
+    private static string GetPageSummary(string description)
+    {
+        var value = description.Trim();
+        var pageStart = value.IndexOf(PageMarker, StringComparison.OrdinalIgnoreCase);
+        if (pageStart < 0)
+        {
+            return "General / ทั่วไป";
+        }
+
+        var pageText = value[(pageStart + PageMarker.Length)..];
+        var separator = pageText.IndexOf('|');
+        return (separator >= 0 ? pageText[..separator] : pageText).Trim();
+    }
+
+    private static string GetUsageSummary(string description)
+    {
+        var value = description.Trim();
+        var useStart = value.IndexOf(UseMarker, StringComparison.OrdinalIgnoreCase);
+        if (useStart < 0)
+        {
+            return value;
+        }
+
+        return value[(useStart + UseMarker.Length)..].Trim();
     }
 }

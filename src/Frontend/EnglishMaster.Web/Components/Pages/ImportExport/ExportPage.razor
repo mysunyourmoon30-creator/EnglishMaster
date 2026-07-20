@@ -8,6 +8,7 @@
     <div>
         <p class="eyebrow">Content Operations</p>
         <h1>Export</h1>
+        <p class="page-subtitle">Download vocabulary and course content as CSV or JSON.</p>
     </div>
 </section>
 
@@ -30,7 +31,7 @@
             </select>
         </label>
         <button class="button primary" type="submit" disabled="@isExporting">
-            @(isExporting ? "Exporting..." : "Export")
+            <Icon Name="export" Size="16" /> @(isExporting ? "Exporting..." : "Export")
         </button>
     </form>
 </section>
@@ -45,12 +46,12 @@
     <section class="panel">
         <h2>Download</h2>
         <p class="muted">@download.FileName (@download.Content.Length bytes)</p>
-        <a class="button primary" href="@download.DataUrl" download="@download.FileName">Download File</a>
+        <a class="button primary" href="@download.DataUrl" download="@download.FileName"><Icon Name="export" Size="16" /> Download File</a>
     </section>
 }
 
 <section class="panel">
-    <h2>Available Exports</h2>
+    <h2><Icon Name="export" Size="17" /> Available Exports</h2>
     <table class="data-table">
         <thead>
             <tr>

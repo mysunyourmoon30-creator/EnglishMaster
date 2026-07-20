@@ -2,18 +2,19 @@
 @rendermode InteractiveServer
 @inject IMediaApiClient MediaApiClient
 
-<PageTitle>@(media is null ? "Media" : media.OriginalFileName)</PageTitle>
+<PageTitle>@(media is null ? "Media / สื่อ" : media.OriginalFileName)</PageTitle>
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Assets</p>
+        <p class="eyebrow">MEDIA / สื่อ</p>
         <h1>@(media is null ? "Media" : media.OriginalFileName)</h1>
+        <p class="page-subtitle">ตรวจไฟล์ รูป เสียง และคำอธิบายที่นำไปใช้ในคำศัพท์ บทเรียน และแบบฝึก</p>
     </div>
     <div class="actions">
-        <a class="button" href="@AdminRoutes.Media.Index">Back</a>
+        <a class="button" href="@AdminRoutes.Media.Index">Back / กลับ</a>
         @if (media is not null)
         {
-            <a class="button primary" href="@AdminRoutes.Media.Edit(media.Id)">Edit</a>
+            <a class="button primary" href="@AdminRoutes.Media.Edit(media.Id)"><Icon Name="edit" Size="15" /> Edit / แก้ไข</a>
         }
     </div>
 </section>
@@ -25,12 +26,17 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading media...</p>
+    <p class="muted">Loading media... / กำลังโหลดสื่อ</p>
 }
 else if (notFound)
 {
-    <section class="panel">
-        <p class="muted">Media was not found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="media" Size="22" /></span>
+        <strong>Media was not found / ไม่พบสื่อ</strong>
+        <p>ข้อมูลอาจถูกลบแล้ว หรือ link ไม่ถูกต้อง</p>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.Media.Index">Back to Media / กลับรายการสื่อ</a>
+        </div>
     </section>
 }
 else if (media is not null)
@@ -45,49 +51,58 @@ else if (media is not null)
             <audio class="media-player" controls src="@media.PublicUrl"></audio>
         }
 
+        <h3 class="detail-section-heading">File / ไฟล์</h3>
         <div class="detail-grid">
             <div class="detail-item">
-                <span class="muted">File Name</span>
+                <span class="muted">File Name / ชื่อไฟล์</span>
                 <strong>@media.FileName</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Original File Name</span>
+                <span class="muted">Original File Name / ชื่อไฟล์เดิม</span>
                 <strong>@media.OriginalFileName</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Media Type</span>
+                <span class="muted">Media Type / ประเภทสื่อ</span>
                 <strong>@media.MediaType</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Content Type</span>
+                <span class="muted">Content Type / ชนิดไฟล์</span>
                 <strong>@media.ContentType</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">File Size</span>
+                <span class="muted">File Size / ขนาดไฟล์</span>
                 <strong>@FormatSize(media.FileSize)</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Status</span>
-                <strong>@(media.IsActive ? "Active" : "Inactive")</strong>
+                <span class="muted">Status / สถานะ</span>
+                <strong>@(media.IsActive ? "Active / ใช้งาน" : "Inactive / ปิดใช้งาน")</strong>
             </div>
+        </div>
+
+        <h3 class="detail-section-heading">Storage &amp; Description / ที่อยู่ไฟล์และคำอธิบาย</h3>
+        <div class="detail-grid">
             <div class="detail-item full">
                 <span class="muted">Public URL</span>
                 <strong>@media.PublicUrl</strong>
             </div>
             <div class="detail-item full">
-                <span class="muted">Alt Text</span>
+                <span class="muted">Alt Text / คำอธิบายภาพ</span>
                 <strong>@media.AltText</strong>
             </div>
             <div class="detail-item full">
-                <span class="muted">Description</span>
+                <span class="muted">Description / รายละเอียด</span>
                 <strong>@media.Description</strong>
             </div>
+        </div>
+
+        <h3 class="detail-section-heading">Metadata / ข้อมูลระบบ</h3>
+        <div class="detail-grid">
             <div class="detail-item">
-                <span class="muted">Created</span>
+                <span class="muted">Created / สร้างเมื่อ</span>
                 <strong>@FormatDate(media.CreatedAt)</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Updated</span>
+                <span class="muted">Updated / แก้ไขล่าสุด</span>
                 <strong>@FormatDate(media.UpdatedAt)</strong>
             </div>
         </div>
@@ -126,7 +141,7 @@ else if (media is not null)
 
     private static string FormatDate(DateTimeOffset value)
     {
-        return value.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+        return value.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
     }
 
     private static string FormatSize(long bytes)

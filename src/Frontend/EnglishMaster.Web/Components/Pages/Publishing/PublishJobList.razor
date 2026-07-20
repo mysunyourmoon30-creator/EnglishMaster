@@ -8,8 +8,9 @@
     <div>
         <p class="eyebrow">Publishing</p>
         <h1>Publish Jobs</h1>
+        <p class="page-subtitle">Create and monitor publish work for lessons, courses, books, and quizzes.</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.Publishing.Jobs.Create">New Job</a>
+    <a class="button primary" href="@AdminRoutes.Publishing.Jobs.Create"><Icon Name="plus" Size="16" /> New Job</a>
 </section>
 
 <section class="panel">
@@ -67,8 +68,13 @@
 }
 else if (jobs.Count == 0)
 {
-    <section class="panel">
-        <p class="muted">No publish jobs found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="publish" Size="22" /></span>
+        <strong>No publish jobs found</strong>
+        <p>Try adjusting your filters, or create a new publish job.</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.Publishing.Jobs.Create"><Icon Name="plus" Size="16" /> New Job</a>
+        </div>
     </section>
 }
 else
@@ -96,9 +102,9 @@ else
                         <td>@job.SourceType</td>
                         <td>@job.Format</td>
                         <td>@job.Status</td>
-                        <td>@job.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@job.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)</td>
                         <td class="row-actions">
-                            <a class="button small" href="@AdminRoutes.Publishing.Jobs.Detail(job.Id)">View</a>
+                            <a class="button small" href="@AdminRoutes.Publishing.Jobs.Detail(job.Id)" aria-label="View @job.Title" title="View"><Icon Name="eye" Size="15" /></a>
                         </td>
                     </tr>
                 }

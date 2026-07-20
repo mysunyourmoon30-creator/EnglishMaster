@@ -7,9 +7,10 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Vocabulary</p>
-        <h1>New Category</h1>
+        <p class="eyebrow">Content Categories / หมวดหมู่เนื้อหา</p>
+        <h1>New Category / เพิ่มหมวด</h1>
     </div>
+    <a class="button" href="@AdminRoutes.Categories.Index">Back to Categories / กลับไปหน้าหมวดหมู่</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -21,7 +22,7 @@
     <CategoryForm Model="model"
                   ValidationErrors="validationErrors"
                   IsSaving="isSaving"
-                  SubmitText="Create"
+                  SubmitText="Create / สร้าง"
                   OnValidSubmit="SaveAsync" />
 </section>
 

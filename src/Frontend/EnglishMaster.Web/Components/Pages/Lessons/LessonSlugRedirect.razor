@@ -1,0 +1,219 @@
+@page "/lessons/{Slug}"
+@rendermode InteractiveServer
+@layout PublicLayout
+@inject ILessonApiClient LessonApiClient
+
+<PageTitle>@(lesson is null ? "Lesson / บทเรียน" : $"{lesson.Title} / Lesson")</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">LESSON / บทเรียน</p>
+        <h1>@(lesson is null ? "Opening lesson / กำลังเปิดบทเรียน" : lesson.Title)</h1>
+        <p class="page-subtitle">Read the lesson, open related words, then practice to remember it. / อ่านบทเรียน เปิดคำศัพท์ที่เกี่ยวข้อง แล้วไปฝึกทบทวนต่อได้ทันที</p>
+    </div>
+    <div class="actions">
+        <a class="button secondary" href="/search?type=lesson"><Icon Name="search" Size="16" /> Search / ค้นหา</a>
+        <a class="button primary" href="/learn/practice"><Icon Name="quiz" Size="16" /> Practice / ฝึก</a>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+    <section class="panel">
+        <a class="button primary" href="/search?type=lesson"><Icon Name="search" Size="16" /> Search lessons / ค้นหาบทเรียน</a>
+    </section>
+}
+else if (isLoading)
+{
+    <section class="panel empty-state">
+        <strong>Loading lesson... / กำลังโหลดบทเรียน</strong>
+        <span class="muted">Please wait while we find this lesson. / รอสักครู่ ระบบกำลังค้นหาบทเรียนนี้</span>
+    </section>
+}
+else if (lesson is not null)
+{
+    <section class="panel">
+        @if (lesson.ThumbnailMedia is not null && !string.IsNullOrWhiteSpace(lesson.ThumbnailMedia.PublicUrl))
+        {
+            <img class="media-preview" src="@lesson.ThumbnailMedia.PublicUrl" alt="@lesson.ThumbnailMedia.AltText" />
+        }
+
+        <div class="list-card-badges">
+            @if (!string.IsNullOrWhiteSpace(lesson.CefrLevel))
+            {
+                <span class="pill">@lesson.CefrLevel</span>
+            }
+            @if (lesson.Category is not null)
+            {
+                <span class="pill">@lesson.Category.Name</span>
+            }
+            <span class="pill">@lesson.EstimatedMinutes min / @lesson.EstimatedMinutes นาที</span>
+        </div>
+
+        <h3 class="detail-section-heading">Overview / ภาพรวม</h3>
+        <div class="detail-grid">
+            <div class="detail-item full">
+                <span class="muted">Summary / สรุป</span>
+                <strong>@FirstNonEmpty(lesson.Summary, "-")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Description / รายละเอียด</span>
+                <strong>@FirstNonEmpty(lesson.Description, "-")</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-section">
+        <div class="section-header-row">
+            <div>
+                <h2>Lesson Content / เนื้อหาบทเรียน</h2>
+                <p class="muted">Read from top to bottom, then use Practice to review after finishing. / อ่านจากบนลงล่าง แล้วกด Practice เพื่อทบทวนหลังอ่านจบ</p>
+            </div>
+        </div>
+
+        @if (sections.Count == 0)
+        {
+            <section class="panel empty-state">
+                <span class="empty-state-icon"><Icon Name="lesson" Size="22" /></span>
+                <strong>No lesson sections yet / บทเรียนนี้ยังไม่มีเนื้อหาย่อย</strong>
+                <p>Use the overview and related words below to start learning. / ใช้สรุปและคำศัพท์ด้านล่างเพื่อเริ่มเรียนก่อนได้</p>
+            </section>
+        }
+        else
+        {
+            <div class="content-list">
+                @foreach (var lessonSection in sections.OrderBy(item => item.SortOrder))
+                {
+                    <article class="list-card">
+                        <div class="list-card-badges">
+                            <span class="pill">@SectionTypeLabel(lessonSection.SectionType)</span>
+                        </div>
+                        <h2>@lessonSection.Title</h2>
+                        @if (lessonSection.Media is not null && !string.IsNullOrWhiteSpace(lessonSection.Media.PublicUrl))
+                        {
+                            <img class="media-preview" src="@lessonSection.Media.PublicUrl" alt="@lessonSection.Media.AltText" />
+                        }
+                        <p class="lesson-section-text">@FirstNonEmpty(lessonSection.ContentMarkdown, "-")</p>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    @if (lesson.Words.Count > 0)
+    {
+        <section class="content-section">
+            <div class="section-header-row">
+                <div>
+                    <h2>Words in This Lesson / คำศัพท์ในบทเรียน</h2>
+                    <p class="muted">Open a word to see meaning, examples, and pronunciation. / เปิดคำเพื่อดูความหมาย ตัวอย่าง และการออกเสียง</p>
+                </div>
+            </div>
+            <div class="card-grid">
+                @foreach (var word in lesson.Words)
+                {
+                    <a class="list-card" href="/dictionary/@word.Slug">
+                        <h3>@word.Text</h3>
+                        <p class="muted">@FirstNonEmpty(word.MeaningTh, "Open word / เปิดคำศัพท์")</p>
+                    </a>
+                }
+            </div>
+        </section>
+    }
+
+    @if (lesson.GrammarRules.Count > 0)
+    {
+        <section class="content-section">
+            <div class="section-header-row">
+                <div>
+                    <h2>Related Grammar / ไวยากรณ์ที่เกี่ยวข้อง</h2>
+                    <p class="muted">These grammar rules help you understand the lesson better. / ไวยากรณ์เหล่านี้ช่วยให้เข้าใจบทเรียนได้ดีขึ้น</p>
+                </div>
+            </div>
+            <div class="card-grid">
+                @foreach (var rule in lesson.GrammarRules)
+                {
+                    <a class="list-card" href="/grammar/@rule.Slug">
+                        <h3>@rule.Title</h3>
+                        <p class="muted">Open grammar / เปิดไวยากรณ์</p>
+                    </a>
+                }
+            </div>
+        </section>
+    }
+
+    <section class="panel">
+        <div class="actions">
+            <a class="button secondary" href="/search?type=lesson">More lessons / บทเรียนอื่น</a>
+            <a class="button primary" href="/learn/practice">Practice now / ฝึกทันที</a>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public string? Slug { get; set; }
+
+    private LessonDto? lesson;
+    private IReadOnlyCollection<LessonSectionDto> sections = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        lesson = null;
+        sections = [];
+
+        if (string.IsNullOrWhiteSpace(Slug))
+        {
+            errorMessage = "Lesson link is missing. / ลิงก์บทเรียนไม่ครบ";
+            isLoading = false;
+            return;
+        }
+
+        try
+        {
+            var result = await LessonApiClient.SearchAsync(
+                new LessonSearchRequest(Slug.Trim(), IsPublished: null, IsActive: true, PageNumber: 1, PageSize: 10),
+                CancellationToken.None);
+
+            var matchedLesson = result.Items.FirstOrDefault(item =>
+                string.Equals(item.Slug, Slug, StringComparison.OrdinalIgnoreCase));
+            if (matchedLesson is null)
+            {
+                errorMessage = "Lesson was not found. / ไม่พบบทเรียนนี้";
+                return;
+            }
+
+            lesson = await LessonApiClient.GetAsync(matchedLesson.Id, CancellationToken.None) ?? matchedLesson;
+            sections = await LessonApiClient.GetSectionsAsync(matchedLesson.Id, CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static string SectionTypeLabel(string value) => value.ToLowerInvariant() switch
+    {
+        "intro" => "Intro / บทนำ",
+        "content" => "Content / เนื้อหา",
+        "text" => "Text / เนื้อหา",
+        "vocabulary" => "Vocabulary / คำศัพท์",
+        "grammar" => "Grammar / ไวยากรณ์",
+        "example" => "Example / ตัวอย่าง",
+        "practice" => "Practice / ฝึก",
+        "summary" => "Summary / สรุป",
+        _ => value
+    };
+
+    private static string FirstNonEmpty(params string?[] values) =>
+        values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
+}

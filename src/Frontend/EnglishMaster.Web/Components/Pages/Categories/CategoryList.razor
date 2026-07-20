@@ -2,30 +2,39 @@
 @rendermode InteractiveServer
 @inject ICategoriesApiClient CategoriesApiClient
 
-<PageTitle>Categories</PageTitle>
+<PageTitle>Categories / หมวดหมู่</PageTitle>
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Vocabulary</p>
+        <p class="eyebrow">CONTENT CATEGORIES / หมวดหมู่เนื้อหา</p>
         <h1>Categories</h1>
+        <p class="page-subtitle">Organize categories used by words, lessons, quizzes, practice, and learner pages. / จัดหมวดหมู่ที่ใช้กับคำศัพท์ บทเรียน แบบฝึก การฝึก และหน้าผู้เรียน</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.Categories.Create">New Category</a>
+    <a class="button primary" href="@AdminRoutes.Categories.Create"><Icon Name="plus" Size="16" /> New Category / เพิ่มหมวด</a>
+</section>
+
+<section class="panel release-note">
+    <div>
+        <strong>Recommended format / รูปแบบที่แนะนำ</strong>
+        <p class="muted">Description can include: <strong>Page / หน้า:</strong> Words, Lessons | <strong>Use / ใช้สำหรับ:</strong> short explanation.</p>
+        <p class="muted">ใส่หน้าและการใช้งานให้ชัด เพื่อให้ทีมรู้ว่าหมวดนี้ถูกใช้ตรงไหน</p>
+    </div>
 </section>
 
 <section class="panel">
     <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
         <label>
-            <span>Search</span>
-            <input class="input" @bind="search" @bind:event="oninput" />
+            <span>Search / ค้นหา</span>
+            <input class="input" placeholder="Category name or usage / ชื่อหมวดหรือการใช้งาน" @bind="search" @bind:event="oninput" />
         </label>
         <label>
-            <span>Status</span>
+            <span>Status / สถานะ</span>
             <select class="input" @bind="activeFilter">
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
+                <option value="true">Active / ใช้งาน</option>
+                <option value="false">Inactive / ปิด</option>
             </select>
         </label>
-        <button class="button" type="submit">Search</button>
+        <button class="button" type="submit">Search / ค้นหา</button>
     </form>
 </section>
 
@@ -36,12 +45,17 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading categories...</p>
+    <p class="muted">Loading categories... / กำลังโหลดหมวดหมู่</p>
 }
 else if (categories.Count == 0)
 {
-    <section class="panel">
-        <p class="muted">No categories found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="category" Size="22" /></span>
+        <strong>No categories found / ยังไม่พบหมวดหมู่</strong>
+        <p>Try changing the search or create the first category for real learning content. / ลองเปลี่ยนคำค้นหา หรือเพิ่มหมวดแรกสำหรับเนื้อหาจริง</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.Categories.Create"><Icon Name="plus" Size="16" /> New Category / เพิ่มหมวด</a>
+        </div>
     </section>
 }
 else
@@ -50,10 +64,10 @@ else
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Slug</th>
-                    <th>Sort</th>
-                    <th>Status</th>
+                    <th>Category / หมวด</th>
+                    <th>Page / หน้า</th>
+                    <th>Sort / ลำดับ</th>
+                    <th>Status / สถานะ</th>
                     <th></th>
                 </tr>
             </thead>
@@ -63,15 +77,20 @@ else
                     <tr>
                         <td>
                             <strong>@category.Name</strong>
-                            <span class="muted">@category.Description</span>
+                            <span class="muted">@GetUsageSummary(category.Description)</span>
+                            <span class="category-slug">@category.Slug</span>
                         </td>
-                        <td>@category.Slug</td>
+                        <td><span class="category-page">@GetPageSummary(category.Description)</span></td>
                         <td>@category.SortOrder</td>
-                        <td>@(category.IsActive ? "Active" : "Inactive")</td>
+                        <td>
+                            <span class="status-badge @(category.IsActive ? "success" : "muted")">
+                                @(category.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")
+                            </span>
+                        </td>
                         <td class="row-actions">
-                            <a class="button small" href="@AdminRoutes.Categories.Detail(category.Id)">View</a>
-                            <a class="button small" href="@AdminRoutes.Categories.Edit(category.Id)">Edit</a>
-                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(category.Id)">Delete</button>
+                            <a class="button small" href="@AdminRoutes.Categories.Detail(category.Id)" aria-label="View @category.Name" title="View"><Icon Name="eye" Size="15" /></a>
+                            <a class="button small" href="@AdminRoutes.Categories.Edit(category.Id)" aria-label="Edit @category.Name" title="Edit"><Icon Name="edit" Size="15" /></a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(category.Id)" aria-label="Delete @category.Name" title="Delete"><Icon Name="trash" Size="15" /></button>
                         </td>
                     </tr>
                 }
@@ -86,6 +105,8 @@ else
     private string activeFilter = "true";
     private string? errorMessage;
     private bool isLoading = true;
+    private const string PageMarker = "Page / หน้า:";
+    private const string UseMarker = "Use / ใช้สำหรับ:";
 
     protected override async Task OnInitializedAsync()
     {
@@ -134,5 +155,31 @@ else
         {
             errorMessage = exception.Message;
         }
+    }
+
+    private static string GetPageSummary(string description)
+    {
+        var value = description.Trim();
+        var pageStart = value.IndexOf(PageMarker, StringComparison.OrdinalIgnoreCase);
+        if (pageStart < 0)
+        {
+            return "General / ทั่วไป";
+        }
+
+        var pageText = value[(pageStart + PageMarker.Length)..];
+        var separator = pageText.IndexOf('|');
+        return (separator >= 0 ? pageText[..separator] : pageText).Trim();
+    }
+
+    private static string GetUsageSummary(string description)
+    {
+        var value = description.Trim();
+        var useStart = value.IndexOf(UseMarker, StringComparison.OrdinalIgnoreCase);
+        if (useStart < 0)
+        {
+            return value;
+        }
+
+        return value[(useStart + UseMarker.Length)..].Trim();
     }
 }

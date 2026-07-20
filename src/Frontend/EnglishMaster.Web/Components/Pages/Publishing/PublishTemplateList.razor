@@ -8,8 +8,9 @@
     <div>
         <p class="eyebrow">Publishing</p>
         <h1>Publish Templates</h1>
+        <p class="page-subtitle">Manage reusable output templates for publish jobs.</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.Publishing.Templates.Create">New Template</a>
+    <a class="button primary" href="@AdminRoutes.Publishing.Templates.Create"><Icon Name="plus" Size="16" /> New Template</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -23,8 +24,13 @@
 }
 else if (templates.Count == 0)
 {
-    <section class="panel">
-        <p class="muted">No publish templates found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="publish" Size="22" /></span>
+        <strong>No publish templates found</strong>
+        <p>Create a template to define how publish jobs render their output.</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.Publishing.Templates.Create"><Icon Name="plus" Size="16" /> New Template</a>
+        </div>
     </section>
 }
 else
@@ -49,8 +55,8 @@ else
                         <td>@(template.IsDefault ? "Default" : "-")</td>
                         <td>@(template.IsActive ? "Active" : "Inactive")</td>
                         <td class="row-actions">
-                            <a class="button small" href="@AdminRoutes.Publishing.Templates.Edit(template.Id)">Edit</a>
-                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(template.Id)">Delete</button>
+                            <a class="button small" href="@AdminRoutes.Publishing.Templates.Edit(template.Id)" aria-label="Edit @template.Name" title="Edit"><Icon Name="edit" Size="15" /></a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(template.Id)" aria-label="Delete @template.Name" title="Delete"><Icon Name="trash" Size="15" /></button>
                         </td>
                     </tr>
                 }

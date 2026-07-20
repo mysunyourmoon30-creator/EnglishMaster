@@ -8,6 +8,7 @@
     <div>
         <p class="eyebrow">Admin</p>
         <h1>Quality Checks</h1>
+        <p class="page-subtitle">Review automated content quality check runs and their findings.</p>
     </div>
 </section>
 
@@ -27,7 +28,11 @@ else if (!string.IsNullOrWhiteSpace(errorMessage))
 }
 else if (checks.Count == 0)
 {
-    <div class="panel">No quality checks found.</div>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="quality" Size="22" /></span>
+        <strong>No quality checks found</strong>
+        <p>Try adjusting your filters, or run a check from the dashboard.</p>
+    </section>
 }
 else
 {
@@ -37,12 +42,12 @@ else
             <article class="panel">
                 <div class="item-header">
                     <div>
-                        <h2>@check.ContentType</h2>
-                        <p class="muted">@check.ContentId · @check.CheckedAt.LocalDateTime.ToString("g")</p>
+                        <h2><Icon Name="quality" Size="17" /> @check.ContentType</h2>
+                        <p class="muted">@check.ContentId · @check.CheckedAt.LocalDateTime.ToString("g", CultureInfo.InvariantCulture)</p>
                     </div>
                     <span class="badge">@check.Status · @check.Score</span>
                 </div>
-                <a class="button small" href="@AdminRoutes.ContentQuality.CheckDetail(check.Id)">Open</a>
+                <a class="button small" href="@AdminRoutes.ContentQuality.CheckDetail(check.Id)" aria-label="View check for @check.ContentType" title="View"><Icon Name="eye" Size="15" /></a>
             </article>
         }
     </section>

@@ -3,16 +3,21 @@
 @inject IReportsApiClient ReportsApiClient
 @inject IHttpContextAccessor HttpContextAccessor
 
-<PageTitle>Admin Dashboard</PageTitle>
+<PageTitle>Admin Dashboard / แดชบอร์ดผู้ดูแล</PageTitle>
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Admin</p>
+        <p class="eyebrow">ADMIN / ผู้ดูแลระบบ</p>
         <h1>Dashboard</h1>
+        <p class="page-subtitle">Local/internal overview, release readiness, content workflow, and the next operational checks. / ภาพรวมระบบภายใน ความพร้อม release ลำดับดูแลเนื้อหา และงานที่ควรตรวจต่อ</p>
         @if (!string.IsNullOrWhiteSpace(CurrentUserName))
         {
-            <p class="muted">Signed in as @CurrentUserName</p>
+            <p class="muted">Signed in as @CurrentUserName / เข้าสู่ระบบในชื่อ @CurrentUserName</p>
         }
+    </div>
+    <div class="actions">
+        <a class="button primary" href="/learn"><Icon Name="lesson" Size="15" /> Learner View / หน้าผู้เรียน</a>
+        <a class="button secondary" href="/search"><Icon Name="search" Size="15" /> Search / ค้นหา</a>
     </div>
 </section>
 
@@ -21,20 +26,213 @@
     <div class="alert error">@errorMessage</div>
 }
 
-<section class="stat-grid">
-    @foreach (var card in cards)
-    {
-        <a class="panel stat-card" href="@card.Route">
-            <span class="stat-label">@card.Label</span>
-            <span class="stat-value">@(isLoading ? "..." : card.Count?.ToString() ?? "-")</span>
-        </a>
-    }
+<section class="content-section">
+    <div class="section-header-row">
+        <div>
+            <p class="eyebrow">RELEASE / ความพร้อม</p>
+            <h2>v0.3.0 Local/Internal Status</h2>
+            <p class="muted">Production VPS is still deferred. This release is focused on private/internal use on this machine with SQL Server.</p>
+        </div>
+        <a class="button secondary" href="@AdminRoutes.SystemHealth.Index"><Icon Name="health" Size="15" /> System Health / สุขภาพระบบ</a>
+    </div>
+
+    <div class="readiness-grid">
+        @foreach (var item in readinessItems)
+        {
+            <article class="panel readiness-item @item.Tone">
+                <span class="status-dot" aria-hidden="true"></span>
+                <div>
+                    <span class="stat-label">@item.Label</span>
+                    <strong>@item.Value</strong>
+                    <p class="muted">@item.Detail</p>
+                </div>
+            </article>
+        }
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="section-header-row">
+        <div>
+            <p class="eyebrow">WORKFLOW / ลำดับงาน</p>
+            <h2>Content Workflow</h2>
+            <p class="muted">Use this order when editing content: foundation, words, grammar, lessons, courses/books, quizzes, then review and publish.</p>
+        </div>
+    </div>
+
+    <div class="workflow-flow">
+        @for (var i = 0; i < workflowStages.Count; i++)
+        {
+            var stage = workflowStages[i];
+            <article class="panel workflow-stage">
+                <span class="workflow-stage-index">@(i + 1)</span>
+                <Icon Name="@stage.Icon" Size="20" />
+                <strong>@stage.Title</strong>
+                <p class="muted">@stage.Detail</p>
+                <div class="workflow-stage-chips">
+                    @foreach (var link in stage.Links)
+                    {
+                        <a class="workflow-chip" href="@link.Route">@link.Label</a>
+                    }
+                </div>
+            </article>
+            if (i < workflowStages.Count - 1)
+            {
+                <span class="workflow-connector" aria-hidden="true"><Icon Name="chevron-right" Size="18" /></span>
+            }
+        }
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="section-header-row">
+        <div>
+            <p class="eyebrow">CONTENT / เนื้อหา</p>
+            <h2>Content Totals</h2>
+        </div>
+    </div>
+    <div class="stat-grid">
+        @foreach (var card in contentCards)
+        {
+            <a class="panel stat-card" href="@card.Route">
+                <Icon Name="@card.Icon" Size="18" />
+                <span class="stat-label">@card.Label</span>
+                <span class="stat-value">@(isLoading ? "..." : card.Count?.ToString("N0") ?? "-")</span>
+            </a>
+        }
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="section-header-row">
+        <div>
+            <p class="eyebrow">PUBLISHING / เผยแพร่</p>
+            <h2>Publishing Status</h2>
+        </div>
+    </div>
+    <div class="stat-grid">
+        @foreach (var card in publishingCards)
+        {
+            <a class="panel stat-card" href="@card.Route">
+                <Icon Name="@card.Icon" Size="18" />
+                <span class="stat-label">@card.Label</span>
+                <span class="stat-value">@(isLoading ? "..." : card.Count?.ToString("N0") ?? "-")</span>
+            </a>
+        }
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="section-header-row">
+        <div>
+            <p class="eyebrow">LEARNERS / ผู้เรียน</p>
+            <h2>Learners &amp; Activity</h2>
+        </div>
+        <a class="button secondary" href="@AdminRoutes.Reports.Index"><Icon Name="report" Size="15" /> Reports / รายงาน</a>
+    </div>
+    <div class="stat-grid">
+        @foreach (var card in activityCards)
+        {
+            <a class="panel stat-card" href="@card.Route">
+                <Icon Name="@card.Icon" Size="18" />
+                <span class="stat-label">@card.Label</span>
+                <span class="stat-value">@(isLoading ? "..." : card.Count?.ToString("N0") ?? "-")</span>
+            </a>
+        }
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="section-header-row">
+        <div>
+            <p class="eyebrow">DONE / ทำครบแล้ว</p>
+            <h2>UX Cleanup Checklist</h2>
+            <p class="muted">These pages were cleaned in order and build-verified.</p>
+        </div>
+    </div>
+
+    <div class="action-grid">
+        @foreach (var action in operationActions)
+        {
+            <article class="panel action-item">
+                <span class="pill">@action.Status</span>
+                <h3>@action.Title</h3>
+                <p class="muted">@action.Detail</p>
+            </article>
+        }
+    </div>
 </section>
 
 @code {
-    private readonly record struct StatCard(string Label, string Route, int? Count);
+    private readonly record struct StatCard(string Label, string Route, int? Count, string Icon = "report");
+    private readonly record struct ReadinessItem(string Label, string Value, string Detail, string Tone);
+    private readonly record struct OperationAction(string Title, string Status, string Detail);
+    private readonly record struct WorkflowLink(string Label, string Route);
+    private readonly record struct WorkflowStage(string Title, string Icon, string Detail, IReadOnlyList<WorkflowLink> Links);
 
-    private IReadOnlyList<StatCard> cards = [];
+    private static readonly IReadOnlyList<WorkflowStage> workflowStages =
+    [
+        new("Foundation / โครงสร้าง", "category", "Categories, tags, and media used by all content.",
+        [
+            new("Categories / หมวดหมู่", AdminRoutes.Categories.Index),
+            new("Tags / ป้ายกำกับ", AdminRoutes.Tags.Index),
+            new("Media / สื่อ", AdminRoutes.Media.Index)
+        ]),
+        new("Vocabulary / คำศัพท์", "word", "Maintain the real 2,500 common words and pronunciation data.",
+        [
+            new("Words / คำศัพท์", AdminRoutes.Words.Index),
+            new("Pronunciation / การออกเสียง", AdminRoutes.Pronunciations.Index)
+        ]),
+        new("Grammar / ไวยากรณ์", "grammar", "Create learner-friendly topics, rules, and examples.",
+        [
+            new("Grammar Topics / หัวข้อ", AdminRoutes.GrammarTopics.Index),
+            new("Grammar Rules / กฎ", AdminRoutes.GrammarRules.Index)
+        ]),
+        new("Lessons / บทเรียน", "lesson", "50 Common Words lessons linked to real learner words.",
+        [
+            new("Lessons / บทเรียน", AdminRoutes.Lessons.Index)
+        ]),
+        new("Courses & Books / คอร์สและหนังสือ", "course", "Optional long-form learning paths and reading resources.",
+        [
+            new("Courses / คอร์ส", AdminRoutes.Courses.Index),
+            new("Books / หนังสือ", AdminRoutes.Books.Index)
+        ]),
+        new("Quizzes / แบบฝึก", "quiz", "Practice and quiz pages linked to lessons and words.",
+        [
+            new("Quizzes / แบบฝึก", AdminRoutes.Quizzes.Index)
+        ]),
+        new("Review & Publish / ตรวจและเผยแพร่", "publish", "Check quality before learners use the content.",
+        [
+            new("Content Quality / คุณภาพ", AdminRoutes.ContentQuality.Index),
+            new("Publishing / เผยแพร่", AdminRoutes.Publishing.Jobs.Index)
+        ])
+    ];
+
+    private IReadOnlyList<StatCard> contentCards = [];
+    private IReadOnlyList<StatCard> publishingCards = [];
+    private IReadOnlyList<StatCard> activityCards = [];
+    private IReadOnlyList<ReadinessItem> readinessItems =
+    [
+        new("v0.3.0 local/internal", "Active", "Private/internal use on this machine is the selected path.", "ready"),
+        new("SQL Server", "Active", "Main data uses EnglishMasterInternal.", "ready"),
+        new("Common 2,500 words", "Ready", "Real learner words are active and sorted by frequency rank.", "ready"),
+        new("50 common word lessons", "Ready", "Lessons, tags, and learner pages are ready for internal testing.", "ready"),
+        new("Production VPS", "Deferred", "No VPS/domain/secrets required until external production launch.", "waiting"),
+        new("Monitoring", "Later", "Add production monitoring when moving outside local/internal use.", "pending")
+    ];
+    private IReadOnlyList<OperationAction> operationActions =
+    [
+        new("1. Search / ค้นหา", "Done", "Public search is learner-friendly and build verified."),
+        new("2. Admin words / คำศัพท์", "Done", "2,500-word admin flow is clearer with learning/performance separation."),
+        new("3. Dictionary / คำศัพท์ผู้เรียน", "Done", "Word detail page explains meaning, examples, pronunciation, and practice."),
+        new("4. Lesson page / บทเรียนผู้เรียน", "Done", "Public lesson page has readable sections, words, grammar, and practice action."),
+        new("5. Quiz page / แบบฝึกผู้เรียน", "Done", "Public quiz page has clearer choices and immediate feedback."),
+        new("6. Study plan / แผนเรียน", "Done", "Create plan, next task, done/skip, and history are easier to understand."),
+        new("7-8. Categories & tags / หมวดและป้าย", "Done", "Admin taxonomy pages now explain usage and common rank/CEFR tags."),
+        new("9-11. Courses, books, media / สื่อเสริม", "Done", "Optional content areas now explain their role."),
+        new("12-13. Users & reports / ผู้ใช้และรายงาน", "Done", "Roles, learner accounts, and reports use clearer bilingual wording."),
+        new("14. Dashboard / ภาพรวม", "Done", "This page is now the local/internal release checklist.")
+    ];
     private bool isLoading = true;
     private string? errorMessage;
 
@@ -50,43 +248,55 @@
             var content = summary.ContentStatus;
             var quiz = summary.QuizAnalytics;
 
-            cards =
+            contentCards =
             [
-                new StatCard("Students", AdminRoutes.Users.Index, overview.TotalStudents),
-                new StatCard("Active Students", AdminRoutes.Users.Index, overview.TotalActiveStudents),
-                new StatCard("Words", AdminRoutes.Words.Index, overview.TotalWords),
-                new StatCard("Lessons", AdminRoutes.Lessons.Index, overview.TotalLessons),
-                new StatCard("Courses", AdminRoutes.Courses.Index, overview.TotalCourses),
-                new StatCard("Books", AdminRoutes.Books.Index, overview.TotalBooks),
-                new StatCard("Quizzes", AdminRoutes.Quizzes.Index, overview.TotalQuizzes),
-                new StatCard("Published Lessons", AdminRoutes.Reports.Index, content.PublishedLessons),
-                new StatCard("Draft Lessons", AdminRoutes.Reports.Index, content.DraftLessons),
-                new StatCard("Published Courses", AdminRoutes.Reports.Index, content.PublishedCourses),
-                new StatCard("Published Books", AdminRoutes.Reports.Index, content.PublishedBooks),
-                new StatCard("Published Quizzes", AdminRoutes.Reports.Index, content.PublishedQuizzes),
-                new StatCard("Quiz Attempts", AdminRoutes.Reports.Index, quiz.TotalAttempts),
-                new StatCard("Recent Activity", AdminRoutes.Reports.Index, summary.RecentActivity.Count)
+                new("Words / คำศัพท์", AdminRoutes.Words.Index, overview.TotalWords, "word"),
+                new("Lessons / บทเรียน", AdminRoutes.Lessons.Index, overview.TotalLessons, "lesson"),
+                new("Courses / คอร์ส", AdminRoutes.Courses.Index, overview.TotalCourses, "course"),
+                new("Books / หนังสือ", AdminRoutes.Books.Index, overview.TotalBooks, "book"),
+                new("Quizzes / แบบฝึก", AdminRoutes.Quizzes.Index, overview.TotalQuizzes, "quiz")
+            ];
+            publishingCards =
+            [
+                new("Published Lessons / บทเรียนเผยแพร่", AdminRoutes.Reports.Index, content.PublishedLessons, "lesson"),
+                new("Draft Lessons / บทเรียนร่าง", AdminRoutes.Reports.Index, content.DraftLessons, "lesson"),
+                new("Published Courses / คอร์สเผยแพร่", AdminRoutes.Reports.Index, content.PublishedCourses, "course"),
+                new("Published Books / หนังสือเผยแพร่", AdminRoutes.Reports.Index, content.PublishedBooks, "book"),
+                new("Published Quizzes / แบบฝึกเผยแพร่", AdminRoutes.Reports.Index, content.PublishedQuizzes, "quiz")
+            ];
+            activityCards =
+            [
+                new("Students / ผู้เรียน", AdminRoutes.Users.Index, overview.TotalStudents, "users"),
+                new("Active Students / ผู้เรียนที่ใช้งาน", AdminRoutes.Users.Index, overview.TotalActiveStudents, "users"),
+                new("Quiz Attempts / การทำแบบฝึก", AdminRoutes.Reports.Index, quiz.TotalAttempts, "analytics"),
+                new("Recent Activity / กิจกรรมล่าสุด", AdminRoutes.Reports.Index, summary.RecentActivity.Count, "revision")
             ];
         }
         catch (ApiRequestException exception)
         {
             errorMessage = exception.Message;
-            cards =
+            contentCards =
             [
-                new StatCard("Students", AdminRoutes.Users.Index, null),
-                new StatCard("Active Students", AdminRoutes.Users.Index, null),
-                new StatCard("Words", AdminRoutes.Words.Index, null),
-                new StatCard("Lessons", AdminRoutes.Lessons.Index, null),
-                new StatCard("Courses", AdminRoutes.Courses.Index, null),
-                new StatCard("Books", AdminRoutes.Books.Index, null),
-                new StatCard("Quizzes", AdminRoutes.Quizzes.Index, null),
-                new StatCard("Published Lessons", AdminRoutes.Reports.Index, null),
-                new StatCard("Draft Lessons", AdminRoutes.Reports.Index, null),
-                new StatCard("Published Courses", AdminRoutes.Reports.Index, null),
-                new StatCard("Published Books", AdminRoutes.Reports.Index, null),
-                new StatCard("Published Quizzes", AdminRoutes.Reports.Index, null),
-                new StatCard("Quiz Attempts", AdminRoutes.Reports.Index, null),
-                new StatCard("Recent Activity", AdminRoutes.Reports.Index, null)
+                new("Words / คำศัพท์", AdminRoutes.Words.Index, null, "word"),
+                new("Lessons / บทเรียน", AdminRoutes.Lessons.Index, null, "lesson"),
+                new("Courses / คอร์ส", AdminRoutes.Courses.Index, null, "course"),
+                new("Books / หนังสือ", AdminRoutes.Books.Index, null, "book"),
+                new("Quizzes / แบบฝึก", AdminRoutes.Quizzes.Index, null, "quiz")
+            ];
+            publishingCards =
+            [
+                new("Published Lessons / บทเรียนเผยแพร่", AdminRoutes.Reports.Index, null, "lesson"),
+                new("Draft Lessons / บทเรียนร่าง", AdminRoutes.Reports.Index, null, "lesson"),
+                new("Published Courses / คอร์สเผยแพร่", AdminRoutes.Reports.Index, null, "course"),
+                new("Published Books / หนังสือเผยแพร่", AdminRoutes.Reports.Index, null, "book"),
+                new("Published Quizzes / แบบฝึกเผยแพร่", AdminRoutes.Reports.Index, null, "quiz")
+            ];
+            activityCards =
+            [
+                new("Students / ผู้เรียน", AdminRoutes.Users.Index, null, "users"),
+                new("Active Students / ผู้เรียนที่ใช้งาน", AdminRoutes.Users.Index, null, "users"),
+                new("Quiz Attempts / การทำแบบฝึก", AdminRoutes.Reports.Index, null, "analytics"),
+                new("Recent Activity / กิจกรรมล่าสุด", AdminRoutes.Reports.Index, null, "revision")
             ];
         }
         finally

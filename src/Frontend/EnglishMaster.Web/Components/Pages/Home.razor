@@ -1,4 +1,5 @@
 @page "/"
+@layout PublicLayout
 
 <PageTitle>Home</PageTitle>
 
@@ -6,11 +7,25 @@
     <div>
         <p class="eyebrow">English learning platform</p>
         <h1>EnglishMaster</h1>
+        <p class="page-subtitle">Vocabulary, grammar, lessons, and courses in one place — build your English step by step.</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.Dashboard">Open Admin</a>
+    <a class="button primary" href="@AdminRoutes.Dashboard"><Icon Name="dashboard" Size="16" /> Open Admin</a>
 </section>
 
-<section class="panel">
+<section class="stat-grid">
+    <a class="panel stat-card" href="/search">
+        <Icon Name="search" Size="20" />
+        <span class="stat-label">Search content</span>
+        <span class="muted">Words, lessons, courses, quizzes</span>
+    </a>
+    <a class="panel stat-card" href="/login">
+        <Icon Name="dashboard" Size="20" />
+        <span class="stat-label">Admin console</span>
+        <span class="muted">Manage all content</span>
+    </a>
+</section>
+
+<section class="panel content-section">
     <h2>Foundation</h2>
     <p>The first vertical slice manages vocabulary words from Blazor through the API and Application layer into EF Core persistence.</p>
 </section>

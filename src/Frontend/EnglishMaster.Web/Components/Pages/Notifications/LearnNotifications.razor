@@ -8,15 +8,18 @@
     <div>
         <p class="eyebrow">Learning</p>
         <h1>Notifications</h1>
+        <p class="page-subtitle">Updates about your learning activity and progress.</p>
     </div>
     <div class="actions">
-        <span class="badge">@unreadCount unread</span>
+        <span class="badge"><Icon Name="bell" Size="14" /> @unreadCount unread</span>
     </div>
 </section>
 
 @if (isLoading)
 {
-    <div class="panel">Loading notifications...</div>
+    <section class="panel empty-state">
+        <strong>Loading notifications...</strong>
+    </section>
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))
 {
@@ -24,7 +27,11 @@ else if (!string.IsNullOrWhiteSpace(errorMessage))
 }
 else if (notifications.Count == 0)
 {
-    <div class="panel">No notifications yet.</div>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="bell" Size="20" /></span>
+        <strong>No notifications yet</strong>
+        <p>Updates about your learning activity will appear here.</p>
+    </section>
 }
 else
 {
@@ -35,7 +42,7 @@ else
                 <div class="item-header">
                     <div>
                         <h2>@notification.Title</h2>
-                        <p class="muted">@notification.EventType · @notification.CreatedAt.LocalDateTime.ToString("g")</p>
+                        <p class="muted">@notification.EventType · @notification.CreatedAt.LocalDateTime.ToString("g", CultureInfo.InvariantCulture)</p>
                     </div>
                     <span class="badge">@notification.Status</span>
                 </div>

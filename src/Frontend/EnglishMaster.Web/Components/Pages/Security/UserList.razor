@@ -6,27 +6,36 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Administration</p>
+        <p class="eyebrow">USERS / ผู้ใช้</p>
         <h1>Users</h1>
+        <p class="page-subtitle">Manage learner and admin accounts, roles, and access status. / จัดการบัญชีผู้เรียนและแอดมิน รวมถึง role และสถานะการใช้งาน</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.Users.Create">New User</a>
+    <a class="button primary" href="@AdminRoutes.Users.Create"><Icon Name="plus" Size="16" /> New User / เพิ่มผู้ใช้</a>
+</section>
+
+<section class="panel release-note">
+    <div>
+        <strong>Role guide / คู่มือ role</strong>
+        <p class="muted">Learner accounts should only get learner roles. Admin roles should be limited to trusted staff.</p>
+        <p class="muted">บัญชีผู้เรียนควรได้เฉพาะ role ผู้เรียน ส่วน role admin ควรให้เฉพาะคนดูแลระบบที่ไว้ใจได้</p>
+    </div>
 </section>
 
 <section class="panel">
     <form class="filters-grid" @onsubmit="LoadAsync" @onsubmit:preventDefault>
         <label>
-            <span>Search</span>
+            <span>Search / ค้นหา</span>
             <input class="input" @bind="search" @bind:event="oninput" />
         </label>
         <label>
-            <span>Status</span>
+            <span>Status / สถานะ</span>
             <select class="input" @bind="activeFilter">
-                <option value="">All</option>
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
+                <option value="">All / ทั้งหมด</option>
+                <option value="true">Active / ใช้งาน</option>
+                <option value="false">Inactive / ปิด</option>
             </select>
         </label>
-        <button class="button" type="submit">Search</button>
+        <button class="button" type="submit">Search / ค้นหา</button>
     </form>
 </section>
 
@@ -37,18 +46,25 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading users...</p>
+    <p class="muted">Loading users... / กำลังโหลดผู้ใช้</p>
 }
 else if (users.Count == 0)
 {
-    <section class="panel"><p class="muted">No users found.</p></section>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="users" Size="22" /></span>
+        <strong>No users found / ยังไม่พบผู้ใช้</strong>
+        <p>Try adjusting your search, or create the first account. / ลองเปลี่ยนคำค้นหา หรือสร้างบัญชีแรก</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.Users.Create"><Icon Name="plus" Size="16" /> New User / เพิ่มผู้ใช้</a>
+        </div>
+    </section>
 }
 else
 {
     <section class="table-wrap">
         <table class="data-table">
             <thead>
-                <tr><th>User</th><th>Roles</th><th>Status</th><th></th></tr>
+                <tr><th>User / ผู้ใช้</th><th>Roles / สิทธิ์</th><th>Status / สถานะ</th><th></th></tr>
             </thead>
             <tbody>
                 @foreach (var user in users)
@@ -56,10 +72,10 @@ else
                     <tr>
                         <td><strong>@user.DisplayName</strong><span class="muted">@user.Email</span></td>
                         <td>@string.Join(", ", user.Roles.Select(role => role.Name))</td>
-                        <td>@(user.IsActive ? "Active" : "Inactive")</td>
+                        <td><span class="status-badge @(user.IsActive ? "success" : "muted")">@(user.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")</span></td>
                         <td class="row-actions">
-                            <a class="button small" href="@AdminRoutes.Users.Detail(user.Id)">View</a>
-                            <a class="button small" href="@AdminRoutes.Users.Edit(user.Id)">Edit</a>
+                            <a class="button small" href="@AdminRoutes.Users.Detail(user.Id)" aria-label="View @user.DisplayName" title="View"><Icon Name="eye" Size="15" /></a>
+                            <a class="button small" href="@AdminRoutes.Users.Edit(user.Id)" aria-label="Edit @user.DisplayName" title="Edit"><Icon Name="edit" Size="15" /></a>
                         </td>
                     </tr>
                 }

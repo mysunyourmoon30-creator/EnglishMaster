@@ -16,6 +16,7 @@
         </div>
     }
 
+    <h3 class="detail-section-heading">Identity</h3>
     <div class="form-grid">
         <label class="span-2">
             <span>Word</span>
@@ -29,6 +30,17 @@
             <ValidationMessage For="@(() => Model.WordId)" />
         </label>
 
+        @if (ShowActiveToggle)
+        {
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="Model.IsActive" />
+                <span>Active</span>
+            </label>
+        }
+    </div>
+
+    <h3 class="detail-section-heading">Phonetics</h3>
+    <div class="form-grid">
         <label>
             <span>IPA UK</span>
             <InputText class="input" @bind-Value="Model.IpaUk" />
@@ -58,7 +70,10 @@
             <InputText class="input" @bind-Value="Model.StressPattern" />
             <ValidationMessage For="@(() => Model.StressPattern)" />
         </label>
+    </div>
 
+    <h3 class="detail-section-heading">Media</h3>
+    <div class="form-grid">
         <label>
             <span>Slow Audio</span>
             <InputSelect class="input" @bind-Value="Model.AudioSlowMediaId">
@@ -91,7 +106,10 @@
                 }
             </InputSelect>
         </label>
+    </div>
 
+    <h3 class="detail-section-heading">Coaching Notes</h3>
+    <div class="form-grid">
         <label class="span-2">
             <span>Mouth Position</span>
             <InputTextArea class="input textarea" @bind-Value="Model.MouthPosition" />
@@ -115,14 +133,6 @@
             <InputTextArea class="input textarea" @bind-Value="Model.PracticeNote" />
             <ValidationMessage For="@(() => Model.PracticeNote)" />
         </label>
-
-        @if (ShowActiveToggle)
-        {
-            <label class="checkbox-row">
-                <InputCheckbox @bind-Value="Model.IsActive" />
-                <span>Active</span>
-            </label>
-        }
     </div>
 
     <div class="actions">

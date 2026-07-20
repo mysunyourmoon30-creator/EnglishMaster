@@ -9,8 +9,9 @@
     <div>
         <p class="eyebrow">Assets</p>
         <h1>Upload Media</h1>
+        <p class="page-subtitle">Upload a new image, audio, or other file to use across words and lessons.</p>
     </div>
-    <a class="button" href="@AdminRoutes.Media.Index">Back</a>
+    <a class="button" href="@AdminRoutes.Media.Index">Back to Media</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -55,12 +56,18 @@ else
                 </div>
             }
 
-            <div class="form-grid">
-                <label class="span-2">
-                    <span>File</span>
-                    <InputFile OnChange="OnFileSelected" />
-                </label>
+            <div class="upload-dropzone">
+                <Icon Name="media" Size="28" />
+                <strong>Drop a file here or click to browse</strong>
+                <p class="muted">Supported: images and audio.</p>
+                <InputFile OnChange="OnFileSelected" />
+                @if (selectedFile is not null)
+                {
+                    <p class="muted">@selectedFile.Name - @FormatSize(selectedFile.Size) - @selectedFile.ContentType</p>
+                }
+            </div>
 
+            <div class="form-grid">
                 <label class="span-2">
                     <span>Alt Text</span>
                     <InputText class="input" @bind-Value="model.AltText" />
@@ -74,13 +81,8 @@ else
                 </label>
             </div>
 
-            @if (selectedFile is not null)
-            {
-                <p class="muted">@selectedFile.Name - @FormatSize(selectedFile.Size) - @selectedFile.ContentType</p>
-            }
-
             <div class="actions">
-                <button class="button primary" type="submit" disabled="@IsUploadDisabled">Upload</button>
+                <button class="button primary" type="submit" disabled="@IsUploadDisabled"><Icon Name="plus" Size="16" /> Upload</button>
                 <button class="button" type="button" @onclick="Cancel">Cancel</button>
             </div>
         </EditForm>

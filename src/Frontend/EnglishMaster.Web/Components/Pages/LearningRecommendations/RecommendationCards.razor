@@ -4,7 +4,11 @@
     <h2>@Title</h2>
     @if (Items.Count == 0)
     {
-        <p class="muted">No recommendations yet.</p>
+        <div class="panel empty-state">
+            <span class="empty-state-icon"><Icon Name="lesson" Size="20" /></span>
+            <strong>No suggestions yet / ยังไม่มีคำแนะนำ</strong>
+            <p>เรียนหรือฝึกเพิ่มอีกนิด แล้วระบบจะเริ่มแนะนำเนื้อหาที่เหมาะกับคุณ.</p>
+        </div>
     }
     else
     {
@@ -12,8 +16,8 @@
             @foreach (var item in Items)
             {
                 <article class="list-card">
-                    <div>
-                        <span class="pill">@item.ContentType</span>
+                    <div class="list-card-badges">
+                        <span class="pill">@ContentTypeLabel(item.ContentType)</span>
                         @if (!string.IsNullOrWhiteSpace(item.CefrLevel))
                         {
                             <span class="pill">@item.CefrLevel</span>
@@ -21,7 +25,7 @@
                     </div>
                     <h3><a href="@item.Url">@item.Title</a></h3>
                     <p>@item.Summary</p>
-                    <p class="muted">@item.ReasonText</p>
+                    <p class="muted">@GetReasonText(item)</p>
                 </article>
             }
         </div>
@@ -31,5 +35,24 @@
 @code {
     [Parameter] public string Title { get; set; } = string.Empty;
     [Parameter] public IReadOnlyCollection<LearningRecommendationDto> Items { get; set; } = [];
-}
 
+    private static string ContentTypeLabel(string value) => value.ToLowerInvariant() switch
+    {
+        "course" => "Course / คอร์ส",
+        "lesson" => "Lesson / บทเรียน",
+        "word" => "Word / คำศัพท์",
+        "grammar" => "Grammar / ไวยากรณ์",
+        "quiz" => "Quiz / แบบฝึก",
+        _ => value
+    };
+
+    private static string GetReasonText(LearningRecommendationDto item)
+    {
+        if (!string.IsNullOrWhiteSpace(item.ReasonText))
+        {
+            return item.ReasonText;
+        }
+
+        return "Recommended for your current learning path. / แนะนำสำหรับเส้นทางการเรียนตอนนี้";
+    }
+}

@@ -7,10 +7,11 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Admin</p>
+        <p class="eyebrow">Import Jobs</p>
         <h1>Upload Import</h1>
+        <p class="page-subtitle">Paste content and queue a new import job for validation.</p>
     </div>
-    <a class="button secondary" href="@AdminRoutes.ImportJobs.Index">Back</a>
+    <a class="button" href="@AdminRoutes.ImportJobs.Index">Back to Import Jobs</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -45,7 +46,9 @@
         Content
         <textarea rows="12" @bind="content"></textarea>
     </label>
-    <button class="button primary" @onclick="UploadAsync" disabled="@isSaving">Upload</button>
+    <div class="form-actions">
+        <button class="button primary" @onclick="UploadAsync" disabled="@isSaving"><Icon Name="import" Size="16" /> Upload</button>
+    </div>
 </section>
 
 @code {

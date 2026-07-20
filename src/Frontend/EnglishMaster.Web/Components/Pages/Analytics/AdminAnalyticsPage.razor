@@ -8,6 +8,7 @@
     <div>
         <p class="eyebrow">Admin</p>
         <h1>Analytics</h1>
+        <p class="page-subtitle">Learner activity, assessment performance, and certificate issuance at a glance.</p>
     </div>
 </section>
 
@@ -23,18 +24,22 @@ else if (overview is not null)
 {
     <section class="stat-grid">
         <div class="panel stat-card">
+            <Icon Name="users" Size="18" />
             <span class="stat-label">Active learners</span>
             <span class="stat-value">@overview.ActiveLearners</span>
         </div>
         <div class="panel stat-card">
+            <Icon Name="revision" Size="18" />
             <span class="stat-label">Study minutes</span>
             <span class="stat-value">@overview.StudyMinutes</span>
         </div>
         <div class="panel stat-card">
+            <Icon Name="analytics" Size="18" />
             <span class="stat-label">Activities</span>
             <span class="stat-value">@overview.LearningActivities</span>
         </div>
         <div class="panel stat-card">
+            <Icon Name="certificate" Size="18" />
             <span class="stat-label">Certificates</span>
             <span class="stat-value">@overview.CertificatesIssued</span>
         </div>
@@ -42,7 +47,7 @@ else if (overview is not null)
 
     <section class="content-grid">
         <article class="panel">
-            <h2>Learning</h2>
+            <h2><Icon Name="lesson" Size="17" /> Learning</h2>
             <dl class="metric-list">
                 <dt>Course completions</dt>
                 <dd>@overview.CourseCompletions</dd>
@@ -54,7 +59,7 @@ else if (overview is not null)
         </article>
 
         <article class="panel">
-            <h2>Assessments</h2>
+            <h2><Icon Name="quiz" Size="17" /> Assessments</h2>
             <dl class="metric-list">
                 <dt>Quiz attempts</dt>
                 <dd>@overview.QuizAttempts</dd>
@@ -64,7 +69,7 @@ else if (overview is not null)
         </article>
 
         <article class="panel">
-            <h2>Certificates</h2>
+            <h2><Icon Name="certificate" Size="17" /> Certificates</h2>
             <dl class="metric-list">
                 <dt>Issued</dt>
                 <dd>@overview.CertificatesIssued</dd>

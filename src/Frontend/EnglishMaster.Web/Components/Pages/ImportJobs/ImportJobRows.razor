@@ -5,13 +5,25 @@
 <PageTitle>Import Rows</PageTitle>
 
 <section class="page-header">
-    <div><p class="eyebrow">Admin</p><h1>Import Rows</h1></div>
-    <a class="button secondary" href="@AdminRoutes.ImportJobs.Detail(Id)">Back</a>
+    <div>
+        <p class="eyebrow">Import Jobs</p>
+        <h1>Import Rows</h1>
+        <p class="page-subtitle">Row-by-row status for this import job.</p>
+    </div>
+    <a class="button" href="@AdminRoutes.ImportJobs.Detail(Id)">Back to Import Job</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
 {
     <div class="alert error">@errorMessage</div>
+}
+else if (rows.Count == 0)
+{
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="import" Size="22" /></span>
+        <strong>No rows yet</strong>
+        <p>Rows will appear here after the import job has been validated or run.</p>
+    </section>
 }
 else
 {

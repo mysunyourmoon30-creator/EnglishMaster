@@ -3,24 +3,26 @@
 @inject ITagsApiClient TagsApiClient
 @inject NavigationManager Navigation
 
-<PageTitle>Edit Tag</PageTitle>
+<PageTitle>Edit Tag / แก้ไขป้ายกำกับ</PageTitle>
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Vocabulary</p>
-        <h1>Edit Tag</h1>
+        <p class="eyebrow">Vocabulary Tags / ป้ายกำกับคำศัพท์</p>
+        <h1>Edit Tag / แก้ไขป้ายกำกับ</h1>
+        <p class="page-subtitle">ปรับชื่อ คำอธิบาย หรือสถานะของป้ายกำกับที่ใช้กับคำศัพท์และบทเรียน.</p>
     </div>
+    <a class="button" href="@AdminRoutes.Tags.Index">Back to Tags / กลับไปหน้าป้ายกำกับ</a>
 </section>
 
 @if (isLoading)
 {
-    <p class="muted">Loading tag...</p>
+    <p class="muted">Loading tag... / กำลังโหลดป้ายกำกับ</p>
 }
 else if (notFound)
 {
     <section class="panel">
-        <p class="muted">Tag was not found.</p>
-        <a class="button" href="@AdminRoutes.Tags.Index">Back to Tags</a>
+        <p class="muted">Tag was not found. / ไม่พบป้ายกำกับ</p>
+        <a class="button" href="@AdminRoutes.Tags.Index">Back to Tags / กลับไปหน้าป้ายกำกับ</a>
     </section>
 }
 else
@@ -35,7 +37,7 @@ else
                  ValidationErrors="validationErrors"
                  IsSaving="isSaving"
                  ShowActiveToggle="true"
-                 SubmitText="Save"
+                 SubmitText="Save / บันทึก"
                  OnValidSubmit="SaveAsync" />
     </section>
 }

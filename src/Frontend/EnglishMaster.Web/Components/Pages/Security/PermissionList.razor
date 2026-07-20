@@ -8,6 +8,7 @@
     <div>
         <p class="eyebrow">Administration</p>
         <h1>Permissions</h1>
+        <p class="page-subtitle">Read-only reference of every permission key available to roles.</p>
     </div>
 </section>
 
@@ -19,6 +20,14 @@
 @if (isLoading)
 {
     <p class="muted">Loading permissions...</p>
+}
+else if (permissions.Count == 0)
+{
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="shield" Size="22" /></span>
+        <strong>No permissions found</strong>
+        <p>Permissions are defined by the system and should appear here once seeded.</p>
+    </section>
 }
 else
 {

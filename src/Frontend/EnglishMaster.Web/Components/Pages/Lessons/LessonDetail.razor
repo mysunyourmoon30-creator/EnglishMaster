@@ -9,17 +9,25 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Lessons</p>
+        <p class="eyebrow">LESSON BUILDER / ตัวสร้างบทเรียน</p>
         <h1>@(lesson is null ? "Lesson" : lesson.Title)</h1>
-    </div>
-    <div class="actions">
-        <a class="button" href="@AdminRoutes.Lessons.Index">Back</a>
         @if (lesson is not null)
         {
-            <a class="button" href="@AdminRoutes.ContentRevisions.Timeline("Lesson", lesson.Id)">Revision History</a>
-            <a class="button primary" href="@AdminRoutes.Lessons.Edit(lesson.Id)">Edit</a>
+            <p class="page-subtitle">Review lesson content, related words, grammar links, and learner visibility. / ตรวจเนื้อหา คำศัพท์ ไวยากรณ์ และสถานะที่ผู้เรียนเห็น</p>
+        }
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.Lessons.Index">Back / กลับ</a>
+        @if (lesson is not null)
+        {
+            @if (lesson.IsPublished && !string.IsNullOrWhiteSpace(lesson.Slug))
+            {
+                <a class="button" href="@PublicLessonUrl(lesson.Slug)">Learner page / หน้าผู้เรียน</a>
+            }
+            <a class="button" href="@AdminRoutes.ContentRevisions.Timeline("Lesson", lesson.Id)"><Icon Name="revision" Size="15" /> History / ประวัติ</a>
+            <a class="button primary" href="@AdminRoutes.Lessons.Edit(lesson.Id)"><Icon Name="edit" Size="15" /> Edit / แก้ไข</a>
             <button class="button" type="button" @onclick="TogglePublishAsync">
-                @(lesson.IsPublished ? "Unpublish" : "Publish")
+                <Icon Name="publish" Size="15" /> @(lesson.IsPublished ? "Unpublish / ปิดเผยแพร่" : "Publish / เผยแพร่")
             </button>
         }
     </div>
@@ -32,21 +40,42 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading lesson...</p>
+    <p class="muted">Loading lesson... / กำลังโหลดบทเรียน</p>
 }
 else if (notFound)
 {
-    <section class="panel">
-        <p class="muted">Lesson was not found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="lesson" Size="22" /></span>
+        <strong>Lesson was not found / ไม่พบบทเรียน</strong>
+        <p>It may have been deleted or the link is incorrect. / อาจถูกลบแล้ว หรือลิงก์ไม่ถูกต้อง</p>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.Lessons.Index">Back to Lessons / กลับรายการบทเรียน</a>
+        </div>
     </section>
 }
 else if (lesson is not null)
 {
+    <section class="panel release-note">
+        <div>
+            <strong>@(lesson.IsPublished ? "Published to learners / เปิดให้ผู้เรียนแล้ว" : "Draft mode / ยังเป็นฉบับร่าง")</strong>
+            @if (lesson.IsPublished && !string.IsNullOrWhiteSpace(lesson.Slug))
+            {
+                <p class="muted">Learners can open this lesson at <a href="@PublicLessonUrl(lesson.Slug)">@PublicLessonUrl(lesson.Slug)</a>.</p>
+            }
+            else
+            {
+                <p class="muted">Check sections and related words, then publish when the lesson is ready. / ตรวจ section และคำศัพท์ให้ครบ แล้วค่อยเผยแพร่</p>
+            }
+        </div>
+    </section>
+
     <section class="panel">
         @if (lesson.ThumbnailMedia is not null)
         {
             <img class="thumbnail" src="@lesson.ThumbnailMedia.PublicUrl" alt="@lesson.ThumbnailMedia.AltText" />
         }
+
+        <h3 class="detail-section-heading">Identity / ข้อมูลหลัก</h3>
         <div class="detail-grid">
             <div class="detail-item">
                 <span class="muted">Slug</span>
@@ -57,31 +86,39 @@ else if (lesson is not null)
                 <strong>@(lesson.CefrLevel ?? "-")</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Category</span>
+                <span class="muted">Category / หมวดหมู่</span>
                 <strong>@(lesson.Category?.Name ?? "-")</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Estimated Minutes</span>
+                <span class="muted">Status / สถานะ</span>
+                <strong>@(lesson.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")</strong>
+            </div>
+        </div>
+
+        <h3 class="detail-section-heading">Scheduling / เวลาและลำดับ</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Estimated Minutes / เวลาประมาณ</span>
                 <strong>@lesson.EstimatedMinutes</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Sort Order</span>
+                <span class="muted">Sort Order / ลำดับ</span>
                 <strong>@lesson.SortOrder</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Published</span>
-                <strong>@(lesson.IsPublished ? "Published" : "Draft")</strong>
+                <span class="muted">Published / เผยแพร่</span>
+                <strong>@(lesson.IsPublished ? "Published / เผยแพร่แล้ว" : "Draft / ร่าง")</strong>
             </div>
-            <div class="detail-item">
-                <span class="muted">Status</span>
-                <strong>@(lesson.IsActive ? "Active" : "Inactive")</strong>
-            </div>
+        </div>
+
+        <h3 class="detail-section-heading">Description / คำอธิบาย</h3>
+        <div class="detail-grid">
             <div class="detail-item full">
-                <span class="muted">Summary</span>
+                <span class="muted">Summary / สรุปสั้น</span>
                 <strong>@lesson.Summary</strong>
             </div>
             <div class="detail-item full">
-                <span class="muted">Description</span>
+                <span class="muted">Description / รายละเอียด</span>
                 <strong>@lesson.Description</strong>
             </div>
         </div>
@@ -89,55 +126,61 @@ else if (lesson is not null)
 
     <section class="page-header section-header">
         <div>
-            <p class="eyebrow">Content</p>
-            <h1>Sections</h1>
+            <p class="eyebrow">CONTENT / เนื้อหา</p>
+            <h1>Sections / ส่วนของบทเรียน</h1>
         </div>
     </section>
 
     @if (sections.Count == 0)
     {
-        <section class="panel nested-table">
-            <p class="muted">No sections yet.</p>
+        <section class="panel nested-table empty-state left-aligned">
+            <span class="empty-state-icon"><Icon Name="lesson" Size="22" /></span>
+            <strong>No sections yet / ยังไม่มีเนื้อหา</strong>
+            <p>Add the first section using the form below. / เพิ่ม section แรกจากฟอร์มด้านล่าง</p>
         </section>
     }
     else
     {
-        <section class="table-wrap nested-table">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Type</th>
-                        <th>Sort</th>
-                        <th>Status</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var lessonSection in sections.OrderBy(item => item.SortOrder))
-                    {
-                        <tr>
-                            <td>
-                                <strong>@lessonSection.Title</strong>
-                            </td>
-                            <td>@lessonSection.SectionType</td>
-                            <td>@lessonSection.SortOrder</td>
-                            <td>@(lessonSection.IsActive ? "Active" : "Inactive")</td>
-                            <td class="row-actions">
-                                <button class="button small" type="button" @onclick="() => MoveSectionUpAsync(lessonSection.Id)">Up</button>
-                                <button class="button small" type="button" @onclick="() => MoveSectionDownAsync(lessonSection.Id)">Down</button>
-                                <button class="button small" type="button" @onclick="() => EditSection(lessonSection)">Edit</button>
-                                <button class="button small danger" type="button" @onclick="() => DeleteSectionAsync(lessonSection.Id)">Delete</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </section>
+        var orderedSections = sections.OrderBy(item => item.SortOrder).ToList();
+
+        <div class="repeater-list">
+            @for (var index = 0; index < orderedSections.Count; index++)
+            {
+                var lessonSection = orderedSections[index];
+                var displayIndex = index + 1;
+
+                <div class="repeater-item">
+                    <div class="repeater-item-header">
+                        <span class="repeater-item-index">@displayIndex</span>
+                        <span class="repeater-item-title">@lessonSection.Title</span>
+                        <div class="row-actions">
+                            <button class="button small" type="button" @onclick="() => MoveSectionUpAsync(lessonSection.Id)" aria-label="Move section @displayIndex up" title="Move up"><Icon Name="chevron-up" Size="15" /></button>
+                            <button class="button small" type="button" @onclick="() => MoveSectionDownAsync(lessonSection.Id)" aria-label="Move section @displayIndex down" title="Move down"><Icon Name="chevron-down" Size="15" /></button>
+                            <button class="button small" type="button" @onclick="() => EditSection(lessonSection)" aria-label="Edit section @displayIndex" title="Edit"><Icon Name="edit" Size="15" /></button>
+                            <button class="button small danger" type="button" @onclick="() => DeleteSectionAsync(lessonSection.Id)" aria-label="Delete section @displayIndex" title="Delete"><Icon Name="trash" Size="15" /></button>
+                        </div>
+                    </div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="muted">Type / ประเภท</span>
+                            <strong>@lessonSection.SectionType</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span class="muted">Sort Order / ลำดับ</span>
+                            <strong>@lessonSection.SortOrder</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span class="muted">Status / สถานะ</span>
+                            <strong>@(lessonSection.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")</strong>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     }
 
     <section class="panel pair-form-panel">
-        <h2>@(editingSectionId.HasValue ? "Edit Section" : "Add Section")</h2>
+        <h2>@(editingSectionId.HasValue ? "Edit Section / แก้ไขส่วนบทเรียน" : "Add Section / เพิ่มส่วนบทเรียน")</h2>
         @if (!string.IsNullOrWhiteSpace(sectionErrorMessage))
         {
             <div class="alert error">@sectionErrorMessage</div>
@@ -147,15 +190,15 @@ else if (lesson is not null)
                            ValidationErrors="sectionValidationErrors"
                            IsSaving="isSectionSaving"
                            ShowActiveToggle="@editingSectionId.HasValue"
-                           SubmitText="@(editingSectionId.HasValue ? "Save Section" : "Add Section")"
+                           SubmitText="@(editingSectionId.HasValue ? "Save Section / บันทึก" : "Add Section / เพิ่ม")"
                            OnValidSubmit="SaveSectionAsync"
                            OnCancel="CancelSectionEditAsync" />
     </section>
 
     <section class="page-header section-header">
         <div>
-            <p class="eyebrow">Vocabulary</p>
-            <h1>Related Words</h1>
+            <p class="eyebrow">VOCABULARY / คำศัพท์</p>
+            <h1>Related Words / คำศัพท์ในบทนี้</h1>
         </div>
     </section>
 
@@ -167,23 +210,25 @@ else if (lesson is not null)
 
         <div class="filters-grid">
             <label>
-                <span>Word</span>
+                <span>Word / คำศัพท์</span>
                 <InputSelect class="input" @bind-Value="selectedWordId">
-                    <option value="">Select word</option>
+                    <option value="">Select word / เลือกคำศัพท์</option>
                     @foreach (var word in AvailableWords())
                     {
                         <option value="@word.Id">@word.Text</option>
                     }
                 </InputSelect>
             </label>
-            <button class="button" type="button" @onclick="AddRelatedWordAsync">Add Word</button>
+            <button class="button" type="button" @onclick="AddRelatedWordAsync">Add Word / เพิ่มคำศัพท์</button>
         </div>
     </section>
 
     @if (lesson.Words.Count == 0)
     {
-        <section class="panel nested-table">
-            <p class="muted">No related words yet.</p>
+        <section class="panel nested-table empty-state left-aligned">
+            <span class="empty-state-icon"><Icon Name="word" Size="22" /></span>
+            <strong>No related words yet / ยังไม่มีคำศัพท์ที่ผูกกับบทนี้</strong>
+            <p>Add a word above to link it with this lesson. / เลือกคำศัพท์ด้านบนเพื่อผูกกับบทเรียน</p>
         </section>
     }
     else
@@ -192,8 +237,8 @@ else if (lesson is not null)
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Word</th>
-                        <th>Meaning TH</th>
+                        <th>Word / คำศัพท์</th>
+                        <th>Meaning TH / ความหมายไทย</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -207,8 +252,8 @@ else if (lesson is not null)
                             </td>
                             <td>@word.MeaningTh</td>
                             <td class="row-actions">
-                                <a class="button small" href="@AdminRoutes.Words.Detail(word.Id)">View</a>
-                                <button class="button small danger" type="button" @onclick="() => RemoveRelatedWordAsync(word.Id)">Remove</button>
+                                <a class="button small" href="@AdminRoutes.Words.Detail(word.Id)" aria-label="View @word.Text" title="View"><Icon Name="eye" Size="15" /></a>
+                                <button class="button small danger" type="button" @onclick="() => RemoveRelatedWordAsync(word.Id)" aria-label="Remove @word.Text" title="Remove"><Icon Name="trash" Size="15" /></button>
                             </td>
                         </tr>
                     }
@@ -219,8 +264,8 @@ else if (lesson is not null)
 
     <section class="page-header section-header">
         <div>
-            <p class="eyebrow">Grammar</p>
-            <h1>Related Grammar Rules</h1>
+            <p class="eyebrow">GRAMMAR / ไวยากรณ์</p>
+            <h1>Related Grammar Rules / ไวยากรณ์ที่เกี่ยวข้อง</h1>
         </div>
     </section>
 
@@ -232,23 +277,25 @@ else if (lesson is not null)
 
         <div class="filters-grid">
             <label>
-                <span>Grammar Rule</span>
+                <span>Grammar Rule / กฎไวยากรณ์</span>
                 <InputSelect class="input" @bind-Value="selectedGrammarRuleId">
-                    <option value="">Select rule</option>
+                    <option value="">Select rule / เลือกกฎ</option>
                     @foreach (var rule in AvailableGrammarRules())
                     {
                         <option value="@rule.Id">@rule.Title</option>
                     }
                 </InputSelect>
             </label>
-            <button class="button" type="button" @onclick="AddRelatedGrammarRuleAsync">Add Rule</button>
+            <button class="button" type="button" @onclick="AddRelatedGrammarRuleAsync">Add Rule / เพิ่มกฎ</button>
         </div>
     </section>
 
     @if (lesson.GrammarRules.Count == 0)
     {
-        <section class="panel nested-table">
-            <p class="muted">No related grammar rules yet.</p>
+        <section class="panel nested-table empty-state left-aligned">
+            <span class="empty-state-icon"><Icon Name="grammar" Size="22" /></span>
+            <strong>No related grammar rules yet / ยังไม่มีไวยากรณ์ที่เกี่ยวข้อง</strong>
+            <p>Add a rule above to link it with this lesson. / เลือกกฎด้านบนเพื่อผูกกับบทเรียน</p>
         </section>
     }
     else
@@ -257,7 +304,7 @@ else if (lesson is not null)
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Title</th>
+                        <th>Title / ชื่อกฎ</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -270,8 +317,8 @@ else if (lesson is not null)
                                 <span class="muted">@rule.Slug</span>
                             </td>
                             <td class="row-actions">
-                                <a class="button small" href="@AdminRoutes.GrammarRules.Detail(rule.Id)">View</a>
-                                <button class="button small danger" type="button" @onclick="() => RemoveRelatedGrammarRuleAsync(rule.Id)">Remove</button>
+                                <a class="button small" href="@AdminRoutes.GrammarRules.Detail(rule.Id)" aria-label="View @rule.Title" title="View"><Icon Name="eye" Size="15" /></a>
+                                <button class="button small danger" type="button" @onclick="() => RemoveRelatedGrammarRuleAsync(rule.Id)" aria-label="Remove @rule.Title" title="Remove"><Icon Name="trash" Size="15" /></button>
                             </td>
                         </tr>
                     }
@@ -302,6 +349,8 @@ else if (lesson is not null)
     private bool isLoading = true;
     private bool isSectionSaving;
     private bool notFound;
+
+    private static string PublicLessonUrl(string slug) => $"/lessons/{slug}";
 
     protected override async Task OnParametersSetAsync()
     {

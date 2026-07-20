@@ -1,35 +1,48 @@
 @page "/search"
+@layout PublicLayout
 @inject IPublicSearchApiClient SearchApiClient
 @inject NavigationManager NavigationManager
 
-<PageTitle>Search</PageTitle>
+<PageTitle>Search / ค้นหา</PageTitle>
 
 <section class="page-header">
     <div>
-        <h1>Search</h1>
-        <p class="muted">Find public lessons, words, grammar, books, courses, and quizzes.</p>
+        <p class="eyebrow">DISCOVER / ค้นหาเนื้อหา</p>
+        <h1>Search EnglishMaster</h1>
+        <p class="page-subtitle">Find words, lessons, quizzes, grammar, courses, and books in one place. / ค้นหาคำศัพท์ บทเรียน แบบฝึก ไวยากรณ์ คอร์ส และหนังสือได้จากที่เดียว</p>
+    </div>
+    <div class="actions">
+        <a class="button secondary" href="/learn">Learn / เริ่มเรียน</a>
+        <a class="button primary" href="/search?type=word">Dictionary / คำศัพท์</a>
     </div>
 </section>
 
-<form class="filters-grid" @onsubmit="SubmitSearchAsync" @onsubmit:preventDefault>
+<section class="panel release-note">
+    <div>
+        <strong>Start simple / เริ่มง่าย ๆ</strong>
+        <p class="muted">Try a word like <strong>ability</strong>, open a lesson, or choose Quizzes to practice. / ลองค้นคำว่า ability เปิดบทเรียน หรือเลือก Quizzes เพื่อฝึกทำแบบฝึก</p>
+    </div>
+</section>
+
+<form class="panel filters-grid" @onsubmit="SubmitSearchAsync" @onsubmit:preventDefault>
     <label>
-        <span>Search</span>
-        <input class="input" @bind="query" @bind:event="oninput" />
+        <span>Search / คำค้น</span>
+        <input class="input" placeholder="Try: the, ability, practice / ลองค้นหา: the, ability, practice" @bind="query" @bind:event="oninput" />
     </label>
     <label>
-        <span>Type</span>
+        <span>Type / ประเภท</span>
         <select class="input" @bind="contentType">
-            <option value="">All</option>
+            <option value="">All / ทั้งหมด</option>
             @foreach (var type in filters.ContentTypes)
             {
-                <option value="@type.Key">@type.Label</option>
+                <option value="@type.Key">@ContentTypeLabel(type.Key, type.Label)</option>
             }
         </select>
     </label>
     <label>
-        <span>CEFR</span>
+        <span>CEFR / ระดับ</span>
         <select class="input" @bind="cefrLevel">
-            <option value="">All</option>
+            <option value="">All / ทุกระดับ</option>
             @foreach (var cefr in filters.CefrLevels)
             {
                 <option value="@cefr.Key">@cefr.Label</option>
@@ -37,9 +50,9 @@
         </select>
     </label>
     <label>
-        <span>Category</span>
+        <span>Category / หมวดหมู่</span>
         <select class="input" @bind="categoryIdText">
-            <option value="">All</option>
+            <option value="">All / ทุกหมวด</option>
             @foreach (var category in filters.Categories)
             {
                 <option value="@category.Key">@category.Label</option>
@@ -47,17 +60,33 @@
         </select>
     </label>
     <label>
-        <span>Tag</span>
+        <span>Tag / ป้ายกำกับ</span>
         <select class="input" @bind="tagIdText">
-            <option value="">All</option>
+            <option value="">All / ทุกป้าย</option>
             @foreach (var tag in filters.Tags)
             {
                 <option value="@tag.Key">@tag.Label</option>
             }
         </select>
     </label>
-    <button class="button" type="submit">Search</button>
+    <button class="button primary" type="submit"><Icon Name="search" Size="16" /> Search / ค้นหา</button>
 </form>
+
+<section class="content-section">
+    <div class="section-header-row">
+        <div>
+            <h2>Quick search / ค้นหาเร็ว</h2>
+            <p class="muted">Use these shortcuts to explore the real learning content. / ใช้ปุ่มลัดเพื่อดูเนื้อหาที่ใช้เรียนจริง</p>
+        </div>
+    </div>
+    <div class="list-card-badges">
+        <button class="button small" type="button" @onclick="@(() => QuickSearchAsync("the", "word"))">the</button>
+        <button class="button small" type="button" @onclick="@(() => QuickSearchAsync("ability", "word"))">ability</button>
+        <button class="button small" type="button" @onclick="@(() => QuickSearchAsync(null, "lesson"))">Lessons / บทเรียน</button>
+        <button class="button small" type="button" @onclick="@(() => QuickSearchAsync(null, "quiz"))">Quizzes / แบบฝึก</button>
+        <button class="button small" type="button" @onclick="@(() => QuickSearchAsync(null, "grammar"))">Grammar / ไวยากรณ์</button>
+    </div>
+</section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
 {
@@ -65,49 +94,57 @@
 }
 else if (isLoading)
 {
-    <p class="muted">Loading results...</p>
+    <section class="panel empty-state">
+        <strong>Loading results... / กำลังโหลดผลลัพธ์</strong>
+        <span class="muted">Please wait a moment. / รอสักครู่</span>
+    </section>
 }
 else if (results.Items.Count == 0)
 {
-    <section class="empty-state">
-        <h2>No results found</h2>
-        <p class="muted">Try a broader keyword or fewer filters.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="search" Size="22" /></span>
+        <strong>No results found / ไม่พบผลลัพธ์</strong>
+        <p>Try a broader word, remove filters, or choose a quick search above. / ลองใช้คำค้นที่กว้างขึ้น ล้างตัวกรอง หรือเลือกปุ่มค้นหาเร็วด้านบน</p>
     </section>
 }
 else
 {
     <section class="content-list">
         <div class="list-summary">
-            <span class="muted">Showing page @results.PageNumber of @Math.Max(results.TotalPages, 1) (@results.TotalCount results)</span>
+            <span class="muted">Page @results.PageNumber of @Math.Max(results.TotalPages, 1) / หน้า @results.PageNumber จาก @Math.Max(results.TotalPages, 1)</span>
+            <span class="pill">@results.TotalCount results / @results.TotalCount ผลลัพธ์</span>
         </div>
         @foreach (var item in results.Items)
         {
             <article class="list-card">
-                <div>
-                    <span class="pill">@item.ContentType</span>
+                <div class="list-card-badges">
+                    <span class="pill">@ContentTypeLabel(item.ContentType, item.ContentType)</span>
                     @if (!string.IsNullOrWhiteSpace(item.CefrLevel))
                     {
                         <span class="pill">@item.CefrLevel</span>
                     }
                 </div>
                 <h2><a href="@item.Url">@item.Title</a></h2>
-                <p>@item.HighlightText</p>
+                <p>@FirstNonEmpty(item.HighlightText, item.Summary, "Open to view details. / เปิดเพื่อดูรายละเอียด")</p>
                 <div class="meta-row">
                     @if (!string.IsNullOrWhiteSpace(item.CategoryName))
                     {
                         <span>@item.CategoryName</span>
                     }
-                    @foreach (var tag in item.Tags)
+                    @foreach (var tag in item.Tags.Take(4))
                     {
                         <span>@tag</span>
                     }
                 </div>
+                <div class="actions">
+                    <a class="button small primary" href="@item.Url">Open / เปิดดู</a>
+                </div>
             </article>
         }
         <div class="pagination">
-            <button class="button small" type="button" disabled="@(!results.HasPreviousPage)" @onclick="PreviousPageAsync">Previous</button>
-            <span class="muted">Page @results.PageNumber</span>
-            <button class="button small" type="button" disabled="@(!results.HasNextPage)" @onclick="NextPageAsync">Next</button>
+            <button class="button small" type="button" disabled="@(!results.HasPreviousPage)" @onclick="PreviousPageAsync">Previous / ก่อนหน้า</button>
+            <span class="muted">Page @results.PageNumber / หน้า @results.PageNumber</span>
+            <button class="button small" type="button" disabled="@(!results.HasNextPage)" @onclick="NextPageAsync">Next / ถัดไป</button>
         </div>
     </section>
 }
@@ -158,7 +195,7 @@ else
         catch (ApiRequestException)
         {
             results = EmptyResults();
-            errorMessage = "Search is unavailable right now.";
+            errorMessage = "Search is unavailable right now. / ตอนนี้ยังค้นหาไม่ได้";
         }
         finally
         {
@@ -168,6 +205,17 @@ else
 
     private async Task SubmitSearchAsync()
     {
+        pageNumber = 1;
+        await SearchAsync();
+    }
+
+    private async Task QuickSearchAsync(string? nextQuery, string nextType)
+    {
+        query = nextQuery;
+        contentType = nextType;
+        cefrLevel = null;
+        categoryIdText = null;
+        tagIdText = null;
         pageNumber = 1;
         await SearchAsync();
     }
@@ -196,6 +244,20 @@ else
 
     private static Guid? ParseId(string? value) =>
         Guid.TryParse(value, out var id) ? id : null;
+
+    private static string ContentTypeLabel(string key, string fallback) => key.ToLowerInvariant() switch
+    {
+        "word" => "Word / คำศัพท์",
+        "grammar" => "Grammar / ไวยากรณ์",
+        "lesson" => "Lesson / บทเรียน",
+        "course" => "Course / คอร์ส",
+        "book" => "Book / หนังสือ",
+        "quiz" => "Quiz / แบบฝึก",
+        _ => fallback
+    };
+
+    private static string FirstNonEmpty(params string?[] values) =>
+        values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
 
     private static PublicSearchResponse EmptyResults() =>
         new([], 1, 10, 0, 0, false, false);

@@ -5,12 +5,13 @@
 
 <section class="page-header">
     <div>
+        <p class="eyebrow">REPORTS / รายงาน</p>
         <h1>Learning Reports</h1>
-        <p class="muted">Review weekly progress and insights.</p>
+        <p class="page-subtitle">Review weekly progress, study time, active days, and quiz performance. / ดูความคืบหน้ารายสัปดาห์ เวลาเรียน วันที่เรียน และคะแนนแบบฝึก</p>
     </div>
     <div class="actions">
-        <a class="button" href="/learn/reports/current-week">Current Week</a>
-        <button class="button secondary" type="button" @onclick="GenerateAsync">Generate Current Week</button>
+        <a class="button primary" href="/learn/reports/current-week"><Icon Name="report" Size="15" /> Current Week / สัปดาห์นี้</a>
+        <button class="button secondary" type="button" @onclick="GenerateAsync"><Icon Name="plus" Size="15" /> Generate / สร้างรายงาน</button>
     </div>
 </section>
 
@@ -20,11 +21,20 @@
 }
 else if (isLoading)
 {
-    <p class="muted">Loading reports...</p>
+    <section class="panel empty-state">
+        <strong>Loading reports... / กำลังโหลดรายงาน</strong>
+    </section>
 }
 else if (reports.Count == 0)
 {
-    <p class="muted">No weekly reports yet.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="report" Size="20" /></span>
+        <strong>No weekly reports yet / ยังไม่มีรายงานรายสัปดาห์</strong>
+        <p>Generate this week's report to see study minutes, active days, and quiz performance. / สร้างรายงานสัปดาห์นี้เพื่อดูเวลาเรียน วันที่เรียน และคะแนนแบบฝึก</p>
+        <div class="actions">
+            <button class="button primary" type="button" @onclick="GenerateAsync"><Icon Name="plus" Size="15" /> Generate / สร้างรายงาน</button>
+        </div>
+    </section>
 }
 else
 {
@@ -33,9 +43,9 @@ else
         {
             <article class="list-card">
                 <span class="pill">@report.Status</span>
-                <h3>@report.WeekStartDate.ToString("yyyy-MM-dd") - @report.WeekEndDate.ToString("yyyy-MM-dd")</h3>
-                <p class="muted">@report.TotalStudyMinutes minutes - @report.ActiveStudyDays active days - @report.AverageQuizScore.ToString("0.#")% quiz average</p>
-                <a class="button secondary" href="/learn/reports/@report.Id">Open</a>
+                <h3>@report.WeekStartDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) - @report.WeekEndDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</h3>
+                <p class="muted">@report.TotalStudyMinutes minutes / นาที - @report.ActiveStudyDays active days / วันที่เรียน - @report.AverageQuizScore.ToString("0.#")% quiz average / คะแนนเฉลี่ย</p>
+                <a class="button secondary" href="/learn/reports/@report.Id">Open / เปิดดู</a>
             </article>
         }
     </div>
@@ -56,7 +66,7 @@ else
         }
         catch (ApiRequestException)
         {
-            errorMessage = "Learning reports are unavailable right now.";
+            errorMessage = "Learning reports are unavailable right now. / ตอนนี้ยังโหลดรายงานไม่ได้";
         }
         finally
         {

@@ -18,30 +18,30 @@
 
     <div class="form-grid">
         <label class="span-2">
-            <span>Choice</span>
+            <span>Choice / ตัวเลือก</span>
             <InputText class="input" @bind-Value="Model.ChoiceText" />
             <ValidationMessage For="@(() => Model.ChoiceText)" />
         </label>
 
         <label class="checkbox-row">
             <InputCheckbox @bind-Value="Model.IsCorrect" />
-            <span>Correct</span>
+            <span>Correct / คำตอบถูก</span>
         </label>
 
         <label>
-            <span>Sort Order</span>
+            <span>Sort Order / ลำดับ</span>
             <InputNumber class="input" @bind-Value="Model.SortOrder" />
             <ValidationMessage For="@(() => Model.SortOrder)" />
         </label>
 
         <label class="span-2">
-            <span>Thai Explanation</span>
+            <span>Thai Explanation / คำอธิบายภาษาไทย</span>
             <InputTextArea class="input textarea" @bind-Value="Model.ExplanationTh" />
             <ValidationMessage For="@(() => Model.ExplanationTh)" />
         </label>
 
         <label class="span-2">
-            <span>English Explanation</span>
+            <span>English Explanation / คำอธิบายภาษาอังกฤษ</span>
             <InputTextArea class="input textarea" @bind-Value="Model.ExplanationEn" />
             <ValidationMessage For="@(() => Model.ExplanationEn)" />
         </label>
@@ -50,16 +50,16 @@
         {
             <label class="checkbox-row">
                 <InputCheckbox @bind-Value="Model.IsActive" />
-                <span>Active</span>
+                <span>Active / ใช้งาน</span>
             </label>
         }
     </div>
 
     <div class="actions">
-        <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
+        <button class="button primary" type="submit" disabled="@IsSaving"><Icon Name="plus" Size="15" /> @SubmitText</button>
         @if (OnCancel.HasDelegate)
         {
-            <button class="button" type="button" @onclick="CancelAsync">Cancel</button>
+            <button class="button" type="button" @onclick="CancelAsync">Cancel / ยกเลิก</button>
         }
     </div>
 </EditForm>

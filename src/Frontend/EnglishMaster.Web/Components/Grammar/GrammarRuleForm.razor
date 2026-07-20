@@ -16,11 +16,12 @@
         </div>
     }
 
+    <h3 class="detail-section-heading">Identity / ข้อมูลหลัก</h3>
     <div class="form-grid">
         <label class="span-2">
-            <span>Topic</span>
+            <span>Topic / หัวข้อ</span>
             <InputSelect class="input" @bind-Value="Model.GrammarTopicId">
-                <option value="">Select topic</option>
+                <option value="">Select topic / เลือกหัวข้อ</option>
                 @foreach (var topic in Topics)
                 {
                     <option value="@topic.Id">@topic.Title (@topic.CefrLevel)</option>
@@ -30,49 +31,13 @@
         </label>
 
         <label class="span-2">
-            <span>Title</span>
+            <span>Title / ชื่อกฎ</span>
             <InputText class="input" @bind-Value="Model.Title" />
             <ValidationMessage For="@(() => Model.Title)" />
         </label>
 
-        <label class="span-2">
-            <span>Rule Text</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.RuleText" />
-            <ValidationMessage For="@(() => Model.RuleText)" />
-        </label>
-
-        <label class="span-2">
-            <span>Structure Pattern</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.StructurePattern" />
-            <ValidationMessage For="@(() => Model.StructurePattern)" />
-        </label>
-
-        <label class="span-2">
-            <span>Thai Explanation</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.ExplanationTh" />
-            <ValidationMessage For="@(() => Model.ExplanationTh)" />
-        </label>
-
-        <label class="span-2">
-            <span>English Explanation</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.ExplanationEn" />
-            <ValidationMessage For="@(() => Model.ExplanationEn)" />
-        </label>
-
-        <label class="span-2">
-            <span>Common Mistake</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.CommonMistake" />
-            <ValidationMessage For="@(() => Model.CommonMistake)" />
-        </label>
-
-        <label class="span-2">
-            <span>Correct Usage Note</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.CorrectUsageNote" />
-            <ValidationMessage For="@(() => Model.CorrectUsageNote)" />
-        </label>
-
         <label>
-            <span>Sort Order</span>
+            <span>Sort Order / ลำดับแสดงผล</span>
             <InputNumber class="input" @bind-Value="Model.SortOrder" />
             <ValidationMessage For="@(() => Model.SortOrder)" />
         </label>
@@ -81,14 +46,56 @@
         {
             <label class="checkbox-row">
                 <InputCheckbox @bind-Value="Model.IsActive" />
-                <span>Active</span>
+                <span>Active / ใช้งาน</span>
             </label>
         }
     </div>
 
+    <h3 class="detail-section-heading">Rule Content / เนื้อหากฎ</h3>
+    <div class="form-grid">
+        <label class="span-2">
+            <span>Rule Text / ข้อความกฎ</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.RuleText" />
+            <ValidationMessage For="@(() => Model.RuleText)" />
+        </label>
+
+        <label class="span-2">
+            <span>Structure Pattern / โครงสร้างประโยค</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.StructurePattern" />
+            <ValidationMessage For="@(() => Model.StructurePattern)" />
+        </label>
+    </div>
+
+    <h3 class="detail-section-heading">Explanations / คำอธิบาย</h3>
+    <div class="form-grid">
+        <label class="span-2">
+            <span>Thai Explanation / คำอธิบายภาษาไทย</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.ExplanationTh" />
+            <ValidationMessage For="@(() => Model.ExplanationTh)" />
+        </label>
+
+        <label class="span-2">
+            <span>English Explanation / คำอธิบายภาษาอังกฤษ</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.ExplanationEn" />
+            <ValidationMessage For="@(() => Model.ExplanationEn)" />
+        </label>
+
+        <label class="span-2">
+            <span>Common Mistake / จุดที่มักผิด</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.CommonMistake" />
+            <ValidationMessage For="@(() => Model.CommonMistake)" />
+        </label>
+
+        <label class="span-2">
+            <span>Correct Usage Note / วิธีใช้ที่ถูกต้อง</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.CorrectUsageNote" />
+            <ValidationMessage For="@(() => Model.CorrectUsageNote)" />
+        </label>
+    </div>
+
     <div class="actions">
         <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
-        <a class="button" href="@CancelHref">Cancel</a>
+        <a class="button" href="@CancelHref">Cancel / ยกเลิก</a>
     </div>
 </EditForm>
 

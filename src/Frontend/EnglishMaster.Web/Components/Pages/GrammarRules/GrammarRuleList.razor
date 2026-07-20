@@ -6,22 +6,31 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Grammar</p>
+        <p class="eyebrow">GRAMMAR / ไวยากรณ์</p>
         <h1>Grammar Rules</h1>
+        <p class="page-subtitle">Manage grammar rules, learner explanations, structure patterns, and examples. / จัดการกฎไวยากรณ์ คำอธิบาย โครงสร้างประโยค และตัวอย่างสำหรับผู้เรียน</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.GrammarRules.Create">New Rule</a>
+    <a class="button primary" href="@AdminRoutes.GrammarRules.Create"><Icon Name="plus" Size="16" /> New Rule / เพิ่มกฎ</a>
+</section>
+
+<section class="panel release-note">
+    <div>
+        <strong>Recommended content / เนื้อหาที่ควรมี</strong>
+        <p class="muted">A good rule should include a simple title, sentence pattern, Thai and English explanation, common mistake, and examples.</p>
+        <p class="muted">กฎที่ดีควรมีชื่อที่เข้าใจง่าย โครงสร้างประโยค คำอธิบายไทย/อังกฤษ จุดที่มักผิด และตัวอย่างประกอบ</p>
+    </div>
 </section>
 
 <section class="panel">
     <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
         <label>
-            <span>Search</span>
-            <input class="input" @bind="search" @bind:event="oninput" />
+            <span>Search / ค้นหา</span>
+            <input class="input" placeholder="Title, pattern, or explanation / ชื่อ โครงสร้าง หรือคำอธิบาย" @bind="search" @bind:event="oninput" />
         </label>
         <label>
-            <span>Topic</span>
+            <span>Topic / หัวข้อ</span>
             <select class="input" @bind="selectedTopicId">
-                <option value="">All topics</option>
+                <option value="">All topics / ทุกหัวข้อ</option>
                 @foreach (var topic in topics)
                 {
                     <option value="@topic.Id">@topic.Title</option>
@@ -29,22 +38,22 @@
             </select>
         </label>
         <label>
-            <span>Status</span>
+            <span>Status / สถานะ</span>
             <select class="input" @bind="activeFilter">
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-                <option value="">All</option>
+                <option value="true">Active / ใช้งาน</option>
+                <option value="false">Inactive / ปิด</option>
+                <option value="">All / ทั้งหมด</option>
             </select>
         </label>
         <label>
-            <span>Page Size</span>
+            <span>Page Size / จำนวนต่อหน้า</span>
             <select class="input" @bind="pageSize">
                 <option value="10">10</option>
                 <option value="20">20</option>
                 <option value="50">50</option>
             </select>
         </label>
-        <button class="button" type="submit">Search</button>
+        <button class="button" type="submit">Search / ค้นหา</button>
     </form>
 </section>
 
@@ -55,27 +64,33 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading grammar rules...</p>
+    <p class="muted">Loading grammar rules... / กำลังโหลดกฎไวยากรณ์</p>
 }
 else if (rules.Count == 0)
 {
-    <section class="panel">
-        <p class="muted">No grammar rules found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="grammar" Size="22" /></span>
+        <strong>No grammar rules found / ไม่พบกฎไวยากรณ์</strong>
+        <p>Try adjusting your filters, or create the first grammar rule. / ลองเปลี่ยนตัวกรอง หรือเพิ่มกฎแรก</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.GrammarRules.Create"><Icon Name="plus" Size="16" /> New Rule / เพิ่มกฎ</a>
+        </div>
     </section>
 }
 else
 {
     <section class="table-wrap">
         <div class="pagination-summary">
-            <span class="muted">Showing page @searchResult.PageNumber of @searchResult.TotalPages (@searchResult.TotalCount rules)</span>
+            <span class="muted">Page @searchResult.PageNumber of @searchResult.TotalPages / หน้า @searchResult.PageNumber จาก @searchResult.TotalPages</span>
+            <span class="status-badge neutral">@searchResult.TotalCount rules / @searchResult.TotalCount กฎ</span>
         </div>
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Rule</th>
-                    <th>Topic</th>
-                    <th>Sort</th>
-                    <th>Status</th>
+                    <th>Rule / กฎ</th>
+                    <th>Topic / หัวข้อ</th>
+                    <th>Sort / ลำดับ</th>
+                    <th>Status / สถานะ</th>
                     <th></th>
                 </tr>
             </thead>
@@ -89,20 +104,24 @@ else
                         </td>
                         <td>@(rule.Topic?.Title ?? rule.GrammarTopicId.ToString())</td>
                         <td>@rule.SortOrder</td>
-                        <td>@(rule.IsActive ? "Active" : "Inactive")</td>
+                        <td>
+                            <span class="status-badge @(rule.IsActive ? "success" : "muted")">
+                                @(rule.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")
+                            </span>
+                        </td>
                         <td class="row-actions">
-                            <a class="button small" href="@AdminRoutes.GrammarRules.Detail(rule.Id)">View</a>
-                            <a class="button small" href="@AdminRoutes.GrammarRules.Edit(rule.Id)">Edit</a>
-                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(rule.Id)">Delete</button>
+                            <a class="button small" href="@AdminRoutes.GrammarRules.Detail(rule.Id)" aria-label="View @rule.Title" title="View"><Icon Name="eye" Size="15" /></a>
+                            <a class="button small" href="@AdminRoutes.GrammarRules.Edit(rule.Id)" aria-label="Edit @rule.Title" title="Edit"><Icon Name="edit" Size="15" /></a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(rule.Id)" aria-label="Delete @rule.Title" title="Delete"><Icon Name="trash" Size="15" /></button>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
         <div class="pagination-row">
-            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous</button>
-            <span class="muted">Page @searchResult.PageNumber</span>
-            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next</button>
+            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous / ก่อนหน้า</button>
+            <span class="muted">Page @searchResult.PageNumber / หน้า @searchResult.PageNumber</span>
+            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next / ถัดไป</button>
         </div>
     </section>
 }

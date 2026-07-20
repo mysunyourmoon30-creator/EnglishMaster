@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Threading.RateLimiting;
 using EnglishMaster.Api.Endpoints;
 using EnglishMaster.Api.Health;
+using EnglishMaster.Api.Security;
 using EnglishMaster.Application.Features.Analytics;
 using EnglishMaster.Application.Features.BookChapters.Commands;
 using EnglishMaster.Application.Features.BookChapters.Queries;
@@ -77,6 +78,7 @@ using EnglishMaster.Application.Features.Words.Queries;
 using EnglishMaster.Infrastructure;
 using EnglishMaster.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -97,6 +99,13 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
         retainedFileCountLimit: 14));
 
 builder.Services.AddSingleton(TimeProvider.System);
+if (builder.Configuration["DataProtection:KeysPath"] is { Length: > 0 } dataProtectionKeysPath)
+{
+    Directory.CreateDirectory(dataProtectionKeysPath);
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+}
+
 builder.Services.AddAuthentication(SecurityEndpoints.CookieScheme)
     .AddCookie(SecurityEndpoints.CookieScheme, options =>
     {
@@ -325,6 +334,7 @@ builder.Services.AddScoped<LearningReportQueryHandler>();
 builder.Services.AddScoped<CertificateGenerationCommandHandler>();
 builder.Services.AddScoped<CertificateGenerationQueryHandler>();
 builder.Services.AddScoped<AnalyticsQueryHandler>();
+builder.Services.AddSingleton<LoginAttemptTracker>();
 var defaultConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if ((builder.Environment.IsProduction() || builder.Environment.IsStaging()) &&
     string.IsNullOrWhiteSpace(defaultConnectionString))
@@ -340,6 +350,15 @@ builder.Services.AddHealthChecks()
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
     options.AddPolicy("certificate-verification", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -373,6 +392,20 @@ if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"
     });
     app.UseHsts();
 }
+
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.TryAdd("Referrer-Policy", "no-referrer");
+    context.Response.Headers.TryAdd("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+    if (context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.Headers.TryAdd("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'");
+        context.Response.Headers.TryAdd("X-Frame-Options", "DENY");
+    }
+
+    await next(context);
+});
 
 if (!app.Environment.IsEnvironment("Testing"))
 {
@@ -479,7 +512,16 @@ app.MapLearningReportEndpoints();
 
 if (!app.Environment.IsEnvironment("Testing"))
 {
-    await SecuritySeeder.SeedSecurityAsync(app.Services, app.Configuration);
+    try
+    {
+        await SecuritySeeder.SeedSecurityAsync(app.Services, app.Configuration);
+    }
+    catch (Exception exception)
+    {
+        app.Logger.LogCritical(exception, "EnglishMaster API could not prepare the database. Check the SQL Server connection string and permissions.");
+        Environment.ExitCode = 1;
+        return;
+    }
 }
 
 app.Run();

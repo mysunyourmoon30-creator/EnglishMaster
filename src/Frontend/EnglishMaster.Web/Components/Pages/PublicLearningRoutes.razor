@@ -4,21 +4,38 @@
 @page "/grammar"
 @page "/books"
 @page "/quizzes"
+@layout PublicLayout
 @inject NavigationManager NavigationManager
 
 <PageTitle>@Title</PageTitle>
 
 <section class="page-header">
     <div>
+        <p class="eyebrow">Discover / ค้นหาเนื้อหา</p>
         <h1>@Title</h1>
-        <p class="muted">Browse published learning content through search.</p>
+        <p class="page-subtitle">@Subtitle</p>
     </div>
-    <a class="button" href="@SearchUrl">Search @Title</a>
+    <div class="actions">
+        <a class="button secondary" href="/learn">Learn / เริ่มเรียน</a>
+        <a class="button primary" href="@SearchUrl"><Icon Name="search" Size="16" /> Search / ค้นหา</a>
+    </div>
 </section>
 
 <section class="content-section">
-    <h2>Discovery</h2>
-    <p class="muted">Published content for this area is available through the learner search experience.</p>
+    <div class="card-grid">
+        <a class="list-card" href="@SearchUrl">
+            <h3><Icon Name="search" Size="17" /> Browse @Title</h3>
+            <p class="muted">เปิดหน้าค้นหาพร้อมตัวกรองของหมวดนี้.</p>
+        </a>
+        <a class="list-card" href="/learn/study-plan">
+            <h3><Icon Name="revision" Size="17" /> Study Plan / แผนเรียน</h3>
+            <p class="muted">ให้ระบบจัดสิ่งที่ควรเรียนวันนี้ให้อัตโนมัติ.</p>
+        </a>
+        <a class="list-card" href="/learn/practice">
+            <h3><Icon Name="quiz" Size="17" /> Practice / ฝึกทบทวน</h3>
+            <p class="muted">ฝึกคำหรือเนื้อหาที่ควรทบทวนวันนี้.</p>
+        </a>
+    </div>
 </section>
 
 @code {
@@ -26,13 +43,24 @@
 
     private string Title => Path switch
     {
-        "/learn/courses" => "Courses",
-        "/learn/lessons" => "Lessons",
-        "/dictionary" => "Dictionary",
-        "/grammar" => "Grammar",
-        "/books" => "Books",
-        "/quizzes" => "Quizzes",
-        _ => "Learning Content"
+        "/learn/courses" => "Courses / คอร์ส",
+        "/learn/lessons" => "Lessons / บทเรียน",
+        "/dictionary" => "Dictionary / คำศัพท์",
+        "/grammar" => "Grammar / ไวยากรณ์",
+        "/books" => "Books / หนังสือ",
+        "/quizzes" => "Quizzes / แบบฝึก",
+        _ => "Learning Content / เนื้อหาเรียน"
+    };
+
+    private string Subtitle => Path switch
+    {
+        "/dictionary" => "ค้นหาคำศัพท์จากชุดคำยอดนิยม 2,500 คำ พร้อมความหมายและระดับ CEFR.",
+        "/quizzes" => "ค้นหาแบบฝึกที่เผยแพร่แล้วเพื่อทดสอบความเข้าใจ.",
+        "/learn/lessons" => "ค้นหาบทเรียนที่เผยแพร่แล้ว รวมถึงบทเรียน Common Words.",
+        "/grammar" => "ค้นหา topic และ rule ด้านไวยากรณ์.",
+        "/books" => "ค้นหาหนังสือและชุดบทเรียน.",
+        "/learn/courses" => "ค้นหาคอร์สที่เผยแพร่แล้ว.",
+        _ => "ค้นหาเนื้อหาที่พร้อมใช้งานสำหรับผู้เรียน."
     };
 
     private string SearchUrl => Path switch

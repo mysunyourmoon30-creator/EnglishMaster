@@ -3,13 +3,15 @@
 @inject ITagsApiClient TagsApiClient
 @inject NavigationManager Navigation
 
-<PageTitle>New Tag</PageTitle>
+<PageTitle>New Tag / เพิ่มป้ายกำกับ</PageTitle>
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Vocabulary</p>
-        <h1>New Tag</h1>
+        <p class="eyebrow">Vocabulary Tags / ป้ายกำกับคำศัพท์</p>
+        <h1>New Tag / เพิ่มป้ายกำกับ</h1>
+        <p class="page-subtitle">เพิ่มป้ายสำหรับจัดกลุ่มคำศัพท์ เช่นช่วงความนิยม หรือระดับผู้เรียน.</p>
     </div>
+    <a class="button" href="@AdminRoutes.Tags.Index">Back to Tags / กลับไปหน้าป้ายกำกับ</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -21,7 +23,7 @@
     <TagForm Model="model"
              ValidationErrors="validationErrors"
              IsSaving="isSaving"
-             SubmitText="Create"
+             SubmitText="Create / สร้าง"
              OnValidSubmit="SaveAsync" />
 </section>
 

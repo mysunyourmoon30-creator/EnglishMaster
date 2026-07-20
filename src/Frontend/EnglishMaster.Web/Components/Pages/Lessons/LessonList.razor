@@ -7,22 +7,34 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Lessons</p>
-        <h1>Lessons</h1>
+        <p class="eyebrow">LESSONS / บทเรียน</p>
+        <h1>Common Word Lessons</h1>
+        <p class="page-subtitle">50 lessons built from the 2,500 most useful English words, sorted from most common to less common. / บทเรียน 50 ชุดจากคำอังกฤษที่ใช้จริงบ่อยที่สุด 2,500 คำ เรียงจากพบบ่อยมากไปน้อย ชุดละ 50 คำ</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.Lessons.Create">New Lesson</a>
+    <div class="actions">
+        <a class="button" href="/learn/study-plan">Learner plan / แผนเรียน</a>
+        <a class="button primary" href="@AdminRoutes.Lessons.Create"><Icon Name="plus" Size="16" /> New Lesson / เพิ่มบทเรียน</a>
+    </div>
+</section>
+
+<section class="panel release-note">
+    <div>
+        <strong>Content structure / โครงสร้างเนื้อหา</strong>
+        <p class="muted">Each lesson should contain a clear summary, learner-friendly sections, related words, and optional grammar rules.</p>
+        <p class="muted">แต่ละบทควรมีสรุปสั้น เนื้อหาที่อ่านง่าย คำศัพท์ที่เกี่ยวข้อง และไวยากรณ์เสริมถ้ามี</p>
+    </div>
 </section>
 
 <section class="panel">
     <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
         <label>
-            <span>Search</span>
-            <input class="input" @bind="search" @bind:event="oninput" />
+            <span>Search / ค้นหา</span>
+            <input class="input" placeholder="Common Words, lesson title, or summary / ชื่อบทเรียนหรือสรุป" @bind="search" @bind:event="oninput" />
         </label>
         <label>
             <span>CEFR</span>
             <select class="input" @bind="cefrLevel">
-                <option value="">All</option>
+                <option value="">All / ทุกระดับ</option>
                 @foreach (var level in CefrLevels)
                 {
                     <option value="@level">@level</option>
@@ -30,9 +42,9 @@
             </select>
         </label>
         <label>
-            <span>Category</span>
+            <span>Category / หมวดหมู่</span>
             <select class="input" @bind="categoryId">
-                <option value="">All</option>
+                <option value="">All / ทั้งหมด</option>
                 @foreach (var category in categories)
                 {
                     <option value="@category.Id">@category.Name</option>
@@ -40,30 +52,30 @@
             </select>
         </label>
         <label>
-            <span>Published</span>
+            <span>Published / เผยแพร่</span>
             <select class="input" @bind="publishedFilter">
-                <option value="">All</option>
-                <option value="true">Published</option>
-                <option value="false">Draft</option>
+                <option value="">All / ทั้งหมด</option>
+                <option value="true">Published / เผยแพร่แล้ว</option>
+                <option value="false">Draft / ร่าง</option>
             </select>
         </label>
         <label>
-            <span>Status</span>
+            <span>Status / สถานะ</span>
             <select class="input" @bind="activeFilter">
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-                <option value="">All</option>
+                <option value="true">Active / ใช้งาน</option>
+                <option value="false">Inactive / ปิดใช้</option>
+                <option value="">All / ทั้งหมด</option>
             </select>
         </label>
         <label>
-            <span>Page Size</span>
+            <span>Page Size / จำนวนต่อหน้า</span>
             <select class="input" @bind="pageSize">
                 <option value="10">10</option>
                 <option value="20">20</option>
                 <option value="50">50</option>
             </select>
         </label>
-        <button class="button" type="submit">Search</button>
+        <button class="button" type="submit">Search / ค้นหา</button>
     </form>
 </section>
 
@@ -74,28 +86,36 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading lessons...</p>
+    <p class="muted">Loading lessons... / กำลังโหลดบทเรียน</p>
 }
 else if (lessons.Count == 0)
 {
-    <section class="panel">
-        <p class="muted">No lessons found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="lesson" Size="22" /></span>
+        <strong>No lessons found / ยังไม่พบบทเรียน</strong>
+        <p>Try changing filters or create a new lesson. / ลองเปลี่ยนตัวกรอง หรือเพิ่มบทเรียนใหม่</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.Lessons.Create"><Icon Name="plus" Size="16" /> New Lesson / เพิ่มบทเรียน</a>
+        </div>
     </section>
 }
 else
 {
     <section class="table-wrap">
         <div class="pagination-summary">
-            <span class="muted">Showing page @searchResult.PageNumber of @searchResult.TotalPages (@searchResult.TotalCount lessons)</span>
+            <span class="muted">Page @searchResult.PageNumber of @searchResult.TotalPages / หน้า @searchResult.PageNumber จาก @searchResult.TotalPages</span>
+            <span class="status-badge neutral">@searchResult.TotalCount lessons / @searchResult.TotalCount บทเรียน</span>
         </div>
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Title</th>
+                    <th>Lesson / บทเรียน</th>
+                    <th>Word rank / ลำดับคำ</th>
                     <th>CEFR</th>
-                    <th>Category</th>
-                    <th>Published</th>
-                    <th>Status</th>
+                    <th>Category / หมวดหมู่</th>
+                    <th>Learner page / หน้าผู้เรียน</th>
+                    <th>Published / เผยแพร่</th>
+                    <th>Status / สถานะ</th>
                     <th></th>
                 </tr>
             </thead>
@@ -106,24 +126,44 @@ else
                         <td>
                             <strong>@lesson.Title</strong>
                             <span class="muted">@lesson.Summary</span>
+                            <span class="category-slug">@lesson.Slug</span>
                         </td>
+                        <td><span class="category-page">@GetRankRange(lesson)</span></td>
                         <td>@(lesson.CefrLevel ?? "-")</td>
                         <td>@(lesson.Category?.Name ?? "-")</td>
-                        <td>@(lesson.IsPublished ? "Published" : "Draft")</td>
-                        <td>@(lesson.IsActive ? "Active" : "Inactive")</td>
+                        <td>
+                            @if (lesson.IsPublished && !string.IsNullOrWhiteSpace(lesson.Slug))
+                            {
+                                <a class="button small" href="@PublicLessonUrl(lesson.Slug)">Open / เปิดดู</a>
+                            }
+                            else
+                            {
+                                <span class="muted">Publish first / เผยแพร่ก่อน</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="status-badge @(lesson.IsPublished ? "success" : "warning")">
+                                @(lesson.IsPublished ? "Published / เผยแพร่แล้ว" : "Draft / ร่าง")
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge @(lesson.IsActive ? "success" : "muted")">
+                                @(lesson.IsActive ? "Active / ใช้งาน" : "Inactive / ปิดใช้")
+                            </span>
+                        </td>
                         <td class="row-actions">
-                            <a class="button small" href="@AdminRoutes.Lessons.Detail(lesson.Id)">View</a>
-                            <a class="button small" href="@AdminRoutes.Lessons.Edit(lesson.Id)">Edit</a>
-                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(lesson.Id)">Delete</button>
+                            <a class="button small" href="@AdminRoutes.Lessons.Detail(lesson.Id)" aria-label="View @lesson.Title" title="View"><Icon Name="eye" Size="15" /></a>
+                            <a class="button small" href="@AdminRoutes.Lessons.Edit(lesson.Id)" aria-label="Edit @lesson.Title" title="Edit"><Icon Name="edit" Size="15" /></a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(lesson.Id)" aria-label="Delete @lesson.Title" title="Delete"><Icon Name="trash" Size="15" /></button>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
         <div class="pagination-row">
-            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous</button>
-            <span class="muted">Page @searchResult.PageNumber</span>
-            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next</button>
+            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous / ก่อนหน้า</button>
+            <span class="muted">Page @searchResult.PageNumber / หน้า @searchResult.PageNumber</span>
+            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next / ถัดไป</button>
         </div>
     </section>
 }
@@ -134,13 +174,13 @@ else
     private IReadOnlyCollection<LessonDto> lessons = [];
     private IReadOnlyCollection<CategoryDto> categories = [];
     private LessonSearchResponse searchResult = EmptySearchResult();
-    private string? search;
+    private string? search = "Common Words";
     private string? cefrLevel;
     private string? categoryId;
-    private string publishedFilter = "";
+    private string publishedFilter = "true";
     private string activeFilter = "true";
     private int pageNumber = 1;
-    private int pageSize = 10;
+    private int pageSize = 50;
     private string? errorMessage;
     private bool isLoading = true;
 
@@ -179,7 +219,9 @@ else
                     ParsePublishedFilter(),
                     ParseActiveFilter(),
                     pageNumber,
-                    pageSize),
+                    pageSize,
+                    SortBy: "CreatedAt",
+                    SortDirection: "Asc"),
                 CancellationToken.None);
             lessons = searchResult.Items;
         }
@@ -259,6 +301,21 @@ else
 
     private static LessonSearchResponse EmptySearchResult()
     {
-        return new LessonSearchResponse([], 1, 10, 0, 0, false, false);
+        return new LessonSearchResponse([], 1, 50, 0, 0, false, false);
+    }
+
+    private static string PublicLessonUrl(string slug) => $"/lessons/{slug}";
+
+    private static string GetRankRange(LessonDto lesson)
+    {
+        var parts = lesson.Slug.Split('-', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 4 &&
+            int.TryParse(parts[^2], out var startRank) &&
+            int.TryParse(parts[^1], out var endRank))
+        {
+            return $"{startRank:N0}-{endRank:N0}";
+        }
+
+        return "-";
     }
 }

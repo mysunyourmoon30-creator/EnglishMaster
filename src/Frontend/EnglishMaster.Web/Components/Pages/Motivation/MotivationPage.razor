@@ -5,12 +5,13 @@
 
 <section class="page-header">
     <div>
+        <p class="eyebrow">Learning</p>
         <h1>Motivation</h1>
-        <p class="muted">Track streaks, achievements, and recent learning activity.</p>
+        <p class="page-subtitle">Track streaks, achievements, and recent learning activity.</p>
     </div>
     <div class="actions">
-        <a class="button secondary" href="/learn/achievements">Achievements</a>
-        <a class="button secondary" href="/learn/activity">Activity</a>
+        <a class="button secondary" href="/learn/achievements"><Icon Name="certificate" Size="15" /> Achievements</a>
+        <a class="button secondary" href="/learn/activity"><Icon Name="analytics" Size="15" /> Activity</a>
     </div>
 </section>
 
@@ -20,22 +21,31 @@
 }
 else if (isLoading)
 {
-    <p class="muted">Loading motivation...</p>
+    <section class="panel empty-state">
+        <strong>Loading motivation...</strong>
+    </section>
 }
 else
 {
-    <section class="metrics-grid">
-        <article class="metric-card"><span>Current streak</span><strong>@summary.CurrentStreakDays</strong></article>
-        <article class="metric-card"><span>Longest streak</span><strong>@summary.LongestStreakDays</strong></article>
-        <article class="metric-card"><span>Achievements</span><strong>@summary.EarnedAchievementCount</strong></article>
-        <article class="metric-card"><span>Lessons completed</span><strong>@summary.TotalLessonsCompleted</strong></article>
+    <section class="stat-grid">
+        <article class="panel stat-card"><Icon Name="health" Size="18" /><span class="stat-label">Current streak</span><span class="stat-value">@summary.CurrentStreakDays</span></article>
+        <article class="panel stat-card"><Icon Name="revision" Size="18" /><span class="stat-label">Longest streak</span><span class="stat-value">@summary.LongestStreakDays</span></article>
+        <article class="panel stat-card"><Icon Name="certificate" Size="18" /><span class="stat-label">Achievements</span><span class="stat-value">@summary.EarnedAchievementCount</span></article>
+        <article class="panel stat-card"><Icon Name="lesson" Size="18" /><span class="stat-label">Lessons completed</span><span class="stat-value">@summary.TotalLessonsCompleted</span></article>
     </section>
 
     <section class="content-section">
         <h2>Recent Achievements</h2>
         @if (summary.RecentAchievements.Count == 0)
         {
-            <p class="muted">No achievements earned yet.</p>
+            <div class="panel empty-state">
+                <span class="empty-state-icon"><Icon Name="certificate" Size="20" /></span>
+                <strong>No achievements earned yet</strong>
+                <p>Keep studying to unlock your first achievement.</p>
+                <div class="actions">
+                    <a class="button primary" href="/learn/achievements">View achievements</a>
+                </div>
+            </div>
         }
         else
         {
@@ -56,7 +66,11 @@ else
         <h2>Recent Activity</h2>
         @if (summary.RecentActivity.Count == 0)
         {
-            <p class="muted">Complete a lesson, quiz, practice session, or daily plan to start building momentum.</p>
+            <div class="panel empty-state">
+                <span class="empty-state-icon"><Icon Name="analytics" Size="20" /></span>
+                <strong>No activity recorded yet</strong>
+                <p>Complete a lesson, quiz, practice session, or daily plan to start building momentum.</p>
+            </div>
         }
         else
         {
@@ -66,7 +80,7 @@ else
                     <article class="list-card">
                         <span class="pill">@activity.ActivityType</span>
                         <h3>@activity.Title</h3>
-                        <p class="muted">@activity.OccurredAt.ToString("yyyy-MM-dd")</p>
+                        <p class="muted">@activity.OccurredAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</p>
                     </article>
                 }
             </div>

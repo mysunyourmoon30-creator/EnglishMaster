@@ -1,27 +1,31 @@
-<section class="metrics-grid">
-    <article class="metric-card"><span>Study minutes</span><strong>@Report.TotalStudyMinutes</strong></article>
-    <article class="metric-card"><span>Active days</span><strong>@Report.ActiveStudyDays</strong></article>
-    <article class="metric-card"><span>Completed plans</span><strong>@Report.CompletedDailyPlans</strong></article>
-    <article class="metric-card"><span>Current streak</span><strong>@Report.CurrentStreakDays</strong></article>
+<section class="stat-grid">
+    <article class="panel stat-card"><Icon Name="book" Size="18" /><span class="stat-label">Study minutes / นาทีเรียน</span><span class="stat-value">@Report.TotalStudyMinutes</span></article>
+    <article class="panel stat-card"><Icon Name="quality" Size="18" /><span class="stat-label">Active days / วันที่เรียน</span><span class="stat-value">@Report.ActiveStudyDays</span></article>
+    <article class="panel stat-card"><Icon Name="certificate" Size="18" /><span class="stat-label">Completed plans / แผนที่จบ</span><span class="stat-value">@Report.CompletedDailyPlans</span></article>
+    <article class="panel stat-card"><Icon Name="health" Size="18" /><span class="stat-label">Current streak / เรียนต่อเนื่อง</span><span class="stat-value">@Report.CurrentStreakDays</span></article>
 </section>
 
-<section class="metrics-grid">
-    <article class="metric-card"><span>Lessons</span><strong>@Report.LessonsCompleted</strong></article>
-    <article class="metric-card"><span>Practice sessions</span><strong>@Report.PracticeSessionsCompleted</strong></article>
-    <article class="metric-card"><span>Quiz attempts</span><strong>@Report.QuizAttempts</strong></article>
-    <article class="metric-card"><span>Quiz average</span><strong>@Report.AverageQuizScore.ToString("0.#")%</strong></article>
+<section class="stat-grid">
+    <article class="panel stat-card"><Icon Name="lesson" Size="18" /><span class="stat-label">Lessons / บทเรียน</span><span class="stat-value">@Report.LessonsCompleted</span></article>
+    <article class="panel stat-card"><Icon Name="quiz" Size="18" /><span class="stat-label">Practice / รอบฝึก</span><span class="stat-value">@Report.PracticeSessionsCompleted</span></article>
+    <article class="panel stat-card"><Icon Name="quiz" Size="18" /><span class="stat-label">Quiz attempts / ทำแบบฝึก</span><span class="stat-value">@Report.QuizAttempts</span></article>
+    <article class="panel stat-card"><Icon Name="quality" Size="18" /><span class="stat-label">Quiz average / คะแนนเฉลี่ย</span><span class="stat-value">@Report.AverageQuizScore.ToString("0.#")%</span></article>
 </section>
 
 <section class="content-section">
-    <h2>@Report.WeekStartDate.ToString("yyyy-MM-dd") - @Report.WeekEndDate.ToString("yyyy-MM-dd")</h2>
+    <h2>@Report.WeekStartDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) - @Report.WeekEndDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</h2>
     <p class="muted">@Report.SummaryText</p>
 </section>
 
 <section class="content-section">
-    <h2>Insights</h2>
+    <h2>Insights / ข้อแนะนำ</h2>
     @if (Report.Insights.Count == 0)
     {
-        <p class="muted">No insights for this report.</p>
+        <div class="panel empty-state">
+            <span class="empty-state-icon"><Icon Name="analytics" Size="20" /></span>
+            <strong>No insights for this report / ยังไม่มีข้อแนะนำ</strong>
+            <p>Insights appear here once there is enough weekly activity to analyze. / เมื่อมีข้อมูลการเรียนพอ ระบบจะแสดงข้อแนะนำที่นี่</p>
+        </div>
     }
     else
     {

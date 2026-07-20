@@ -1,5 +1,6 @@
 @page "/certificates/verify"
 @page "/certificates/verify/{VerificationCode}"
+@layout PublicLayout
 @inject ICertificateVerificationApiClient VerificationApiClient
 @inject NavigationManager NavigationManager
 
@@ -7,17 +8,18 @@
 
 <section class="page-header">
     <div>
+        <p class="eyebrow">Certificates</p>
         <h1>Certificate Verification</h1>
-        <p class="muted">Confirm an EnglishMaster certificate by verification code.</p>
+        <p class="page-subtitle">Confirm an EnglishMaster certificate by verification code.</p>
     </div>
 </section>
 
-<form class="filters-grid" @onsubmit="SubmitAsync" @onsubmit:preventDefault>
+<form class="panel filters-grid" @onsubmit="SubmitAsync" @onsubmit:preventDefault>
     <label>
         <span>Verification code</span>
         <input class="input" @bind="codeInput" @bind:event="oninput" />
     </label>
-    <button class="button" type="submit" disabled="@isLoading">Verify</button>
+    <button class="button primary" type="submit" disabled="@isLoading"><Icon Name="quality" Size="16" /> Verify</button>
 </form>
 
 @if (isLoading)
@@ -30,21 +32,22 @@ else if (!string.IsNullOrWhiteSpace(errorMessage))
 }
 else if (certificate is null && hasSearched)
 {
-    <section class="empty-state">
-        <h2>Certificate not found</h2>
-        <p class="muted">Check the verification code and try again.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="certificate" Size="22" /></span>
+        <strong>Certificate not found</strong>
+        <p>Check the verification code and try again.</p>
     </section>
 }
 else if (certificate is not null)
 {
     <section class="content-list">
         <article class="list-card">
-            <div>
+            <div class="list-card-badges">
                 <span class="pill">Certificate</span>
-                <span class="pill">@(certificate.IsValid ? "Valid" : "Revoked")</span>
+                <span class="@(certificate.IsValid ? "status-badge success" : "status-badge muted")">@(certificate.IsValid ? "Valid" : "Revoked")</span>
             </div>
-            <h2>@certificate.CourseTitle</h2>
-            <p>Issued to @certificate.RecipientName on @certificate.IssuedAt.ToString("yyyy-MM-dd").</p>
+            <h2><Icon Name="certificate" Size="17" /> @certificate.CourseTitle</h2>
+            <p>Issued to @certificate.RecipientName on @certificate.IssuedAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture).</p>
             <div class="meta-row">
                 <span>@certificate.VerificationCode</span>
                 <span>@certificate.TemplateCode</span>

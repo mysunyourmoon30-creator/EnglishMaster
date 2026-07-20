@@ -8,28 +8,42 @@
     <div>
         <p class="eyebrow">Admin</p>
         <h1>Revision Timeline</h1>
+        <p class="page-subtitle">Chronological history of revisions for @ContentType @ContentId.</p>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.ContentRevisions.Index">Back</a>
     </div>
 </section>
 
 @if (isLoading)
 {
-    <div class="panel">Loading timeline...</div>
+    <p class="muted">Loading timeline...</p>
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))
 {
     <div class="alert error">@errorMessage</div>
 }
+else if (revisions.Count == 0)
+{
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="revision" Size="22" /></span>
+        <strong>No revisions found</strong>
+        <p>This content item has no recorded revision history yet.</p>
+    </section>
+}
 else
 {
-    <section class="content-list">
-        @foreach (var revision in revisions)
-        {
-            <article class="panel">
-                <h2>#@revision.RevisionNumber @revision.EventType</h2>
-                <p class="muted">@revision.ChangedBy · @revision.ChangedAt.LocalDateTime.ToString("g")</p>
-                <a class="button small" href="@AdminRoutes.ContentRevisions.Detail(revision.Id)">Open</a>
-            </article>
-        }
+    <section class="panel">
+        <div class="timeline">
+            @foreach (var revision in revisions)
+            {
+                <div class="timeline-item">
+                    <div class="timeline-item-title">#@revision.RevisionNumber @revision.EventType</div>
+                    <p class="muted">@revision.ChangedBy · @revision.ChangedAt.LocalDateTime.ToString("g", CultureInfo.InvariantCulture)</p>
+                    <a class="button small" href="@AdminRoutes.ContentRevisions.Detail(revision.Id)" aria-label="View revision #@revision.RevisionNumber" title="View"><Icon Name="eye" Size="15" /></a>
+                </div>
+            }
+        </div>
     </section>
 }
 

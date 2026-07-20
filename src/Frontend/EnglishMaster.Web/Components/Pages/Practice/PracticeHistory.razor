@@ -1,13 +1,15 @@
 @page "/learn/practice/history"
 @inject IPracticeApiClient PracticeApiClient
 
-<PageTitle>Practice History</PageTitle>
+<PageTitle>Practice History / ประวัติการฝึก</PageTitle>
 
 <section class="page-header">
     <div>
-        <h1>Practice History</h1>
-        <p class="muted">Previous practice sessions and scores.</p>
+        <p class="eyebrow">PRACTICE HISTORY / ประวัติการฝึก</p>
+        <h1>Recent Practice</h1>
+        <p class="page-subtitle">See recent sessions, completed items, remembered items, and words that still need review. / ดูรอบฝึกล่าสุด จำนวนข้อที่ทำได้ และข้อที่ยังต้องทบทวน</p>
     </div>
+    <a class="button secondary" href="/learn/practice"><Icon Name="chevron-left" Size="15" /> Back / กลับ</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -16,11 +18,20 @@
 }
 else if (isLoading)
 {
-    <p class="muted">Loading history...</p>
+    <section class="panel empty-state">
+        <strong>Loading history... / กำลังโหลดประวัติ</strong>
+    </section>
 }
 else if (sessions.Count == 0)
 {
-    <p class="muted">No practice sessions yet.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="revision" Size="20" /></span>
+        <strong>No practice sessions yet / ยังไม่มีประวัติการฝึก</strong>
+        <p>Your finished practice sessions will appear here. / เมื่อฝึกจบรอบ ผลจะแสดงที่นี่</p>
+        <div class="actions">
+            <a class="button primary" href="/learn/practice">Start practice / เริ่มฝึก</a>
+        </div>
+    </section>
 }
 else
 {
@@ -28,8 +39,12 @@ else
         @foreach (var item in sessions)
         {
             <article class="list-card">
-                <h2>@item.StartedAt.LocalDateTime</h2>
-                <p class="muted">@item.Status · @item.CorrectItems correct · @item.IncorrectItems again</p>
+                <div class="list-card-badges">
+                    <span class="pill">@GetStatusLabel(item.Status)</span>
+                    <span class="pill">@item.CompletedItems / @item.TotalItems done</span>
+                </div>
+                <h2>@item.StartedAt.LocalDateTime.ToString("g", CultureInfo.InvariantCulture)</h2>
+                <p class="muted">@item.CorrectItems remembered / จำได้ @item.CorrectItems ข้อ · @item.IncorrectItems need review / ต้องทบทวน @item.IncorrectItems ข้อ</p>
             </article>
         }
     </section>
@@ -48,12 +63,19 @@ else
         }
         catch (ApiRequestException)
         {
-            errorMessage = "Practice history is unavailable.";
+            errorMessage = "Practice history is unavailable. / เปิดประวัติการฝึกไม่ได้";
         }
         finally
         {
             isLoading = false;
         }
     }
-}
 
+    private static string GetStatusLabel(string value) => value.ToLowerInvariant() switch
+    {
+        "started" => "Started / กำลังฝึก",
+        "completed" => "Completed / จบแล้ว",
+        "cancelled" => "Cancelled / ยกเลิก",
+        _ => value
+    };
+}

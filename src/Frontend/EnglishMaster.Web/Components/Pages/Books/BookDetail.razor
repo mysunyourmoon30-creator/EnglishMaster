@@ -3,21 +3,22 @@
 @inject IBookApiClient BookApiClient
 @inject ILessonApiClient LessonApiClient
 
-<PageTitle>@(book is null ? "Book" : book.Title)</PageTitle>
+<PageTitle>@(book is null ? "Book / หนังสือ" : book.Title)</PageTitle>
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Books</p>
+        <p class="eyebrow">BOOKS / หนังสือ</p>
         <h1>@(book is null ? "Book" : book.Title)</h1>
+        <p class="page-subtitle">จัดโครงสร้างหนังสือเป็นบทและผูกบทเรียนที่ผู้เรียนควรอ่านตามลำดับ</p>
     </div>
     <div class="actions">
-        <a class="button" href="@AdminRoutes.Books.Index">Back</a>
+        <a class="button" href="@AdminRoutes.Books.Index">Back / กลับ</a>
         @if (book is not null)
         {
-            <a class="button" href="@AdminRoutes.ContentRevisions.Timeline("Book", book.Id)">Revision History</a>
-            <a class="button primary" href="@AdminRoutes.Books.Edit(book.Id)">Edit</a>
+            <a class="button" href="@AdminRoutes.ContentRevisions.Timeline("Book", book.Id)"><Icon Name="revision" Size="15" /> History / ประวัติแก้ไข</a>
+            <a class="button primary" href="@AdminRoutes.Books.Edit(book.Id)"><Icon Name="edit" Size="15" /> Edit / แก้ไข</a>
             <button class="button" type="button" @onclick="TogglePublishAsync">
-                @(book.IsPublished ? "Unpublish" : "Publish")
+                <Icon Name="publish" Size="15" /> @(book.IsPublished ? "Unpublish / ซ่อน" : "Publish / เผยแพร่")
             </button>
         }
     </div>
@@ -30,12 +31,17 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading book...</p>
+    <p class="muted">Loading book... / กำลังโหลดหนังสือ</p>
 }
 else if (notFound)
 {
-    <section class="panel">
-        <p class="muted">Book was not found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="book" Size="22" /></span>
+        <strong>Book was not found / ไม่พบหนังสือ</strong>
+        <p>ข้อมูลอาจถูกลบแล้ว หรือ link ไม่ถูกต้อง</p>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.Books.Index">Back to Books / กลับรายการหนังสือ</a>
+        </div>
     </section>
 }
 else if (book is not null)
@@ -45,6 +51,8 @@ else if (book is not null)
         {
             <img class="thumbnail" src="@book.CoverMedia.PublicUrl" alt="@book.CoverMedia.AltText" />
         }
+
+        <h3 class="detail-section-heading">Overview / ภาพรวม</h3>
         <div class="detail-grid">
             <div class="detail-item">
                 <span class="muted">Slug</span>
@@ -55,19 +63,23 @@ else if (book is not null)
                 <strong>@(book.CefrLevel ?? "-")</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Category</span>
+                <span class="muted">Category / หมวดหมู่</span>
                 <strong>@(book.Category?.Name ?? "-")</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Course</span>
+                <span class="muted">Course / คอร์ส</span>
                 <strong>@(book.Course?.Title ?? "-")</strong>
             </div>
+        </div>
+
+        <h3 class="detail-section-heading">Publication Details / รายละเอียดหนังสือ</h3>
+        <div class="detail-grid">
             <div class="detail-item">
-                <span class="muted">Author</span>
+                <span class="muted">Author / ผู้เขียน</span>
                 <strong>@book.AuthorName</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Edition</span>
+                <span class="muted">Edition / ฉบับ</span>
                 <strong>@book.Edition</strong>
             </div>
             <div class="detail-item">
@@ -75,27 +87,35 @@ else if (book is not null)
                 <strong>@book.Version</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Estimated Pages</span>
+                <span class="muted">Estimated Pages / จำนวนหน้าโดยประมาณ</span>
                 <strong>@book.EstimatedPages</strong>
             </div>
+        </div>
+
+        <h3 class="detail-section-heading">Publishing Status / สถานะเผยแพร่</h3>
+        <div class="detail-grid">
             <div class="detail-item">
-                <span class="muted">Published</span>
-                <strong>@(book.IsPublished ? "Published" : "Draft")</strong>
+                <span class="muted">Published / เผยแพร่</span>
+                <strong>@(book.IsPublished ? "Published / เผยแพร่แล้ว" : "Draft / ร่าง")</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Status</span>
-                <strong>@(book.IsActive ? "Active" : "Inactive")</strong>
+                <span class="muted">Status / สถานะ</span>
+                <strong>@(book.IsActive ? "Active / ใช้งาน" : "Inactive / ปิดใช้งาน")</strong>
             </div>
+        </div>
+
+        <h3 class="detail-section-heading">Description / คำอธิบาย</h3>
+        <div class="detail-grid">
             <div class="detail-item full">
-                <span class="muted">Subtitle</span>
+                <span class="muted">Subtitle / คำโปรย</span>
                 <strong>@book.Subtitle</strong>
             </div>
             <div class="detail-item full">
-                <span class="muted">Summary</span>
+                <span class="muted">Summary / สรุปสั้น</span>
                 <strong>@book.Summary</strong>
             </div>
             <div class="detail-item full">
-                <span class="muted">Description</span>
+                <span class="muted">Description / รายละเอียด</span>
                 <strong>@book.Description</strong>
             </div>
         </div>
@@ -103,8 +123,9 @@ else if (book is not null)
 
     <section class="page-header section-header">
         <div>
-            <p class="eyebrow">Structure</p>
-            <h1>Chapters</h1>
+            <p class="eyebrow">STRUCTURE / โครงสร้าง</p>
+            <h1>Chapters / บทในหนังสือ</h1>
+            <p class="page-subtitle">เพิ่มบทและเรียงบทเรียนให้เป็นเส้นทางอ่านที่เข้าใจง่าย</p>
         </div>
     </section>
 
@@ -118,7 +139,7 @@ else if (book is not null)
                          ValidationErrors="chapterValidationErrors"
                          IsSaving="isSavingChapter"
                          ShowStatusToggle="@(editingChapterId.HasValue)"
-                         SubmitText="@(editingChapterId.HasValue ? "Save Chapter" : "Add Chapter")"
+                         SubmitText="@(editingChapterId.HasValue ? "Save Chapter / บันทึกบท" : "Add Chapter / เพิ่มบท")"
                          OnValidSubmit="SaveChapterAsync"
                          OnCancel="CancelChapterEdit" />
     </section>
@@ -131,9 +152,9 @@ else if (book is not null)
 
         <div class="filters-grid">
             <label>
-                <span>Chapter</span>
+                <span>Chapter / บท</span>
                 <InputSelect class="input" @bind-Value="selectedChapterId">
-                    <option value="">Select chapter</option>
+                    <option value="">Select chapter / เลือกบท</option>
                     @foreach (var chapter in chapters.OrderBy(item => item.SortOrder))
                     {
                         <option value="@chapter.Id">@chapter.Title</option>
@@ -141,95 +162,98 @@ else if (book is not null)
                 </InputSelect>
             </label>
             <label>
-                <span>Lesson</span>
+                <span>Lesson / บทเรียน</span>
                 <InputSelect class="input" @bind-Value="selectedLessonId">
-                    <option value="">Select lesson</option>
+                    <option value="">Select lesson / เลือกบทเรียน</option>
                     @foreach (var lesson in AvailableLessonsForSelectedChapter())
                     {
                         <option value="@lesson.Id">@lesson.Title</option>
                     }
                 </InputSelect>
             </label>
-            <button class="button" type="button" @onclick="AddLessonAsync">Add Lesson</button>
+            <button class="button" type="button" @onclick="AddLessonAsync"><Icon Name="plus" Size="15" /> Add Lesson / เพิ่มบทเรียน</button>
         </div>
     </section>
 
     @if (chapters.Count == 0)
     {
-        <section class="panel nested-table">
-            <p class="muted">No chapters added yet.</p>
+        <section class="panel empty-state">
+            <span class="empty-state-icon"><Icon Name="book" Size="22" /></span>
+            <strong>No chapters yet / ยังไม่มีบท</strong>
+            <p>ใช้แบบฟอร์มด้านบนเพื่อเพิ่มบทแรกของหนังสือ</p>
         </section>
     }
     else
     {
-        <section class="table-wrap nested-table">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Chapter</th>
-                        <th>Status</th>
-                        <th>Sort</th>
-                        <th>Lessons</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var chapter in chapters.OrderBy(item => item.SortOrder))
-                    {
-                        <tr>
-                            <td>
-                                <strong>@chapter.Title</strong>
-                                <span class="muted">@chapter.Summary</span>
-                            </td>
-                            <td>@(chapter.IsActive ? "Active" : "Inactive")</td>
-                            <td>@chapter.SortOrder</td>
-                            <td>@chapter.Lessons.Count</td>
-                            <td class="row-actions">
-                                <button class="button small" type="button" @onclick="() => MoveChapterUpAsync(chapter.Id)">Up</button>
-                                <button class="button small" type="button" @onclick="() => MoveChapterDownAsync(chapter.Id)">Down</button>
-                                <button class="button small" type="button" @onclick="() => EditChapter(chapter)">Edit</button>
-                                <button class="button small danger" type="button" @onclick="() => DeleteChapterAsync(chapter.Id)">Delete</button>
-                            </td>
-                        </tr>
+        <section class="panel nested-table">
+            <div class="repeater-list">
+                @foreach (var chapter in chapters.OrderBy(item => item.SortOrder))
+                {
+                    <div class="repeater-item">
+                        <div class="repeater-item-header">
+                            <span class="repeater-item-index">@(chapter.SortOrder + 1)</span>
+                            <span class="repeater-item-title">@chapter.Title</span>
+                            <span class="row-actions">
+                                <button class="button small" type="button" @onclick="() => MoveChapterUpAsync(chapter.Id)" aria-label="Move @chapter.Title up" title="Move up">Up / ขึ้น</button>
+                                <button class="button small" type="button" @onclick="() => MoveChapterDownAsync(chapter.Id)" aria-label="Move @chapter.Title down" title="Move down">Down / ลง</button>
+                                <button class="button small" type="button" @onclick="() => EditChapter(chapter)" aria-label="Edit @chapter.Title" title="Edit"><Icon Name="edit" Size="15" /></button>
+                                <button class="button small danger" type="button" @onclick="() => DeleteChapterAsync(chapter.Id)" aria-label="Delete @chapter.Title" title="Delete"><Icon Name="trash" Size="15" /></button>
+                            </span>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(chapter.Summary))
+                        {
+                            <p class="muted">@chapter.Summary</p>
+                        }
+
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="muted">Status / สถานะ</span>
+                                <strong>@(chapter.IsActive ? "Active / ใช้งาน" : "Inactive / ปิดใช้งาน")</strong>
+                            </div>
+                            <div class="detail-item">
+                                <span class="muted">Lessons / บทเรียน</span>
+                                <strong>@chapter.Lessons.Count</strong>
+                            </div>
+                        </div>
+
                         @if (chapter.Lessons.Count > 0)
                         {
-                            <tr>
-                                <td colspan="5">
-                                    <table class="data-table">
-                                        <thead>
+                            <div class="table-wrap nested-table">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Lesson / บทเรียน</th>
+                                            <th>CEFR</th>
+                                            <th>Sort / ลำดับ</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var relation in chapter.Lessons.OrderBy(item => item.SortOrder))
+                                        {
                                             <tr>
-                                                <th>Lesson</th>
-                                                <th>CEFR</th>
-                                                <th>Sort</th>
-                                                <th></th>
+                                                <td>
+                                                    <strong>@relation.LessonTitle</strong>
+                                                    <span class="muted">@relation.LessonSummary</span>
+                                                </td>
+                                                <td>@(relation.LessonCefrLevel ?? "-")</td>
+                                                <td>@relation.SortOrder</td>
+                                                <td class="row-actions">
+                                                    <button class="button small" type="button" @onclick="() => MoveLessonUpAsync(chapter.Id, relation.Id)" aria-label="Move @relation.LessonTitle up" title="Move up">Up / ขึ้น</button>
+                                                    <button class="button small" type="button" @onclick="() => MoveLessonDownAsync(chapter.Id, relation.Id)" aria-label="Move @relation.LessonTitle down" title="Move down">Down / ลง</button>
+                                                    <a class="button small" href="@AdminRoutes.Lessons.Detail(relation.LessonId)" aria-label="View @relation.LessonTitle" title="View"><Icon Name="eye" Size="15" /></a>
+                                                    <button class="button small danger" type="button" @onclick="() => RemoveLessonAsync(chapter.Id, relation.LessonId)" aria-label="Remove @relation.LessonTitle" title="Remove"><Icon Name="trash" Size="15" /></button>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var relation in chapter.Lessons.OrderBy(item => item.SortOrder))
-                                            {
-                                                <tr>
-                                                    <td>
-                                                        <strong>@relation.LessonTitle</strong>
-                                                        <span class="muted">@relation.LessonSummary</span>
-                                                    </td>
-                                                    <td>@(relation.LessonCefrLevel ?? "-")</td>
-                                                    <td>@relation.SortOrder</td>
-                                                    <td class="row-actions">
-                                                        <button class="button small" type="button" @onclick="() => MoveLessonUpAsync(chapter.Id, relation.Id)">Up</button>
-                                                        <button class="button small" type="button" @onclick="() => MoveLessonDownAsync(chapter.Id, relation.Id)">Down</button>
-                                                        <a class="button small" href="@AdminRoutes.Lessons.Detail(relation.LessonId)">View</a>
-                                                        <button class="button small danger" type="button" @onclick="() => RemoveLessonAsync(chapter.Id, relation.LessonId)">Remove</button>
-                                                    </td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                </td>
-                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
                         }
-                    }
-                </tbody>
-            </table>
+                    </div>
+                }
+            </div>
         </section>
     }
 }

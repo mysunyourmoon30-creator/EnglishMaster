@@ -5,10 +5,11 @@
 
 <section class="page-header">
     <div>
+        <p class="eyebrow">Learning Goals</p>
         <h1>@(goal?.Title ?? "Learning Goal")</h1>
-        <p class="muted">Review progress and manage this goal.</p>
+        <p class="page-subtitle">Review progress and manage this goal.</p>
     </div>
-    <a class="button secondary" href="/learn/goals">Back</a>
+    <a class="button secondary" href="/learn/goals"><Icon Name="chevron-left" Size="15" /> Back</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -17,15 +18,24 @@
 }
 else if (isLoading)
 {
-    <p class="muted">Loading goal...</p>
+    <section class="panel empty-state">
+        <strong>Loading goal...</strong>
+    </section>
 }
 else if (goal is null)
 {
-    <p class="muted">Goal not found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="search" Size="20" /></span>
+        <strong>Goal not found</strong>
+        <p>This goal may have been removed. Go back to your goals list.</p>
+        <div class="actions">
+            <a class="button primary" href="/learn/goals">Back to goals</a>
+        </div>
+    </section>
 }
 else
 {
-    <section class="content-section">
+    <section class="content-section panel">
         <span class="pill">@goal.Status</span>
         <h2>@goal.GoalType</h2>
         <p>@goal.Description</p>
@@ -33,8 +43,8 @@ else
         <div class="actions">
             <button class="button secondary" type="button" @onclick="PauseAsync">Pause</button>
             <button class="button secondary" type="button" @onclick="ResumeAsync">Resume</button>
-            <button class="button" type="button" @onclick="CompleteAsync">Complete</button>
-            <button class="button danger" type="button" @onclick="CancelAsync">Cancel</button>
+            <button class="button primary" type="button" @onclick="CompleteAsync"><Icon Name="quality" Size="15" /> Complete</button>
+            <button class="button danger" type="button" @onclick="CancelAsync"><Icon Name="trash" Size="15" /> Cancel</button>
         </div>
     </section>
 }

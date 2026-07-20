@@ -8,12 +8,16 @@
     <div>
         <p class="eyebrow">Admin</p>
         <h1>Quality Check</h1>
+        <p class="page-subtitle">Findings and recommendations for a single quality check run.</p>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.ContentQuality.Checks">Back</a>
     </div>
 </section>
 
 @if (isLoading)
 {
-    <div class="panel">Loading quality check...</div>
+    <p class="muted">Loading quality check...</p>
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))
 {
@@ -22,30 +26,58 @@ else if (!string.IsNullOrWhiteSpace(errorMessage))
 else if (check is not null)
 {
     <section class="panel">
-        <h2>@check.ContentType</h2>
-        <p class="muted">@check.ContentId</p>
-        <p>Status: @check.Status · Score: @check.Score</p>
+        <h3 class="detail-section-heading">Summary</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Content Type</span>
+                <strong>@check.ContentType</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Content Id</span>
+                <strong>@check.ContentId</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Status</span>
+                <strong>@check.Status</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Score</span>
+                <strong>@check.Score</strong>
+            </div>
+        </div>
     </section>
 
-    <section class="content-list">
-        @foreach (var finding in check.Findings)
-        {
-            <article class="panel">
-                <div class="item-header">
-                    <div>
-                        <h2>@finding.RuleCode</h2>
-                        <p>@finding.Message</p>
+    <h3 class="detail-section-heading">Findings</h3>
+    @if (check.Findings.Count == 0)
+    {
+        <section class="panel empty-state">
+            <span class="empty-state-icon"><Icon Name="quality" Size="22" /></span>
+            <strong>No findings</strong>
+            <p>This check did not raise any issues.</p>
+        </section>
+    }
+    else
+    {
+        <section class="content-list">
+            @foreach (var finding in check.Findings)
+            {
+                <article class="panel">
+                    <div class="item-header">
+                        <div>
+                            <h2>@finding.RuleCode</h2>
+                            <p>@finding.Message</p>
+                        </div>
+                        <span class="badge">@finding.Severity</span>
                     </div>
-                    <span class="badge">@finding.Severity</span>
-                </div>
-                <p class="muted">@finding.Recommendation</p>
-                @if (!finding.IsResolved)
-                {
-                    <button class="button small" type="button" @onclick="() => ResolveAsync(finding.Id)">Resolve</button>
-                }
-            </article>
-        }
-    </section>
+                    <p class="muted">@finding.Recommendation</p>
+                    @if (!finding.IsResolved)
+                    {
+                        <button class="button small" type="button" @onclick="() => ResolveAsync(finding.Id)"><Icon Name="quality" Size="15" /> Resolve</button>
+                    }
+                </article>
+            }
+        </section>
+    }
 }
 
 @code {

@@ -1,12 +1,17 @@
 @page "/learn/recommendations"
 @inject ILearningRecommendationApiClient RecommendationApiClient
 
-<PageTitle>Recommendations</PageTitle>
+<PageTitle>Recommendations / คำแนะนำ</PageTitle>
 
 <section class="page-header">
     <div>
-        <h1>Recommendations</h1>
-        <p class="muted">Rule-based suggestions from your learning activity.</p>
+        <p class="eyebrow">Learning Recommendations / คำแนะนำการเรียน</p>
+        <h1>What to Learn Next / เรียนอะไรต่อดี</h1>
+        <p class="page-subtitle">ระบบแนะนำเนื้อหาจากกิจกรรมการเรียนของคุณ เพื่อช่วยให้เลือกต่อได้ง่ายขึ้น.</p>
+    </div>
+    <div class="actions">
+        <a class="button primary" href="/learn/study-plan">Study Plan / แผนวันนี้</a>
+        <a class="button secondary" href="/learn/practice">Practice / ฝึก</a>
     </div>
 </section>
 
@@ -16,17 +21,19 @@
 }
 else if (isLoading)
 {
-    <p class="muted">Loading recommendations...</p>
+    <section class="panel empty-state">
+        <strong>Loading recommendations... / กำลังโหลดคำแนะนำ</strong>
+    </section>
 }
 else
 {
-    <RecommendationSection Title="Continue Learning" Items="summary.ContinueLearning" />
-    <RecommendationCards Title="Recommended Courses" Items="summary.RecommendedCourses" />
-    <RecommendationCards Title="Recommended Lessons" Items="summary.RecommendedLessons" />
-    <RecommendationCards Title="Recommended Words" Items="summary.RecommendedWords" />
-    <RecommendationCards Title="Recommended Grammar" Items="summary.RecommendedGrammar" />
-    <RecommendationCards Title="Recommended Quizzes" Items="summary.RecommendedQuizzes" />
-    <RecommendationCards Title="Review Weak Areas" Items="summary.ReviewRecommendations" />
+    <RecommendationSection Title="Continue Learning / เรียนต่อ" Items="summary.ContinueLearning" />
+    <RecommendationCards Title="Recommended Lessons / บทเรียนแนะนำ" Items="summary.RecommendedLessons" />
+    <RecommendationCards Title="Recommended Words / คำศัพท์แนะนำ" Items="summary.RecommendedWords" />
+    <RecommendationCards Title="Recommended Quizzes / แบบฝึกแนะนำ" Items="summary.RecommendedQuizzes" />
+    <RecommendationCards Title="Review Weak Areas / จุดที่ควรทบทวน" Items="summary.ReviewRecommendations" />
+    <RecommendationCards Title="Recommended Courses / คอร์สแนะนำ" Items="summary.RecommendedCourses" />
+    <RecommendationCards Title="Recommended Grammar / ไวยากรณ์แนะนำ" Items="summary.RecommendedGrammar" />
 }
 
 @code {
@@ -42,7 +49,7 @@ else
         }
         catch (ApiRequestException)
         {
-            errorMessage = "Recommendations are unavailable right now.";
+            errorMessage = "Recommendations are unavailable right now. / ตอนนี้ยังโหลดคำแนะนำไม่ได้";
         }
         finally
         {
@@ -50,4 +57,3 @@ else
         }
     }
 }
-

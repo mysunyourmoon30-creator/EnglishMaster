@@ -3398,6 +3398,10 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Text");
 
+                    b.HasIndex("IsActive", "Slug");
+
+                    b.HasIndex("IsActive", "Text");
+
                     b.ToTable("Words", (string)null);
                 });
 

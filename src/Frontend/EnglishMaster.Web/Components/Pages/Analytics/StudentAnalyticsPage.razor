@@ -8,12 +8,15 @@
     <div>
         <p class="eyebrow">Learning</p>
         <h1>My Analytics</h1>
+        <p class="page-subtitle">Your learning progress and momentum at a glance.</p>
     </div>
 </section>
 
 @if (isLoading)
 {
-    <div class="panel">Loading analytics...</div>
+    <section class="panel empty-state">
+        <strong>Loading analytics...</strong>
+    </section>
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))
 {
@@ -23,18 +26,22 @@ else if (overview is not null)
 {
     <section class="stat-grid">
         <div class="panel stat-card">
+            <Icon Name="book" Size="18" />
             <span class="stat-label">Study minutes</span>
             <span class="stat-value">@overview.StudyMinutes</span>
         </div>
         <div class="panel stat-card">
+            <Icon Name="analytics" Size="18" />
             <span class="stat-label">Activities</span>
             <span class="stat-value">@overview.LearningActivities</span>
         </div>
         <div class="panel stat-card">
+            <Icon Name="health" Size="18" />
             <span class="stat-label">Current streak</span>
             <span class="stat-value">@overview.CurrentStreakDays</span>
         </div>
         <div class="panel stat-card">
+            <Icon Name="certificate" Size="18" />
             <span class="stat-label">Certificates</span>
             <span class="stat-value">@overview.CertificatesEarned</span>
         </div>

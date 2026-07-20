@@ -2,30 +2,38 @@
 @rendermode InteractiveServer
 @inject ITagsApiClient TagsApiClient
 
-<PageTitle>Tags</PageTitle>
+<PageTitle>Tags / ป้ายกำกับ</PageTitle>
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Vocabulary</p>
+        <p class="eyebrow">VOCABULARY TAGS / ป้ายกำกับคำศัพท์</p>
         <h1>Tags</h1>
+        <p class="page-subtitle">Group the 2,500 common words by frequency rank, CEFR level, and custom learning groups. / จัดกลุ่มคำศัพท์ 2,500 คำตามลำดับความนิยม ระดับ CEFR และกลุ่มเรียนที่กำหนดเอง</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.Tags.Create">New Tag</a>
+    <a class="button primary" href="@AdminRoutes.Tags.Create"><Icon Name="plus" Size="16" /> New Tag / เพิ่มป้ายกำกับ</a>
+</section>
+
+<section class="panel release-note">
+    <div>
+        <strong>Current recommended tags / ป้ายที่แนะนำตอนนี้</strong>
+        <p class="muted">Common Rank 1-500, 501-1000, 1001-1500, 1501-2000, 2001-2500 plus CEFR tags A1, A2, B1, B2.</p>
+    </div>
 </section>
 
 <section class="panel">
     <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
         <label>
-            <span>Search</span>
-            <input class="input" @bind="search" @bind:event="oninput" />
+            <span>Search / ค้นหา</span>
+            <input class="input" placeholder="A1, Common Rank, 1-500" @bind="search" @bind:event="oninput" />
         </label>
         <label>
-            <span>Status</span>
+            <span>Status / สถานะ</span>
             <select class="input" @bind="activeFilter">
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
+                <option value="true">Active / ใช้งาน</option>
+                <option value="false">Inactive / ปิด</option>
             </select>
         </label>
-        <button class="button" type="submit">Search</button>
+        <button class="button" type="submit">Search / ค้นหา</button>
     </form>
 </section>
 
@@ -36,12 +44,17 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading tags...</p>
+    <p class="muted">Loading tags... / กำลังโหลดป้ายกำกับ</p>
 }
 else if (tags.Count == 0)
 {
-    <section class="panel">
-        <p class="muted">No tags found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="tag" Size="22" /></span>
+        <strong>No tags found / ยังไม่พบป้ายกำกับ</strong>
+        <p>Try changing the search or create tags for grouping words. / ลองเปลี่ยนคำค้นหา หรือเพิ่มป้ายกำกับสำหรับจัดกลุ่มคำศัพท์</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.Tags.Create"><Icon Name="plus" Size="16" /> New Tag / เพิ่มป้ายกำกับ</a>
+        </div>
     </section>
 }
 else
@@ -50,9 +63,10 @@ else
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Slug</th>
-                    <th>Status</th>
+                    <th>Tag / ป้ายกำกับ</th>
+                    <th>Type / ประเภท</th>
+                    <th>Use / ใช้สำหรับ</th>
+                    <th>Status / สถานะ</th>
                     <th></th>
                 </tr>
             </thead>
@@ -62,14 +76,22 @@ else
                     <tr>
                         <td>
                             <strong>@tag.Name</strong>
-                            <span class="muted">@tag.Description</span>
+                            <span class="muted">@GetDescriptionSummary(tag)</span>
+                            <span class="category-slug">@tag.Slug</span>
                         </td>
-                        <td>@tag.Slug</td>
-                        <td>@(tag.IsActive ? "Active" : "Inactive")</td>
+                        <td>
+                            <span class="category-page">@GetTagType(tag)</span>
+                        </td>
+                        <td>@GetTagUse(tag)</td>
+                        <td>
+                            <span class="status-badge @(tag.IsActive ? "success" : "muted")">
+                                @(tag.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")
+                            </span>
+                        </td>
                         <td class="row-actions">
-                            <a class="button small" href="@AdminRoutes.Tags.Detail(tag.Id)">View</a>
-                            <a class="button small" href="@AdminRoutes.Tags.Edit(tag.Id)">Edit</a>
-                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(tag.Id)">Delete</button>
+                            <a class="button small" href="@AdminRoutes.Tags.Detail(tag.Id)" aria-label="View @tag.Name" title="View"><Icon Name="eye" Size="15" /></a>
+                            <a class="button small" href="@AdminRoutes.Tags.Edit(tag.Id)" aria-label="Edit @tag.Name" title="Edit"><Icon Name="edit" Size="15" /></a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(tag.Id)" aria-label="Delete @tag.Name" title="Delete"><Icon Name="trash" Size="15" /></button>
                         </td>
                     </tr>
                 }
@@ -84,6 +106,15 @@ else
     private string activeFilter = "true";
     private string? errorMessage;
     private bool isLoading = true;
+    private static readonly HashSet<string> CefrTags = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "a1",
+        "a2",
+        "b1",
+        "b2",
+        "c1",
+        "c2"
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -132,5 +163,50 @@ else
         {
             errorMessage = exception.Message;
         }
+    }
+
+    private static string GetTagType(TagDto tag)
+    {
+        if (tag.Slug.StartsWith("common-rank-", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Frequency group / กลุ่มความถี่";
+        }
+
+        if (CefrTags.Contains(tag.Slug))
+        {
+            return "CEFR level / ระดับ CEFR";
+        }
+
+        return "Custom / กำหนดเอง";
+    }
+
+    private static string GetTagUse(TagDto tag)
+    {
+        if (tag.Slug.StartsWith("common-rank-", StringComparison.OrdinalIgnoreCase))
+        {
+            var range = tag.Name.Replace("Common Rank", string.Empty, StringComparison.OrdinalIgnoreCase).Trim();
+            return string.IsNullOrWhiteSpace(range)
+                ? "จัดชุดคำตามลำดับความนิยม"
+                : $"คำยอดนิยมลำดับ {range}";
+        }
+
+        if (CefrTags.Contains(tag.Slug))
+        {
+            return $"ระดับผู้เรียน {tag.Name}";
+        }
+
+        return string.IsNullOrWhiteSpace(tag.Description) ? "จัดกลุ่มเนื้อหา" : tag.Description;
+    }
+
+    private static string GetDescriptionSummary(TagDto tag)
+    {
+        if (!string.IsNullOrWhiteSpace(tag.Description))
+        {
+            return tag.Description;
+        }
+
+        return tag.Slug.StartsWith("common-rank-", StringComparison.OrdinalIgnoreCase)
+            ? "กลุ่มคำศัพท์จากรายการ 2,500 คำที่ใช้บ่อย"
+            : "ป้ายกำกับสำหรับค้นหาและจัดกลุ่มคำศัพท์";
     }
 }

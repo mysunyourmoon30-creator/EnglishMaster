@@ -8,8 +8,9 @@
     <div>
         <p class="eyebrow">Pronunciation</p>
         <h1>Pronunciations</h1>
+        <p class="page-subtitle">Manage IPA transcriptions, coaching notes, and audio for vocabulary pronunciation.</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.Pronunciations.Create">New Pronunciation</a>
+    <a class="button primary" href="@AdminRoutes.Pronunciations.Create"><Icon Name="plus" Size="16" /> New Pronunciation</a>
 </section>
 
 <section class="panel">
@@ -49,8 +50,13 @@
 }
 else if (pronunciations.Count == 0)
 {
-    <section class="panel">
-        <p class="muted">No pronunciations found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="pronunciation" Size="22" /></span>
+        <strong>No pronunciations found</strong>
+        <p>Try adjusting your filters, or create the first pronunciation record.</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.Pronunciations.Create"><Icon Name="plus" Size="16" /> New Pronunciation</a>
+        </div>
     </section>
 }
 else
@@ -88,9 +94,9 @@ else
                         <td>@FormatMedia(pronunciation)</td>
                         <td>@(pronunciation.IsActive ? "Active" : "Inactive")</td>
                         <td class="row-actions">
-                            <a class="button small" href="@AdminRoutes.Pronunciations.Detail(pronunciation.Id)">View</a>
-                            <a class="button small" href="@AdminRoutes.Pronunciations.Edit(pronunciation.Id)">Edit</a>
-                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(pronunciation.Id)">Delete</button>
+                            <a class="button small" href="@AdminRoutes.Pronunciations.Detail(pronunciation.Id)" aria-label="View @(pronunciation.Word?.Text ?? "pronunciation")" title="View"><Icon Name="eye" Size="15" /></a>
+                            <a class="button small" href="@AdminRoutes.Pronunciations.Edit(pronunciation.Id)" aria-label="Edit @(pronunciation.Word?.Text ?? "pronunciation")" title="Edit"><Icon Name="edit" Size="15" /></a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(pronunciation.Id)" aria-label="Delete @(pronunciation.Word?.Text ?? "pronunciation")" title="Delete"><Icon Name="trash" Size="15" /></button>
                         </td>
                     </tr>
                 }

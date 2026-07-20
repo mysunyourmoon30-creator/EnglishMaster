@@ -1,0 +1,279 @@
+@page "/quizzes/{Slug}"
+@rendermode InteractiveServer
+@layout PublicLayout
+@inject IQuizApiClient QuizApiClient
+
+<PageTitle>@(quiz is null ? "Quiz / แบบฝึก" : $"{quiz.Title} / Quiz")</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">QUIZ / แบบฝึก</p>
+        <h1>@(quiz is null ? "Opening quiz / กำลังเปิดแบบฝึก" : quiz.Title)</h1>
+        <p class="page-subtitle">Answer one question at a time and get immediate feedback. / ตอบทีละข้อ แล้วดูเฉลยและคำอธิบายได้ทันที</p>
+    </div>
+    <div class="actions">
+        <a class="button secondary" href="/search?type=quiz"><Icon Name="search" Size="16" /> Search / ค้นหา</a>
+        <a class="button primary" href="/learn/practice"><Icon Name="quiz" Size="16" /> Practice / ฝึก</a>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+    <section class="panel">
+        <a class="button primary" href="/search?type=quiz"><Icon Name="search" Size="16" /> Search quizzes / ค้นหาแบบฝึก</a>
+    </section>
+}
+else if (isLoading)
+{
+    <section class="panel empty-state">
+        <strong>Loading quiz... / กำลังโหลดแบบฝึก</strong>
+        <span class="muted">Please wait while we find this quiz. / รอสักครู่ ระบบกำลังค้นหาแบบฝึกนี้</span>
+    </section>
+}
+else if (quiz is not null)
+{
+    <section class="panel">
+        <div class="list-card-badges">
+            @if (!string.IsNullOrWhiteSpace(quiz.CefrLevel))
+            {
+                <span class="pill">@quiz.CefrLevel</span>
+            }
+            @if (quiz.Category is not null)
+            {
+                <span class="pill">@quiz.Category.Name</span>
+            }
+            <span class="pill">@quiz.TimeLimitMinutes min / @quiz.TimeLimitMinutes นาที</span>
+            <span class="pill">Pass @quiz.PassingScore%</span>
+        </div>
+
+        <h3 class="detail-section-heading">Overview / ภาพรวม</h3>
+        <div class="detail-grid">
+            <div class="detail-item full">
+                <span class="muted">Summary / สรุป</span>
+                <strong>@FirstNonEmpty(quiz.Summary, "-")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Description / รายละเอียด</span>
+                <strong>@FirstNonEmpty(quiz.Description, "-")</strong>
+            </div>
+            @if (quiz.Lesson is not null)
+            {
+                <div class="detail-item full">
+                    <span class="muted">Related lesson / บทเรียนที่เกี่ยวข้อง</span>
+                    <strong><a href="/lessons/@quiz.Lesson.Slug">@quiz.Lesson.Title</a></strong>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="content-section">
+        <div class="section-header-row">
+            <div>
+                <h2>Questions / คำถาม</h2>
+                <p class="muted">Choose an answer to see whether it is correct. This preview does not save scores to your profile yet. / เลือกคำตอบเพื่อดูผลทันที หน้านี้ยังไม่บันทึกคะแนนลงโปรไฟล์</p>
+            </div>
+            <div class="actions">
+                <button class="button secondary" type="button" @onclick="ResetAnswers">Reset / เริ่มใหม่</button>
+            </div>
+        </div>
+
+        @if (ActiveQuestions.Count == 0)
+        {
+            <section class="panel empty-state">
+                <span class="empty-state-icon"><Icon Name="quiz" Size="22" /></span>
+                <strong>No questions yet / ยังไม่มีคำถาม</strong>
+                <p>This quiz is not ready yet. Try another quiz from search. / แบบฝึกนี้ยังไม่พร้อม ลองค้นหาแบบฝึกอื่นก่อน</p>
+            </section>
+        }
+        else
+        {
+            <div class="content-list">
+                @foreach (var question in ActiveQuestions)
+                {
+                    <article class="list-card">
+                        <div class="list-card-badges">
+                            <span class="pill">@QuestionTypeLabel(question.QuestionType)</span>
+                            <span class="pill">@question.Points point(s)</span>
+                            @if (selectedChoices.ContainsKey(question.Id))
+                            {
+                                <span class="@ResultBadgeClass(question)">@ResultLabel(question)</span>
+                            }
+                        </div>
+                        <h2>@question.QuestionText</h2>
+
+                        @if (question.Word is not null)
+                        {
+                            <p class="muted">Word / คำศัพท์: <a href="/dictionary/@question.Word.Slug">@question.Word.Text</a></p>
+                        }
+
+                        @if (question.Choices.Count == 0)
+                        {
+                            <p class="muted">No choices for this question yet. / คำถามนี้ยังไม่มีตัวเลือก</p>
+                        }
+                        else
+                        {
+                            <div class="quiz-choice-list">
+                                @foreach (var choice in question.Choices.Where(item => item.IsActive).OrderBy(item => item.SortOrder))
+                                {
+                                    var isSelected = selectedChoices.TryGetValue(question.Id, out var selectedChoiceId) && selectedChoiceId == choice.Id;
+                                    var showAnswer = selectedChoices.ContainsKey(question.Id);
+                                    <button class="@ChoiceButtonClass(choice, isSelected, showAnswer)" type="button" @onclick="() => SelectChoice(question.Id, choice.Id)">
+                                        <span>@choice.ChoiceText</span>
+                                        @if (showAnswer && choice.IsCorrect)
+                                        {
+                                            <strong>Correct / ถูก</strong>
+                                        }
+                                        else if (showAnswer && isSelected)
+                                        {
+                                            <strong>Review / ทบทวน</strong>
+                                        }
+                                    </button>
+                                }
+                            </div>
+                        }
+
+                        @if (selectedChoices.ContainsKey(question.Id))
+                        {
+                            <div class="alert @(IsCorrect(question) ? "success" : "warning")">
+                                <strong>@ResultLabel(question)</strong>
+                                <p>@FirstNonEmpty(question.ExplanationTh, question.ExplanationEn, SelectedChoiceExplanation(question), "Review the answer, then continue to the next question. / ทบทวนคำตอบ แล้วทำข้อต่อไป")</p>
+                            </div>
+                        }
+                    </article>
+                }
+            </div>
+        }
+    </section>
+}
+
+@code {
+    [Parameter]
+    public string? Slug { get; set; }
+
+    private QuizDto? quiz;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private readonly Dictionary<Guid, Guid> selectedChoices = [];
+
+    private IReadOnlyCollection<QuizQuestionDto> ActiveQuestions => quiz?.Questions
+        .Where(question => question.IsActive)
+        .OrderBy(question => question.SortOrder)
+        .ToArray() ?? [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        quiz = null;
+        selectedChoices.Clear();
+
+        if (string.IsNullOrWhiteSpace(Slug))
+        {
+            errorMessage = "Quiz link is missing. / ลิงก์แบบฝึกไม่ครบ";
+            isLoading = false;
+            return;
+        }
+
+        try
+        {
+            var result = await QuizApiClient.SearchAsync(
+                new QuizSearchRequest(
+                    Slug.Trim(),
+                    CefrLevel: null,
+                    CategoryId: null,
+                    LessonId: null,
+                    CourseId: null,
+                    BookId: null,
+                    IsPublished: null,
+                    IsActive: true,
+                    PageNumber: 1,
+                    PageSize: 10,
+                    SortBy: "Title",
+                    SortDirection: "Asc"),
+                CancellationToken.None);
+
+            var matchedQuiz = result.Items.FirstOrDefault(item =>
+                string.Equals(item.Slug, Slug, StringComparison.OrdinalIgnoreCase));
+            if (matchedQuiz is null)
+            {
+                errorMessage = "Quiz was not found. / ไม่พบแบบฝึกนี้";
+                return;
+            }
+
+            quiz = await QuizApiClient.GetAsync(matchedQuiz.Id, CancellationToken.None) ?? matchedQuiz;
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void SelectChoice(Guid questionId, Guid choiceId)
+    {
+        selectedChoices[questionId] = choiceId;
+    }
+
+    private void ResetAnswers()
+    {
+        selectedChoices.Clear();
+    }
+
+    private bool IsCorrect(QuizQuestionDto question)
+    {
+        return selectedChoices.TryGetValue(question.Id, out var choiceId)
+            && question.Choices.Any(choice => choice.Id == choiceId && choice.IsCorrect);
+    }
+
+    private string SelectedChoiceExplanation(QuizQuestionDto question)
+    {
+        if (!selectedChoices.TryGetValue(question.Id, out var choiceId))
+        {
+            return string.Empty;
+        }
+
+        var choice = question.Choices.FirstOrDefault(item => item.Id == choiceId);
+        return FirstNonEmpty(choice?.ExplanationTh, choice?.ExplanationEn);
+    }
+
+    private string ChoiceButtonClass(QuizChoiceDto choice, bool isSelected, bool showAnswer)
+    {
+        var classes = new List<string> { "quiz-choice-button" };
+        if (showAnswer && choice.IsCorrect)
+        {
+            classes.Add("correct");
+        }
+        else if (showAnswer && isSelected)
+        {
+            classes.Add("incorrect");
+        }
+        else if (isSelected)
+        {
+            classes.Add("selected");
+        }
+
+        return string.Join(" ", classes);
+    }
+
+    private string ResultBadgeClass(QuizQuestionDto question) =>
+        IsCorrect(question) ? "status-badge success" : "status-badge warning";
+
+    private string ResultLabel(QuizQuestionDto question) =>
+        IsCorrect(question) ? "Correct / ถูกต้อง" : "Review / ทบทวนอีกครั้ง";
+
+    private static string QuestionTypeLabel(string value) => value.ToLowerInvariant() switch
+    {
+        "multiplechoice" or "multiple_choice" => "Multiple choice / เลือกตอบ",
+        "singlechoice" or "single_choice" => "Single choice / เลือกคำตอบเดียว",
+        "truefalse" or "true_false" => "True/False / ถูกผิด",
+        "typing" => "Typing / พิมพ์ตอบ",
+        _ => value
+    };
+
+    private static string FirstNonEmpty(params string?[] values) =>
+        values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
+}

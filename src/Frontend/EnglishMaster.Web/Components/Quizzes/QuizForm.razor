@@ -16,29 +16,18 @@
         </div>
     }
 
+    <h3 class="detail-section-heading">Overview / ภาพรวม</h3>
     <div class="form-grid">
         <label class="span-2">
-            <span>Title</span>
+            <span>Title / ชื่อแบบฝึก</span>
             <InputText class="input" @bind-Value="Model.Title" />
             <ValidationMessage For="@(() => Model.Title)" />
-        </label>
-
-        <label class="span-2">
-            <span>Summary</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.Summary" />
-            <ValidationMessage For="@(() => Model.Summary)" />
-        </label>
-
-        <label class="span-2">
-            <span>Description</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.Description" />
-            <ValidationMessage For="@(() => Model.Description)" />
         </label>
 
         <label>
             <span>CEFR</span>
             <InputSelect class="input" @bind-Value="Model.CefrLevel">
-                <option value="">No level</option>
+                <option value="">No level / ไม่ระบุระดับ</option>
                 @foreach (var level in CefrLevels)
                 {
                     <option value="@level">@level</option>
@@ -47,9 +36,9 @@
         </label>
 
         <label>
-            <span>Category</span>
+            <span>Category / หมวดหมู่</span>
             <InputSelect class="input" @bind-Value="Model.CategoryId">
-                <option value="">No category</option>
+                <option value="">No category / ไม่ระบุหมวดหมู่</option>
                 @foreach (var category in Categories)
                 {
                     <option value="@category.Id">@category.Name</option>
@@ -58,9 +47,9 @@
         </label>
 
         <label>
-            <span>Lesson</span>
+            <span>Lesson / บทเรียน</span>
             <InputSelect class="input" @bind-Value="Model.LessonId">
-                <option value="">No lesson</option>
+                <option value="">No lesson / ไม่ระบุบทเรียน</option>
                 @foreach (var lesson in Lessons)
                 {
                     <option value="@lesson.Id">@lesson.Title</option>
@@ -69,9 +58,9 @@
         </label>
 
         <label>
-            <span>Course</span>
+            <span>Course / คอร์ส</span>
             <InputSelect class="input" @bind-Value="Model.CourseId">
-                <option value="">No course</option>
+                <option value="">No course / ไม่ระบุคอร์ส</option>
                 @foreach (var course in Courses)
                 {
                     <option value="@course.Id">@course.Title</option>
@@ -80,30 +69,33 @@
         </label>
 
         <label>
-            <span>Book</span>
+            <span>Book / หนังสือ</span>
             <InputSelect class="input" @bind-Value="Model.BookId">
-                <option value="">No book</option>
+                <option value="">No book / ไม่ระบุหนังสือ</option>
                 @foreach (var book in Books)
                 {
                     <option value="@book.Id">@book.Title</option>
                 }
             </InputSelect>
         </label>
+    </div>
 
+    <h3 class="detail-section-heading">Scoring &amp; Status / คะแนนและสถานะ</h3>
+    <div class="form-grid">
         <label>
-            <span>Time Limit</span>
+            <span>Time Limit / เวลาทำแบบฝึก</span>
             <InputNumber class="input" @bind-Value="Model.TimeLimitMinutes" />
             <ValidationMessage For="@(() => Model.TimeLimitMinutes)" />
         </label>
 
         <label>
-            <span>Passing Score</span>
+            <span>Passing Score / คะแนนผ่าน</span>
             <InputNumber class="input" @bind-Value="Model.PassingScore" />
             <ValidationMessage For="@(() => Model.PassingScore)" />
         </label>
 
         <label>
-            <span>Sort Order</span>
+            <span>Sort Order / ลำดับแสดงผล</span>
             <InputNumber class="input" @bind-Value="Model.SortOrder" />
             <ValidationMessage For="@(() => Model.SortOrder)" />
         </label>
@@ -112,19 +104,34 @@
         {
             <label class="checkbox-row">
                 <InputCheckbox @bind-Value="Model.IsPublished" />
-                <span>Published</span>
+                <span>Published / เผยแพร่</span>
             </label>
 
             <label class="checkbox-row">
                 <InputCheckbox @bind-Value="Model.IsActive" />
-                <span>Active</span>
+                <span>Active / ใช้งาน</span>
             </label>
         }
     </div>
 
+    <h3 class="detail-section-heading">Description / คำอธิบาย</h3>
+    <div class="form-grid">
+        <label class="span-2">
+            <span>Summary / สรุปสั้น</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.Summary" />
+            <ValidationMessage For="@(() => Model.Summary)" />
+        </label>
+
+        <label class="span-2">
+            <span>Description / รายละเอียด</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.Description" />
+            <ValidationMessage For="@(() => Model.Description)" />
+        </label>
+    </div>
+
     <div class="actions">
         <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
-        <a class="button" href="@AdminRoutes.Quizzes.Index">Cancel</a>
+        <a class="button" href="@AdminRoutes.Quizzes.Index">Cancel / ยกเลิก</a>
     </div>
 </EditForm>
 

@@ -6,25 +6,34 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Assets</p>
+        <p class="eyebrow">ASSETS / สื่อประกอบ</p>
         <h1>Media</h1>
+        <p class="page-subtitle">Manage images, audio, and files used by words, pronunciation, lessons, books, and quizzes. / จัดการรูปภาพ เสียง และไฟล์ที่ใช้กับคำศัพท์ การออกเสียง บทเรียน หนังสือ และแบบฝึก</p>
     </div>
     <div class="actions">
-        <a class="button" href="@AdminRoutes.Media.Upload">Upload</a>
-        <a class="button primary" href="@AdminRoutes.Media.Create">New Media</a>
+        <a class="button" href="@AdminRoutes.Media.Upload"><Icon Name="plus" Size="16" /> Upload / อัปโหลด</a>
+        <a class="button primary" href="@AdminRoutes.Media.Create"><Icon Name="plus" Size="16" /> New Media / เพิ่มสื่อ</a>
+    </div>
+</section>
+
+<section class="panel release-note">
+    <div>
+        <strong>Accessibility check / ตรวจการใช้งานสำหรับทุกคน</strong>
+        <p class="muted">Images should have helpful alt text. Audio should have a clear description so admins know where it belongs.</p>
+        <p class="muted">รูปภาพควรมี alt text ที่เข้าใจง่าย ส่วนไฟล์เสียงควรมีคำอธิบายว่าถูกใช้กับคำหรือบทเรียนใด</p>
     </div>
 </section>
 
 <section class="panel">
     <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
         <label>
-            <span>Search</span>
+            <span>Search / ค้นหา</span>
             <input class="input" @bind="search" @bind:event="oninput" />
         </label>
         <label>
-            <span>Media Type</span>
+            <span>Media Type / ประเภทสื่อ</span>
             <select class="input" @bind="mediaType">
-                <option value="">All types</option>
+                <option value="">All types / ทุกประเภท</option>
                 @foreach (var option in MediaTypeOptions)
                 {
                     <option value="@option">@option</option>
@@ -32,26 +41,26 @@
             </select>
         </label>
         <label>
-            <span>Content Type</span>
+            <span>Content Type / ชนิดไฟล์</span>
             <input class="input" @bind="contentType" @bind:event="oninput" />
         </label>
         <label>
-            <span>Status</span>
+            <span>Status / สถานะ</span>
             <select class="input" @bind="activeFilter">
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-                <option value="">All</option>
+                <option value="true">Active / ใช้งาน</option>
+                <option value="false">Inactive / ปิด</option>
+                <option value="">All / ทั้งหมด</option>
             </select>
         </label>
         <label>
-            <span>Page Size</span>
+            <span>Page Size / จำนวนต่อหน้า</span>
             <select class="input" @bind="pageSize">
                 <option value="10">10</option>
                 <option value="20">20</option>
                 <option value="50">50</option>
             </select>
         </label>
-        <button class="button" type="submit">Search</button>
+        <button class="button" type="submit">Search / ค้นหา</button>
     </form>
 </section>
 
@@ -62,56 +71,61 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading media...</p>
+    <p class="muted">Loading media... / กำลังโหลดสื่อ</p>
 }
 else if (mediaItems.Count == 0)
 {
-    <section class="panel">
-        <p class="muted">No media found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="media" Size="22" /></span>
+        <strong>No media found / ยังไม่พบสื่อ</strong>
+        <p>Try adjusting filters or upload the first asset. / ลองเปลี่ยนตัวกรอง หรืออัปโหลดสื่อแรก</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.Media.Upload"><Icon Name="plus" Size="16" /> Upload Media / อัปโหลดสื่อ</a>
+        </div>
     </section>
 }
 else
 {
     <section class="table-wrap">
         <div class="pagination-summary">
-            <span class="muted">Showing page @searchResult.PageNumber of @searchResult.TotalPages (@searchResult.TotalCount media items)</span>
+            <span class="muted">Page @searchResult.PageNumber of @searchResult.TotalPages / หน้า @searchResult.PageNumber จาก @searchResult.TotalPages</span>
+            <span class="status-badge neutral">@searchResult.TotalCount media items / @searchResult.TotalCount รายการ</span>
         </div>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>File</th>
-                    <th>Type</th>
-                    <th>Content</th>
-                    <th>Size</th>
-                    <th>Status</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var media in mediaItems)
-                {
-                    <tr>
-                        <td>
-                            <strong>@media.OriginalFileName</strong>
-                            <span class="muted">@media.FileName</span>
-                        </td>
-                        <td>@media.MediaType</td>
-                        <td>@media.ContentType</td>
-                        <td>@FormatSize(media.FileSize)</td>
-                        <td>@(media.IsActive ? "Active" : "Inactive")</td>
-                        <td class="row-actions">
-                            <a class="button small" href="@AdminRoutes.Media.Detail(media.Id)">View</a>
-                            <a class="button small" href="@AdminRoutes.Media.Edit(media.Id)">Edit</a>
-                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(media.Id)">Delete</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <div class="card-grid">
+            @foreach (var media in mediaItems)
+            {
+                <div class="entity-card">
+                    <a class="entity-card-link" href="@AdminRoutes.Media.Detail(media.Id)">
+                        <div class="entity-card-media">
+                            @if (media.MediaType == "Image" && !string.IsNullOrWhiteSpace(media.PublicUrl))
+                            {
+                                <img src="@media.PublicUrl" alt="@media.AltText" />
+                            }
+                            else
+                            {
+                                <Icon Name="media" Size="28" />
+                            }
+                        </div>
+                        <div class="entity-card-body">
+                            <h3>@media.OriginalFileName</h3>
+                            <span class="muted">@media.MediaType &middot; @FormatSize(media.FileSize)</span>
+                        </div>
+                    </a>
+                    <div class="entity-card-footer">
+                        <span class="status-badge @(media.IsActive ? "success" : "muted")">@(media.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")</span>
+                        <span class="row-actions">
+                            <a class="button small" href="@AdminRoutes.Media.Detail(media.Id)" aria-label="View @media.OriginalFileName" title="View"><Icon Name="eye" Size="15" /></a>
+                            <a class="button small" href="@AdminRoutes.Media.Edit(media.Id)" aria-label="Edit @media.OriginalFileName" title="Edit"><Icon Name="edit" Size="15" /></a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(media.Id)" aria-label="Delete @media.OriginalFileName" title="Delete"><Icon Name="trash" Size="15" /></button>
+                        </span>
+                    </div>
+                </div>
+            }
+        </div>
         <div class="pagination-row">
-            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous</button>
-            <span class="muted">Page @searchResult.PageNumber</span>
-            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next</button>
+            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous / ก่อนหน้า</button>
+            <span class="muted">Page @searchResult.PageNumber / หน้า @searchResult.PageNumber</span>
+            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next / ถัดไป</button>
         </div>
     </section>
 }

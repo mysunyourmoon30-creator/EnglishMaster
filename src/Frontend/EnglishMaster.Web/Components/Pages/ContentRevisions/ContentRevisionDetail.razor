@@ -8,12 +8,16 @@
     <div>
         <p class="eyebrow">Admin</p>
         <h1>Content Revision</h1>
+        <p class="page-subtitle">Details and snapshot for a single content revision.</p>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.ContentRevisions.Index">Back</a>
     </div>
 </section>
 
 @if (isLoading)
 {
-    <div class="panel">Loading revision...</div>
+    <p class="muted">Loading revision...</p>
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))
 {
@@ -22,9 +26,31 @@ else if (!string.IsNullOrWhiteSpace(errorMessage))
 else if (revision is not null)
 {
     <section class="panel">
-        <h2>@revision.ContentType #@revision.RevisionNumber</h2>
-        <p>@revision.EventType · @revision.ChangedBy · @revision.ChangedAt.LocalDateTime.ToString("g")</p>
-        <p>@revision.ChangeReason</p>
+        <h3 class="detail-section-heading">Overview</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Content Type</span>
+                <strong>@revision.ContentType #@revision.RevisionNumber</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Event Type</span>
+                <strong>@revision.EventType</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Changed By</span>
+                <strong>@revision.ChangedBy</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Changed At</span>
+                <strong>@revision.ChangedAt.LocalDateTime.ToString("g", CultureInfo.InvariantCulture)</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Change Reason</span>
+                <strong>@revision.ChangeReason</strong>
+            </div>
+        </div>
+
+        <h3 class="detail-section-heading">Snapshot</h3>
         <pre>@revision.SnapshotJson</pre>
     </section>
 }

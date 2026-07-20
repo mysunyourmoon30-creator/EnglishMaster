@@ -84,9 +84,22 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         services.AddDbContext<EnglishMasterDbContext>(options =>
+        {
+            if (string.Equals(configuration["Database:Provider"], "InMemory", StringComparison.OrdinalIgnoreCase))
+            {
+                options.UseInMemoryDatabase(configuration["Database:Name"] ?? "EnglishMasterInternal");
+                return;
+            }
+
+            if (string.Equals(configuration["Database:Provider"], "Sqlite", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("SQLite provider is not available in this build. Use SqlServer for local/internal and production runs.");
+            }
+
             options.UseSqlServer(string.IsNullOrWhiteSpace(connectionString)
                 ? DefaultConnectionString
-                : connectionString));
+                : connectionString);
+        });
 
         services.AddScoped<ICategoryRepository, EfCategoryRepository>();
         services.AddScoped<IAnalyticsRepository, EfAnalyticsRepository>();

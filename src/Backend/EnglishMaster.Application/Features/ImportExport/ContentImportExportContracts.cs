@@ -14,17 +14,17 @@ public interface IContentImportService
 
 public interface IContentExportService
 {
-    Task<Result<ContentExportResult>> ExportWordsAsync(string? format, CancellationToken cancellationToken);
+    Task<Result<ContentExportStream>> ExportWordsAsync(string? format, CancellationToken cancellationToken);
 
-    Task<Result<ContentExportResult>> ExportGrammarTopicsAsync(string? format, CancellationToken cancellationToken);
+    Task<Result<ContentExportStream>> ExportGrammarTopicsAsync(string? format, CancellationToken cancellationToken);
 
-    Task<Result<ContentExportResult>> ExportLessonsAsync(string? format, CancellationToken cancellationToken);
+    Task<Result<ContentExportStream>> ExportLessonsAsync(string? format, CancellationToken cancellationToken);
 
-    Task<Result<ContentExportResult>> ExportCoursesAsync(string? format, CancellationToken cancellationToken);
+    Task<Result<ContentExportStream>> ExportCoursesAsync(string? format, CancellationToken cancellationToken);
 
-    Task<Result<ContentExportResult>> ExportBooksAsync(string? format, CancellationToken cancellationToken);
+    Task<Result<ContentExportStream>> ExportBooksAsync(string? format, CancellationToken cancellationToken);
 
-    Task<Result<ContentExportResult>> ExportQuizzesAsync(string? format, CancellationToken cancellationToken);
+    Task<Result<ContentExportStream>> ExportQuizzesAsync(string? format, CancellationToken cancellationToken);
 }
 
 public static class ContentImportExportLimits
@@ -43,7 +43,7 @@ public sealed record ContentImportError(
     string Field,
     string Message);
 
-public sealed record ContentExportResult(
+public sealed record ContentExportStream(
     string FileName,
     string ContentType,
-    byte[] Content);
+    Func<Stream, CancellationToken, Task> WriteToAsync);

@@ -16,35 +16,18 @@
         </div>
     }
 
+    <h3 class="detail-section-heading">Overview / ภาพรวม</h3>
     <div class="form-grid">
         <label class="span-2">
-            <span>Title</span>
+            <span>Title / ชื่อหนังสือ</span>
             <InputText class="input" @bind-Value="Model.Title" />
             <ValidationMessage For="@(() => Model.Title)" />
-        </label>
-
-        <label class="span-2">
-            <span>Subtitle</span>
-            <InputText class="input" @bind-Value="Model.Subtitle" />
-            <ValidationMessage For="@(() => Model.Subtitle)" />
-        </label>
-
-        <label class="span-2">
-            <span>Summary</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.Summary" />
-            <ValidationMessage For="@(() => Model.Summary)" />
-        </label>
-
-        <label class="span-2">
-            <span>Description</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.Description" />
-            <ValidationMessage For="@(() => Model.Description)" />
         </label>
 
         <label>
             <span>CEFR</span>
             <InputSelect class="input" @bind-Value="Model.CefrLevel">
-                <option value="">No level</option>
+                <option value="">No level / ไม่ระบุระดับ</option>
                 @foreach (var level in CefrLevels)
                 {
                     <option value="@level">@level</option>
@@ -53,9 +36,9 @@
         </label>
 
         <label>
-            <span>Category</span>
+            <span>Category / หมวดหมู่</span>
             <InputSelect class="input" @bind-Value="Model.CategoryId">
-                <option value="">No category</option>
+                <option value="">No category / ไม่ระบุหมวดหมู่</option>
                 @foreach (var category in Categories)
                 {
                     <option value="@category.Id">@category.Name</option>
@@ -64,9 +47,9 @@
         </label>
 
         <label>
-            <span>Course</span>
+            <span>Course / คอร์ส</span>
             <InputSelect class="input" @bind-Value="Model.CourseId">
-                <option value="">No course</option>
+                <option value="">No course / ไม่ระบุคอร์ส</option>
                 @foreach (var course in Courses)
                 {
                     <option value="@course.Id">@course.Title</option>
@@ -75,63 +58,90 @@
         </label>
 
         <label>
-            <span>Cover</span>
+            <span>Cover / หน้าปก</span>
             <InputSelect class="input" @bind-Value="Model.CoverMediaId">
-                <option value="">No cover</option>
+                <option value="">No cover / ไม่มีหน้าปก</option>
                 @foreach (var media in CoverMediaOptions)
                 {
                     <option value="@media.Id">@media.OriginalFileName</option>
                 }
             </InputSelect>
         </label>
+    </div>
 
+    <h3 class="detail-section-heading">Publication Details / รายละเอียดสิ่งพิมพ์</h3>
+    <div class="form-grid">
         <label>
-            <span>Author</span>
+            <span>Author / ผู้เขียน</span>
             <InputText class="input" @bind-Value="Model.AuthorName" />
             <ValidationMessage For="@(() => Model.AuthorName)" />
         </label>
 
         <label>
-            <span>Edition</span>
+            <span>Edition / ฉบับ</span>
             <InputText class="input" @bind-Value="Model.Edition" />
             <ValidationMessage For="@(() => Model.Edition)" />
         </label>
 
         <label>
-            <span>Version</span>
+            <span>Version / เวอร์ชัน</span>
             <InputText class="input" @bind-Value="Model.Version" />
             <ValidationMessage For="@(() => Model.Version)" />
         </label>
 
         <label>
-            <span>Estimated Pages</span>
+            <span>Estimated Pages / จำนวนหน้าประมาณ</span>
             <InputNumber class="input" @bind-Value="Model.EstimatedPages" />
             <ValidationMessage For="@(() => Model.EstimatedPages)" />
         </label>
 
         <label>
-            <span>Sort Order</span>
+            <span>Sort Order / ลำดับแสดงผล</span>
             <InputNumber class="input" @bind-Value="Model.SortOrder" />
             <ValidationMessage For="@(() => Model.SortOrder)" />
         </label>
+    </div>
 
-        @if (ShowStatusToggles)
-        {
+    @if (ShowStatusToggles)
+    {
+        <h3 class="detail-section-heading">Publishing Status / สถานะเผยแพร่</h3>
+        <div class="form-grid">
             <label class="checkbox-row">
                 <InputCheckbox @bind-Value="Model.IsPublished" />
-                <span>Published</span>
+                <span>Published / เผยแพร่</span>
             </label>
 
             <label class="checkbox-row">
                 <InputCheckbox @bind-Value="Model.IsActive" />
-                <span>Active</span>
+                <span>Active / ใช้งาน</span>
             </label>
-        }
+        </div>
+    }
+
+    <h3 class="detail-section-heading">Description / คำอธิบาย</h3>
+    <div class="form-grid">
+        <label class="span-2">
+            <span>Subtitle / ชื่อรอง</span>
+            <InputText class="input" @bind-Value="Model.Subtitle" />
+            <ValidationMessage For="@(() => Model.Subtitle)" />
+        </label>
+
+        <label class="span-2">
+            <span>Summary / สรุป</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.Summary" />
+            <ValidationMessage For="@(() => Model.Summary)" />
+        </label>
+
+        <label class="span-2">
+            <span>Description / รายละเอียด</span>
+            <InputTextArea class="input textarea" @bind-Value="Model.Description" />
+            <ValidationMessage For="@(() => Model.Description)" />
+        </label>
     </div>
 
     <div class="actions">
         <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
-        <a class="button" href="@AdminRoutes.Books.Index">Cancel</a>
+        <a class="button" href="@AdminRoutes.Books.Index">Cancel / ยกเลิก</a>
     </div>
 </EditForm>
 

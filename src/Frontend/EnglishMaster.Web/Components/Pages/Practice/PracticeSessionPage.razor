@@ -1,14 +1,26 @@
 @page "/learn/practice/session/{Id:guid}"
 @inject IPracticeApiClient PracticeApiClient
 
-<PageTitle>Practice Session</PageTitle>
+<PageTitle>Practice Session / รอบฝึก</PageTitle>
 
 <section class="page-header">
     <div>
-        <h1>Practice Session</h1>
-        <p class="muted">@session.CompletedItems of @session.TotalItems completed</p>
+        <p class="eyebrow">PRACTICE SESSION / รอบฝึก</p>
+        <h1>Review Each Item</h1>
+        <p class="page-subtitle">@session.CompletedItems of @session.TotalItems completed / ทำแล้ว @session.CompletedItems จาก @session.TotalItems ข้อ</p>
     </div>
-    <button class="button" type="button" @onclick="CompleteAsync">Complete session</button>
+    <div class="actions">
+        <a class="button secondary" href="/learn/practice">Back / กลับ</a>
+        <button class="button primary" type="button" disabled="@isBusy" @onclick="CompleteAsync"><Icon Name="quality" Size="15" /> Complete / จบรอบ</button>
+    </div>
+</section>
+
+<section class="panel release-note">
+    <div>
+        <strong>Rate honestly / เลือกตามความจำจริง</strong>
+        <p class="muted">Again means you forgot, Hard means you remembered with effort, Good means you remembered, Easy means it felt simple.</p>
+        <p class="muted">Again = ยังจำไม่ได้, Hard = ยาก, Good = พอจำได้, Easy = ง่าย ระบบจะใช้คำตอบนี้จัดรอบทบทวนครั้งต่อไป</p>
+    </div>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -17,11 +29,20 @@
 }
 else if (isLoading)
 {
-    <p class="muted">Loading session...</p>
+    <section class="panel empty-state">
+        <strong>Loading session... / กำลังโหลดรอบฝึก</strong>
+    </section>
 }
 else if (session.Items.Count == 0)
 {
-    <p class="muted">No items in this session.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="quiz" Size="20" /></span>
+        <strong>No items in this session / รอบนี้ยังไม่มีข้อฝึก</strong>
+        <p>Go back to Practice and start a new session. / กลับไปหน้า Practice แล้วเริ่มรอบฝึกใหม่</p>
+        <div class="actions">
+            <a class="button primary" href="/learn/practice">Back to practice / กลับไปฝึก</a>
+        </div>
+    </section>
 }
 else
 {
@@ -29,19 +50,31 @@ else
         @foreach (var item in session.Items)
         {
             <article class="list-card">
-                <span class="pill">@item.PracticeType</span>
+                <div class="list-card-badges">
+                    <span class="pill">@GetPracticeTypeLabel(item.PracticeType)</span>
+                    @if (item.PracticedAt.HasValue)
+                    {
+                        <span class="pill">@GetResultLabel(item.Result)</span>
+                    }
+                </div>
                 <h2>@item.PromptText</h2>
+                @if (!string.IsNullOrWhiteSpace(item.AnswerText))
+                {
+                    <p class="muted">Answer / คำตอบ: @item.AnswerText</p>
+                }
+
                 @if (item.PracticedAt.HasValue)
                 {
-                    <p class="muted">Submitted: @item.Result</p>
+                    <p class="muted">Submitted / บันทึกแล้ว: @GetResultLabel(item.Result)</p>
                 }
                 else
                 {
+                    <p class="muted">Choose the button that matches your real memory. / เลือกปุ่มตามความจำจริงของคุณ</p>
                     <div class="actions">
-                        <button class="button small" type="button" @onclick="@(() => SubmitAsync(item.Id, "Again"))">Again</button>
-                        <button class="button small" type="button" @onclick="@(() => SubmitAsync(item.Id, "Hard"))">Hard</button>
-                        <button class="button small" type="button" @onclick="@(() => SubmitAsync(item.Id, "Good"))">Good</button>
-                        <button class="button small" type="button" @onclick="@(() => SubmitAsync(item.Id, "Easy"))">Easy</button>
+                        <button class="button small danger" type="button" disabled="@isBusy" @onclick="@(() => SubmitAsync(item.Id, "Again"))">Again / ยังจำไม่ได้</button>
+                        <button class="button small" type="button" disabled="@isBusy" @onclick="@(() => SubmitAsync(item.Id, "Hard"))">Hard / ยาก</button>
+                        <button class="button small" type="button" disabled="@isBusy" @onclick="@(() => SubmitAsync(item.Id, "Good"))">Good / พอได้</button>
+                        <button class="button small primary" type="button" disabled="@isBusy" @onclick="@(() => SubmitAsync(item.Id, "Easy"))">Easy / ง่าย</button>
                     </div>
                 }
             </article>
@@ -53,6 +86,7 @@ else
     [Parameter] public Guid Id { get; set; }
     private PracticeSessionDto session = new(Guid.Empty, DateTimeOffset.UtcNow, null, "Started", 0, 0, 0, 0, []);
     private bool isLoading = true;
+    private bool isBusy;
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
@@ -65,7 +99,7 @@ else
         }
         catch (ApiRequestException)
         {
-            errorMessage = "Practice session is unavailable.";
+            errorMessage = "Practice session is unavailable. / เปิดรอบฝึกนี้ไม่ได้";
         }
         finally
         {
@@ -75,13 +109,53 @@ else
 
     private async Task SubmitAsync(Guid itemId, string result)
     {
-        await PracticeApiClient.SubmitAsync(itemId, new SubmitPracticeSessionItemRequest(null, result), CancellationToken.None);
-        await LoadAsync();
+        await RunBusyAsync(async () =>
+        {
+            await PracticeApiClient.SubmitAsync(itemId, new SubmitPracticeSessionItemRequest(null, result), CancellationToken.None);
+            await LoadAsync();
+        });
     }
 
     private async Task CompleteAsync()
     {
-        session = await PracticeApiClient.CompleteAsync(Id, CancellationToken.None);
+        await RunBusyAsync(async () =>
+        {
+            session = await PracticeApiClient.CompleteAsync(Id, CancellationToken.None);
+        });
     }
-}
 
+    private async Task RunBusyAsync(Func<Task> action)
+    {
+        errorMessage = null;
+        isBusy = true;
+        try
+        {
+            await action();
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Practice action failed. Please try again. / ทำรายการไม่สำเร็จ ลองใหม่อีกครั้ง";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private static string GetPracticeTypeLabel(string value) => value.ToLowerInvariant() switch
+    {
+        "recall" => "Recall / นึกคำตอบ",
+        "recognition" => "Recognition / เลือกคำตอบ",
+        "typing" => "Typing / พิมพ์ตอบ",
+        _ => value
+    };
+
+    private static string GetResultLabel(string? value) => value?.ToLowerInvariant() switch
+    {
+        "again" => "Again / ยังจำไม่ได้",
+        "hard" => "Hard / ยาก",
+        "good" => "Good / พอได้",
+        "easy" => "Easy / ง่าย",
+        _ => value ?? "-"
+    };
+}

@@ -1,0 +1,76 @@
+@page "/grammar/{Slug}"
+@rendermode InteractiveServer
+@layout PublicLayout
+@inject IGrammarApiClient GrammarApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Opening grammar / เปิดไวยากรณ์</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Grammar / ไวยากรณ์</p>
+        <h1>Opening grammar / กำลังเปิดไวยากรณ์</h1>
+        <p class="page-subtitle">กำลังค้นหาเนื้อหาไวยากรณ์จากลิงก์นี้.</p>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+    <section class="panel">
+        <a class="button primary" href="/search?type=grammar"><Icon Name="search" Size="16" /> Search grammar / ค้นหาไวยากรณ์</a>
+    </section>
+}
+else
+{
+    <section class="panel">
+        <p class="muted">Please wait... / รอสักครู่</p>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public string? Slug { get; set; }
+
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Slug))
+        {
+            errorMessage = "Grammar link is missing. / ลิงก์ไวยากรณ์ไม่ครบ";
+            return;
+        }
+
+        try
+        {
+            var topicResult = await GrammarApiClient.SearchTopicsAsync(
+                new GrammarTopicSearchRequest(Slug.Trim(), IsActive: true, PageNumber: 1, PageSize: 10),
+                CancellationToken.None);
+            var topic = topicResult.Items.FirstOrDefault(item =>
+                string.Equals(item.Slug, Slug, StringComparison.OrdinalIgnoreCase));
+            if (topic is not null)
+            {
+                NavigationManager.NavigateTo(AdminRoutes.GrammarTopics.Detail(topic.Id), replace: true);
+                return;
+            }
+
+            var ruleResult = await GrammarApiClient.SearchRulesAsync(
+                new GrammarRuleSearchRequest(Slug.Trim(), IsActive: true, PageNumber: 1, PageSize: 10),
+                CancellationToken.None);
+            var rule = ruleResult.Items.FirstOrDefault(item =>
+                string.Equals(item.Slug, Slug, StringComparison.OrdinalIgnoreCase));
+            if (rule is not null)
+            {
+                NavigationManager.NavigateTo(AdminRoutes.GrammarRules.Detail(rule.Id), replace: true);
+                return;
+            }
+
+            errorMessage = "Grammar content was not found. / ไม่พบเนื้อหาไวยากรณ์นี้";
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+}

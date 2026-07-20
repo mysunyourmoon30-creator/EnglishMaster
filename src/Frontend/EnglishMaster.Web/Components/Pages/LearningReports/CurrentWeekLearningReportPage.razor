@@ -5,12 +5,13 @@
 
 <section class="page-header">
     <div>
-        <h1>Current Week Report</h1>
-        <p class="muted">See this week's learning progress.</p>
+        <p class="eyebrow">REPORTS / รายงาน</p>
+        <h1>Current Week Report / รายงานสัปดาห์นี้</h1>
+        <p class="page-subtitle">See this week's learning progress. / ดูความคืบหน้าการเรียนของสัปดาห์นี้</p>
     </div>
     <div class="actions">
-        <button class="button" type="button" @onclick="GenerateAsync">Generate</button>
-        <a class="button secondary" href="/learn/reports">History</a>
+        <button class="button primary" type="button" @onclick="GenerateAsync"><Icon Name="plus" Size="15" /> Generate / สร้าง</button>
+        <a class="button secondary" href="/learn/reports"><Icon Name="revision" Size="15" /> History / ประวัติ</a>
     </div>
 </section>
 
@@ -20,11 +21,20 @@
 }
 else if (isLoading)
 {
-    <p class="muted">Loading report...</p>
+    <section class="panel empty-state">
+        <strong>Loading report... / กำลังโหลดรายงาน</strong>
+    </section>
 }
 else if (report is null)
 {
-    <p class="muted">No report generated for this week yet.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="report" Size="20" /></span>
+        <strong>No report generated for this week yet / ยังไม่มีรายงานสัปดาห์นี้</strong>
+        <p>Generate the report to see study minutes, lessons, and quiz performance. / สร้างรายงานเพื่อดูเวลาเรียน บทเรียน และคะแนนแบบฝึก</p>
+        <div class="actions">
+            <button class="button primary" type="button" @onclick="GenerateAsync"><Icon Name="plus" Size="15" /> Generate / สร้าง</button>
+        </div>
+    </section>
 }
 else
 {
@@ -46,7 +56,7 @@ else
         }
         catch (ApiRequestException)
         {
-            errorMessage = "Current week report is unavailable right now.";
+            errorMessage = "Current week report is unavailable right now. / ตอนนี้ยังโหลดรายงานสัปดาห์นี้ไม่ได้";
         }
         finally
         {

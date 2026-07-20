@@ -14,7 +14,11 @@ public static class SecuritySeeder
     {
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<EnglishMasterDbContext>();
-        if (dbContext.Database.IsRelational())
+        if (string.Equals(configuration["Database:Provider"], "Sqlite", StringComparison.OrdinalIgnoreCase))
+        {
+            await dbContext.Database.EnsureCreatedAsync(cancellationToken);
+        }
+        else if (dbContext.Database.IsRelational())
         {
             await dbContext.Database.MigrateAsync(cancellationToken);
         }

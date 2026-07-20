@@ -7,20 +7,21 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Vocabulary</p>
-        <h1>Edit Category</h1>
+        <p class="eyebrow">Content Categories / หมวดหมู่เนื้อหา</p>
+        <h1>Edit Category / แก้ไขหมวด</h1>
     </div>
+    <a class="button" href="@AdminRoutes.Categories.Index">Back to Categories / กลับไปหน้าหมวดหมู่</a>
 </section>
 
 @if (isLoading)
 {
-    <p class="muted">Loading category...</p>
+    <p class="muted">Loading category... / กำลังโหลดหมวดหมู่</p>
 }
 else if (notFound)
 {
     <section class="panel">
-        <p class="muted">Category was not found.</p>
-        <a class="button" href="@AdminRoutes.Categories.Index">Back to Categories</a>
+        <p class="muted">Category was not found. / ไม่พบหมวดหมู่</p>
+        <a class="button" href="@AdminRoutes.Categories.Index">Back to Categories / กลับไปหน้าหมวดหมู่</a>
     </section>
 }
 else
@@ -35,7 +36,7 @@ else
                       ValidationErrors="validationErrors"
                       IsSaving="isSaving"
                       ShowActiveToggle="true"
-                      SubmitText="Save"
+                      SubmitText="Save / บันทึก"
                       OnValidSubmit="SaveAsync" />
     </section>
 }

@@ -1,0 +1,66 @@
+@page "/books/{Slug}"
+@rendermode InteractiveServer
+@layout PublicLayout
+@inject IBookApiClient BookApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Opening book / เปิดหนังสือ</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Books / หนังสือ</p>
+        <h1>Opening book / กำลังเปิดหนังสือ</h1>
+        <p class="page-subtitle">กำลังค้นหาหนังสือจากลิงก์นี้.</p>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+    <section class="panel">
+        <a class="button primary" href="/search?type=book"><Icon Name="search" Size="16" /> Search books / ค้นหาหนังสือ</a>
+    </section>
+}
+else
+{
+    <section class="panel">
+        <p class="muted">Please wait... / รอสักครู่</p>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public string? Slug { get; set; }
+
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Slug))
+        {
+            errorMessage = "Book link is missing. / ลิงก์หนังสือไม่ครบ";
+            return;
+        }
+
+        try
+        {
+            var result = await BookApiClient.SearchAsync(
+                new BookSearchRequest(Slug.Trim(), IsPublished: null, IsActive: true, PageNumber: 1, PageSize: 10),
+                CancellationToken.None);
+
+            var book = result.Items.FirstOrDefault(item =>
+                string.Equals(item.Slug, Slug, StringComparison.OrdinalIgnoreCase));
+            if (book is null)
+            {
+                errorMessage = "Book was not found. / ไม่พบหนังสือนี้";
+                return;
+            }
+
+            NavigationManager.NavigateTo(AdminRoutes.Books.Detail(book.Id), replace: true);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+}

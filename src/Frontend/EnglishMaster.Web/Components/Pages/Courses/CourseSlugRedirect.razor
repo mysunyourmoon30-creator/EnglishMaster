@@ -1,0 +1,66 @@
+@page "/courses/{Slug}"
+@rendermode InteractiveServer
+@layout PublicLayout
+@inject ICourseApiClient CourseApiClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Opening course / เปิดคอร์ส</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Courses / คอร์ส</p>
+        <h1>Opening course / กำลังเปิดคอร์ส</h1>
+        <p class="page-subtitle">กำลังค้นหาคอร์สจากลิงก์นี้.</p>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+    <section class="panel">
+        <a class="button primary" href="/search?type=course"><Icon Name="search" Size="16" /> Search courses / ค้นหาคอร์ส</a>
+    </section>
+}
+else
+{
+    <section class="panel">
+        <p class="muted">Please wait... / รอสักครู่</p>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public string? Slug { get; set; }
+
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Slug))
+        {
+            errorMessage = "Course link is missing. / ลิงก์คอร์สไม่ครบ";
+            return;
+        }
+
+        try
+        {
+            var result = await CourseApiClient.SearchAsync(
+                new CourseSearchRequest(Slug.Trim(), IsPublished: null, IsActive: true, PageNumber: 1, PageSize: 10),
+                CancellationToken.None);
+
+            var course = result.Items.FirstOrDefault(item =>
+                string.Equals(item.Slug, Slug, StringComparison.OrdinalIgnoreCase));
+            if (course is null)
+            {
+                errorMessage = "Course was not found. / ไม่พบคอร์สนี้";
+                return;
+            }
+
+            NavigationManager.NavigateTo(AdminRoutes.Courses.Detail(course.Id), replace: true);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+    }
+}

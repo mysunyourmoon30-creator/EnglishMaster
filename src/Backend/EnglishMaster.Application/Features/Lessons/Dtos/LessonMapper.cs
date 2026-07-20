@@ -33,10 +33,10 @@ internal static class LessonMapper
             lesson.EstimatedMinutes,
             lesson.SortOrder,
             lesson.Words
+                .OrderBy(relation => relation.SortOrder)
                 .Select(relation => wordById.TryGetValue(relation.WordId, out var word) ? word : null)
                 .Where(word => word is not null)
                 .Cast<Word>()
-                .OrderBy(word => word.Text)
                 .Select(word => new LessonWordSummaryDto(word.Id, word.Text, word.Slug, word.MeaningTh))
                 .ToArray(),
             lesson.GrammarRules

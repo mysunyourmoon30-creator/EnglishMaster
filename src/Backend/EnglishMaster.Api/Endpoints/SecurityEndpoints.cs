@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using EnglishMaster.Api.Security;
 using EnglishMaster.Application.Features.Security;
 using EnglishMaster.Contracts.Security;
 using EnglishMaster.Shared.Results;
@@ -14,7 +15,7 @@ public static class SecurityEndpoints
     public static IEndpointRouteBuilder MapSecurityEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var auth = endpoints.MapGroup("/api/v1/auth").WithTags("Auth");
-        auth.MapPost("/login", LoginAsync).AllowAnonymous();
+        auth.MapPost("/login", LoginAsync).AllowAnonymous().RequireRateLimiting("login");
         auth.MapPost("/logout", async (HttpContext httpContext) =>
         {
             await httpContext.SignOutAsync(CookieScheme);
@@ -52,14 +53,27 @@ public static class SecurityEndpoints
         LoginRequest request,
         LoginCommandHandler handler,
         HttpContext httpContext,
+        LoginAttemptTracker loginAttemptTracker,
         CancellationToken cancellationToken)
     {
+        var remoteAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        if (loginAttemptTracker.IsLockedOut(request.Email, remoteAddress, out var retryAfter))
+        {
+            httpContext.Response.Headers.RetryAfter = Math.Ceiling(retryAfter.TotalSeconds).ToString("F0");
+            return Results.Problem(
+                title: "Too many failed login attempts.",
+                detail: "Please wait before trying again.",
+                statusCode: StatusCodes.Status429TooManyRequests);
+        }
+
         var result = await handler.HandleAsync(new LoginCommand(request.Email, request.Password), cancellationToken);
         if (result.Status != ResultStatus.Success)
         {
+            loginAttemptTracker.RecordFailure(request.Email, remoteAddress);
             return ToHttpResult(result);
         }
 
+        loginAttemptTracker.RecordSuccess(request.Email, remoteAddress);
         await httpContext.SignInAsync(CookieScheme, CreatePrincipal(result.Value!), AuthenticationProperties());
         return Results.Ok(new LoginResponse(result.Value!));
     }

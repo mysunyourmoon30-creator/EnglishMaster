@@ -3,18 +3,19 @@
 @inject ISecurityApiClient SecurityApiClient
 @inject NavigationManager NavigationManager
 
-<PageTitle>Edit User</PageTitle>
+<PageTitle>Edit User / แก้ไขผู้ใช้</PageTitle>
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Administration</p>
-        <h1>Edit User</h1>
+        <p class="eyebrow">USERS / ผู้ใช้</p>
+        <h1>Edit User / แก้ไขผู้ใช้</h1>
     </div>
+    <a class="button" href="@AdminRoutes.Users.Detail(Id)">Back to User / กลับหน้าผู้ใช้</a>
 </section>
 
 @if (isLoading)
 {
-    <p class="muted">Loading user...</p>
+    <p class="muted">Loading user... / กำลังโหลดผู้ใช้</p>
 }
 else
 {
@@ -26,14 +27,14 @@ else
             <div class="alert error">@errorMessage</div>
         }
         <div class="form-grid">
-            <label><span>Email</span><InputText class="input" @bind-Value="model.Email" /></label>
-            <label><span>User Name</span><InputText class="input" @bind-Value="model.UserName" /></label>
-            <label><span>Display Name</span><InputText class="input" @bind-Value="model.DisplayName" /></label>
-            <label class="checkbox-row"><InputCheckbox @bind-Value="model.IsActive" /><span>Active</span></label>
+            <label><span>Email / อีเมล</span><InputText class="input" @bind-Value="model.Email" /></label>
+            <label><span>User Name / ชื่อผู้ใช้</span><InputText class="input" @bind-Value="model.UserName" /></label>
+            <label><span>Display Name / ชื่อที่แสดง</span><InputText class="input" @bind-Value="model.DisplayName" /></label>
+            <label class="checkbox-row"><InputCheckbox @bind-Value="model.IsActive" /><span>Active / ใช้งาน</span></label>
         </div>
         <div class="actions">
-            <button class="button primary" type="submit" disabled="@isSaving">Save</button>
-            <a class="button" href="@AdminRoutes.Users.Detail(Id)">Cancel</a>
+            <button class="button primary" type="submit" disabled="@isSaving">Save / บันทึก</button>
+            <a class="button" href="@AdminRoutes.Users.Detail(Id)">Cancel / ยกเลิก</a>
         </div>
     </EditForm>
 }

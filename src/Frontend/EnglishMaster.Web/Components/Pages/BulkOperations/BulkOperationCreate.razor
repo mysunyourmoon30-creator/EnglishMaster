@@ -7,10 +7,11 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Admin</p>
+        <p class="eyebrow">Bulk Operations</p>
         <h1>Create Bulk Operation</h1>
+        <p class="page-subtitle">Queue a batch action across a set of selected content items.</p>
     </div>
-    <a class="button secondary" href="@AdminRoutes.BulkOperations.Index">Back</a>
+    <a class="button" href="@AdminRoutes.BulkOperations.Index">Back to Bulk Operations</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -60,7 +61,7 @@
         <textarea rows="3" @bind="note"></textarea>
     </label>
     <div class="form-actions">
-        <button class="button primary" @onclick="CreateAsync" disabled="@isSaving">Create</button>
+        <button class="button primary" @onclick="CreateAsync" disabled="@isSaving"><Icon Name="plus" Size="16" /> Create</button>
     </div>
 </section>
 

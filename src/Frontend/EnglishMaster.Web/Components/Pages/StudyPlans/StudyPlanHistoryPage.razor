@@ -1,14 +1,15 @@
 @page "/learn/study-plan/history"
 @inject IDailyStudyPlanApiClient StudyPlanApiClient
 
-<PageTitle>Study Plan History</PageTitle>
+<PageTitle>Study Plan History / ประวัติแผนเรียน</PageTitle>
 
 <section class="page-header">
     <div>
+        <p class="eyebrow">STUDY PLAN / แผนเรียน</p>
         <h1>Study Plan History</h1>
-        <p class="muted">Review recent daily study plans.</p>
+        <p class="page-subtitle">Review past daily plans, completed tasks, and study time. / ดูแผนเรียนย้อนหลัง งานที่ทำเสร็จ และเวลาที่ใช้เรียน</p>
     </div>
-    <a class="button secondary" href="/learn/study-plan">Today</a>
+    <a class="button secondary" href="/learn/study-plan">Today / วันนี้</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -17,11 +18,20 @@
 }
 else if (isLoading)
 {
-    <p class="muted">Loading history...</p>
+    <section class="panel empty-state">
+        <strong>Loading history... / กำลังโหลดประวัติ</strong>
+    </section>
 }
 else if (plans.Count == 0)
 {
-    <p class="muted">No study plan history yet.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="revision" Size="20" /></span>
+        <strong>No study plan history yet / ยังไม่มีประวัติแผนเรียน</strong>
+        <p>Your daily plan results will appear here after you create and use a plan. / เมื่อสร้างและทำแผนรายวันแล้ว ผลจะแสดงที่นี่</p>
+        <div class="actions">
+            <a class="button primary" href="/learn/study-plan">Create today's plan / สร้างแผนวันนี้</a>
+        </div>
+    </section>
 }
 else
 {
@@ -29,9 +39,12 @@ else
         @foreach (var plan in plans)
         {
             <article class="list-card">
-                <span class="pill">@plan.Status</span>
-                <h3>@plan.PlanDate.ToString("yyyy-MM-dd")</h3>
-                <p class="muted">@plan.CompletedItems / @plan.TotalItems items - @plan.CompletedMinutes minutes</p>
+                <div class="list-card-badges">
+                    <span class="@StatusBadgeClass(plan.Status)">@StatusLabel(plan.Status)</span>
+                    <span class="pill">@GetProgressPercent(plan)% done</span>
+                </div>
+                <h3>@plan.PlanDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</h3>
+                <p class="muted">@plan.CompletedItems / @plan.TotalItems tasks / งาน · @plan.CompletedMinutes / @plan.TargetMinutes minutes / นาที</p>
             </article>
         }
     </div>
@@ -50,11 +63,32 @@ else
         }
         catch (ApiRequestException)
         {
-            errorMessage = "Study plan history is unavailable right now.";
+            errorMessage = "Study plan history is unavailable right now. / ตอนนี้ยังโหลดประวัติแผนเรียนไม่ได้";
         }
         finally
         {
             isLoading = false;
         }
     }
+
+    private static int GetProgressPercent(DailyStudyPlanDto plan) => plan.TotalItems == 0
+        ? 0
+        : Math.Clamp((int)Math.Round(plan.CompletedItems * 100m / plan.TotalItems), 0, 100);
+
+    private static string StatusLabel(string status) => status.ToLowerInvariant() switch
+    {
+        "completed" => "Completed / เสร็จแล้ว",
+        "skipped" => "Skipped / ข้ามแล้ว",
+        "inprogress" or "in_progress" => "In progress / กำลังทำ",
+        "planned" or "pending" => "Planned / รอทำ",
+        _ => $"{status} / สถานะ"
+    };
+
+    private static string StatusBadgeClass(string status) => status.ToLowerInvariant() switch
+    {
+        "completed" => "status-badge success",
+        "skipped" => "status-badge muted",
+        "inprogress" or "in_progress" => "status-badge warning",
+        _ => "status-badge neutral"
+    };
 }

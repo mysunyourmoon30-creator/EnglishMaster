@@ -8,19 +8,31 @@
     <div>
         <p class="eyebrow">Admin</p>
         <h1>Quality Rules</h1>
+        <p class="page-subtitle">Configure the rules that drive automated content quality checks.</p>
     </div>
     <div class="actions">
-        <a class="button" href="@AdminRoutes.ContentQuality.CreateRule">Create</a>
+        <a class="button primary" href="@AdminRoutes.ContentQuality.CreateRule"><Icon Name="plus" Size="16" /> Create</a>
     </div>
 </section>
 
 @if (isLoading)
 {
-    <div class="panel">Loading rules...</div>
+    <p class="muted">Loading rules...</p>
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))
 {
     <div class="alert error">@errorMessage</div>
+}
+else if (rules.Count == 0)
+{
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="report" Size="22" /></span>
+        <strong>No quality rules found</strong>
+        <p>Create the first rule to start running automated content quality checks.</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.ContentQuality.CreateRule"><Icon Name="plus" Size="16" /> Create</a>
+        </div>
+    </section>
 }
 else
 {
@@ -30,12 +42,12 @@ else
             <article class="panel">
                 <div class="item-header">
                     <div>
-                        <h2>@rule.Code</h2>
+                        <h2><Icon Name="report" Size="17" /> @rule.Code</h2>
                         <p>@rule.Name</p>
                     </div>
                     <span class="badge">@rule.Severity</span>
                 </div>
-                <a class="button small" href="@AdminRoutes.ContentQuality.EditRule(rule.Id)">Edit</a>
+                <a class="button small" href="@AdminRoutes.ContentQuality.EditRule(rule.Id)" aria-label="Edit @rule.Code" title="Edit"><Icon Name="edit" Size="15" /></a>
             </article>
         }
     </section>

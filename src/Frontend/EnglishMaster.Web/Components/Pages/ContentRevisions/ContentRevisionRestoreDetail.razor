@@ -8,6 +8,7 @@
     <div>
         <p class="eyebrow">Admin</p>
         <h1>Restore Request</h1>
+        <p class="page-subtitle">Review the request and approve, reject, or complete the restore.</p>
     </div>
     <a class="button secondary" href="@AdminRoutes.ContentRevisions.Restores">Back</a>
 </section>
@@ -32,7 +33,7 @@ else if (request is not null)
                 <dt>Requested by</dt>
                 <dd>@request.RequestedBy</dd>
                 <dt>Requested at</dt>
-                <dd>@request.RequestedAt.LocalDateTime.ToString("f")</dd>
+                <dd>@request.RequestedAt.LocalDateTime.ToString("f", CultureInfo.InvariantCulture)</dd>
                 <dt>Reason</dt>
                 <dd>@request.Reason</dd>
                 <dt>Review note</dt>
@@ -41,13 +42,13 @@ else if (request is not null)
         </article>
 
         <article class="panel">
-            <h2>Review</h2>
+            <h2><Icon Name="edit" Size="17" /> Review</h2>
             <label>
                 Note
                 <textarea rows="4" @bind="reviewNote"></textarea>
             </label>
             <div class="form-actions">
-                <button class="button" @onclick="ApproveAsync" disabled="@isSaving">Approve</button>
+                <button class="button" @onclick="ApproveAsync" disabled="@isSaving"><Icon Name="quality" Size="15" /> Approve</button>
                 <button class="button secondary" @onclick="RejectAsync" disabled="@isSaving">Reject</button>
                 <button class="button secondary" @onclick="CompleteAsync" disabled="@isSaving">Complete</button>
             </div>

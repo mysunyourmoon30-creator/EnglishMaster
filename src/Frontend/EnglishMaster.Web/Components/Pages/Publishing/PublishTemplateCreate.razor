@@ -10,7 +10,7 @@
         <p class="eyebrow">Publishing</p>
         <h1>Create Publish Template</h1>
     </div>
-    <a class="button" href="@AdminRoutes.Publishing.Templates.Index">Back</a>
+    <a class="button" href="@AdminRoutes.Publishing.Templates.Index">Back to Templates</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -50,7 +50,7 @@
             <InputTextArea class="input" @bind-Value="model.TemplateContent" />
         </label>
         <div class="form-actions">
-            <button class="button primary" type="submit" disabled="@isSaving">@(isSaving ? "Saving..." : "Create")</button>
+            <button class="button primary" type="submit" disabled="@isSaving"><Icon Name="plus" Size="16" /> @(isSaving ? "Saving..." : "Create")</button>
         </div>
     </EditForm>
 </section>

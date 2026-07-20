@@ -14,31 +14,35 @@
         </div>
     }
 
+    <h3 class="detail-section-heading">Identity / ข้อมูลหลัก</h3>
     <div class="form-grid">
         <label>
-            <span>Name</span>
-            <InputText class="input" @bind-Value="Model.Name" />
+            <span>Name / ชื่อป้ายกำกับ</span>
+            <InputText class="input" placeholder="Common Rank 1-500 or A1 / เช่น Common Rank 1-500 หรือ A1" @bind-Value="Model.Name" />
             <ValidationMessage For="@(() => Model.Name)" />
-        </label>
-
-        <label class="span-2">
-            <span>Description</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.Description" />
-            <ValidationMessage For="@(() => Model.Description)" />
         </label>
 
         @if (ShowActiveToggle)
         {
             <label class="checkbox-row">
                 <InputCheckbox @bind-Value="Model.IsActive" />
-                <span>Active</span>
+                <span>Active / ใช้งาน</span>
             </label>
         }
     </div>
 
+    <h3 class="detail-section-heading">Details / รายละเอียด</h3>
+    <div class="form-grid">
+        <label class="span-2">
+            <span>Description / คำอธิบาย</span>
+            <InputTextArea class="input textarea" placeholder="Explain which words this tag groups, or which learner level it supports. / อธิบายว่าป้ายนี้ใช้กับคำกลุ่มไหน หรือเหมาะกับผู้เรียนระดับใด" @bind-Value="Model.Description" />
+            <ValidationMessage For="@(() => Model.Description)" />
+        </label>
+    </div>
+
     <div class="actions">
         <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
-        <a class="button" href="@AdminRoutes.Tags.Index">Cancel</a>
+        <a class="button" href="@AdminRoutes.Tags.Index">Cancel / ยกเลิก</a>
     </div>
 </EditForm>
 

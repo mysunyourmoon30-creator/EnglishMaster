@@ -6,22 +6,31 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Grammar</p>
+        <p class="eyebrow">GRAMMAR / ไวยากรณ์</p>
         <h1>Grammar Topics</h1>
+        <p class="page-subtitle">Organize grammar by level, then add rules and examples under each topic. / จัดหมวดไวยากรณ์ตามระดับ แล้วเพิ่มกฎและตัวอย่างในแต่ละหัวข้อ</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.GrammarTopics.Create">New Topic</a>
+    <a class="button primary" href="@AdminRoutes.GrammarTopics.Create"><Icon Name="plus" Size="16" /> New Topic / เพิ่มหัวข้อ</a>
+</section>
+
+<section class="panel release-note">
+    <div>
+        <strong>Recommended structure / โครงสร้างที่แนะนำ</strong>
+        <p class="muted">Start with broad learner topics such as Tenses, Modals, Questions, Prepositions, and Conditionals, then add clear rules inside each topic.</p>
+        <p class="muted">เริ่มจากหัวข้อใหญ่ที่ผู้เรียนเข้าใจง่าย เช่น Tenses, Modals, Questions, Prepositions, Conditionals แล้วค่อยเพิ่มกฎย่อย</p>
+    </div>
 </section>
 
 <section class="panel">
     <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
         <label>
-            <span>Search</span>
-            <input class="input" @bind="search" @bind:event="oninput" />
+            <span>Search / ค้นหา</span>
+            <input class="input" placeholder="Topic title or summary / ชื่อหัวข้อหรือสรุป" @bind="search" @bind:event="oninput" />
         </label>
         <label>
             <span>CEFR</span>
             <select class="input" @bind="cefrLevel">
-                <option value="">All</option>
+                <option value="">All / ทุกระดับ</option>
                 @foreach (var level in CefrLevels)
                 {
                     <option value="@level">@level</option>
@@ -29,22 +38,22 @@
             </select>
         </label>
         <label>
-            <span>Status</span>
+            <span>Status / สถานะ</span>
             <select class="input" @bind="activeFilter">
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-                <option value="">All</option>
+                <option value="true">Active / ใช้งาน</option>
+                <option value="false">Inactive / ปิด</option>
+                <option value="">All / ทั้งหมด</option>
             </select>
         </label>
         <label>
-            <span>Page Size</span>
+            <span>Page Size / จำนวนต่อหน้า</span>
             <select class="input" @bind="pageSize">
                 <option value="10">10</option>
                 <option value="20">20</option>
                 <option value="50">50</option>
             </select>
         </label>
-        <button class="button" type="submit">Search</button>
+        <button class="button" type="submit">Search / ค้นหา</button>
     </form>
 </section>
 
@@ -55,27 +64,33 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading grammar topics...</p>
+    <p class="muted">Loading grammar topics... / กำลังโหลดหัวข้อไวยากรณ์</p>
 }
 else if (topics.Count == 0)
 {
-    <section class="panel">
-        <p class="muted">No grammar topics found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="grammar" Size="22" /></span>
+        <strong>No grammar topics found / ไม่พบหัวข้อไวยากรณ์</strong>
+        <p>Try adjusting your filters, or create the first grammar topic. / ลองเปลี่ยนตัวกรอง หรือเพิ่มหัวข้อแรก</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.GrammarTopics.Create"><Icon Name="plus" Size="16" /> New Topic / เพิ่มหัวข้อ</a>
+        </div>
     </section>
 }
 else
 {
     <section class="table-wrap">
         <div class="pagination-summary">
-            <span class="muted">Showing page @searchResult.PageNumber of @searchResult.TotalPages (@searchResult.TotalCount topics)</span>
+            <span class="muted">Page @searchResult.PageNumber of @searchResult.TotalPages / หน้า @searchResult.PageNumber จาก @searchResult.TotalPages</span>
+            <span class="status-badge neutral">@searchResult.TotalCount topics / @searchResult.TotalCount หัวข้อ</span>
         </div>
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Title</th>
+                    <th>Topic / หัวข้อ</th>
                     <th>CEFR</th>
-                    <th>Sort</th>
-                    <th>Status</th>
+                    <th>Sort / ลำดับ</th>
+                    <th>Status / สถานะ</th>
                     <th></th>
                 </tr>
             </thead>
@@ -89,21 +104,25 @@ else
                         </td>
                         <td>@topic.CefrLevel</td>
                         <td>@topic.SortOrder</td>
-                        <td>@(topic.IsActive ? "Active" : "Inactive")</td>
+                        <td>
+                            <span class="status-badge @(topic.IsActive ? "success" : "muted")">
+                                @(topic.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")
+                            </span>
+                        </td>
                         <td class="row-actions">
-                            <a class="button small" href="@AdminRoutes.GrammarTopics.Detail(topic.Id)">View</a>
-                            <a class="button small" href="@AdminRoutes.GrammarTopics.Edit(topic.Id)">Edit</a>
-                            <a class="button small" href="@AdminRoutes.GrammarRules.IndexForTopic(topic.Id)">Rules</a>
-                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(topic.Id)">Delete</button>
+                            <a class="button small" href="@AdminRoutes.GrammarTopics.Detail(topic.Id)" aria-label="View @topic.Title" title="View"><Icon Name="eye" Size="15" /></a>
+                            <a class="button small" href="@AdminRoutes.GrammarTopics.Edit(topic.Id)" aria-label="Edit @topic.Title" title="Edit"><Icon Name="edit" Size="15" /></a>
+                            <a class="button small" href="@AdminRoutes.GrammarRules.IndexForTopic(topic.Id)" aria-label="Rules for @topic.Title" title="Rules"><Icon Name="chevron-right" Size="15" /></a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(topic.Id)" aria-label="Delete @topic.Title" title="Delete"><Icon Name="trash" Size="15" /></button>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
         <div class="pagination-row">
-            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous</button>
-            <span class="muted">Page @searchResult.PageNumber</span>
-            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next</button>
+            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous / ก่อนหน้า</button>
+            <span class="muted">Page @searchResult.PageNumber / หน้า @searchResult.PageNumber</span>
+            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next / ถัดไป</button>
         </div>
     </section>
 }

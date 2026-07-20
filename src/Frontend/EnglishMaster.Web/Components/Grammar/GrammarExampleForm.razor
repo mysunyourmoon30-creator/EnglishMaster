@@ -18,46 +18,46 @@
 
     <div class="form-grid">
         <label class="span-2">
-            <span>Example</span>
+            <span>Example / ตัวอย่างประโยค</span>
             <InputTextArea class="input textarea" @bind-Value="Model.ExampleEn" />
             <ValidationMessage For="@(() => Model.ExampleEn)" />
         </label>
 
         <label class="span-2">
-            <span>Thai Translation</span>
+            <span>Thai Translation / คำแปลภาษาไทย</span>
             <InputTextArea class="input textarea" @bind-Value="Model.TranslationTh" />
             <ValidationMessage For="@(() => Model.TranslationTh)" />
         </label>
 
         <label class="span-2">
-            <span>Thai Explanation</span>
+            <span>Thai Explanation / คำอธิบายภาษาไทย</span>
             <InputTextArea class="input textarea" @bind-Value="Model.ExplanationTh" />
             <ValidationMessage For="@(() => Model.ExplanationTh)" />
         </label>
 
         <label>
-            <span>Sort Order</span>
+            <span>Sort Order / ลำดับ</span>
             <InputNumber class="input" @bind-Value="Model.SortOrder" />
             <ValidationMessage For="@(() => Model.SortOrder)" />
         </label>
 
         <label class="checkbox-row">
             <InputCheckbox @bind-Value="Model.IsCorrectExample" />
-            <span>Correct Example</span>
+            <span>Correct Example / ตัวอย่างที่ถูกต้อง</span>
         </label>
 
         @if (ShowActiveToggle)
         {
             <label class="checkbox-row">
                 <InputCheckbox @bind-Value="Model.IsActive" />
-                <span>Active</span>
+                <span>Active / ใช้งาน</span>
             </label>
         }
     </div>
 
     <div class="actions">
         <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
-        <button class="button" type="button" @onclick="CancelAsync">Cancel</button>
+        <button class="button" type="button" @onclick="CancelAsync">Cancel / ยกเลิก</button>
     </div>
 </EditForm>
 

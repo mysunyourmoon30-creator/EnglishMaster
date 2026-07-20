@@ -4,16 +4,17 @@
 
 <section class="page-header">
     <div>
+        <p class="eyebrow">Content Operations</p>
         <h1>Publishing</h1>
-        <p class="muted">Manage publish jobs, templates, and artifacts.</p>
+        <p class="page-subtitle">Manage publish jobs, templates, and artifacts.</p>
     </div>
-    <a class="button" href="/admin/publishing/jobs">Jobs</a>
+    <a class="button primary" href="@AdminRoutes.Publishing.Jobs.Create"><Icon Name="plus" Size="16" /> New Job</a>
 </section>
 
 <section class="content-section">
     <div class="card-grid">
-        <a class="list-card" href="/admin/publishing/jobs"><h3>Publish Jobs</h3><p class="muted">Create and monitor publish work.</p></a>
-        <a class="list-card" href="/admin/publishing/templates"><h3>Templates</h3><p class="muted">Manage publish templates.</p></a>
-        <a class="list-card" href="/admin/publishing/artifacts"><h3>Artifacts</h3><p class="muted">Review generated artifacts.</p></a>
+        <a class="list-card" href="@AdminRoutes.Publishing.Jobs.Index"><h3><Icon Name="publish" Size="17" /> Publish Jobs</h3><p class="muted">Create and monitor publish work.</p></a>
+        <a class="list-card" href="@AdminRoutes.Publishing.Templates.Index"><h3><Icon Name="publish" Size="17" /> Templates</h3><p class="muted">Manage publish templates.</p></a>
+        <a class="list-card" href="@AdminRoutes.Publishing.Artifacts.Index"><h3><Icon Name="publish" Size="17" /> Artifacts</h3><p class="muted">Review generated artifacts.</p></a>
     </div>
 </section>

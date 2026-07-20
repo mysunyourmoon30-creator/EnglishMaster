@@ -1,0 +1,45 @@
+<div class="sidebar-group">
+    <button type="button" class="sidebar-group-toggle @(expanded ? "expanded" : "")" @onclick="Toggle">
+        <span class="sidebar-group-toggle-label">
+            @if (!string.IsNullOrEmpty(Icon))
+            {
+                <Icon Name="@Icon" Size="15" />
+            }
+            <span class="sidebar-group-title">@Title</span>
+        </span>
+        <Icon Name="chevron-down" Size="14" />
+    </button>
+
+    @if (expanded)
+    {
+        <div class="sidebar-group-body">
+            @ChildContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public string? Icon { get; set; }
+
+    [Parameter]
+    public bool InitiallyExpanded { get; set; } = true;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool expanded;
+
+    protected override void OnInitialized()
+    {
+        expanded = InitiallyExpanded;
+    }
+
+    private void Toggle()
+    {
+        expanded = !expanded;
+    }
+}

@@ -14,8 +14,8 @@
         <a class="button" href="@AdminRoutes.Pronunciations.Index">Back</a>
         @if (pronunciation is not null)
         {
-            <a class="button" href="@AdminRoutes.Words.Detail(pronunciation.WordId)">Word</a>
-            <a class="button primary" href="@AdminRoutes.Pronunciations.Edit(pronunciation.Id)">Edit</a>
+            <a class="button" href="@AdminRoutes.Words.Detail(pronunciation.WordId)"><Icon Name="word" Size="15" /> Word</a>
+            <a class="button primary" href="@AdminRoutes.Pronunciations.Edit(pronunciation.Id)"><Icon Name="edit" Size="15" /> Edit</a>
         }
     </div>
 </section>
@@ -31,8 +31,13 @@
 }
 else if (notFound)
 {
-    <section class="panel">
-        <p class="muted">Pronunciation was not found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="pronunciation" Size="22" /></span>
+        <strong>Pronunciation was not found</strong>
+        <p>It may have been deleted or the link is incorrect.</p>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.Pronunciations.Index">Back to Pronunciations</a>
+        </div>
     </section>
 }
 else if (pronunciation is not null)
@@ -55,6 +60,7 @@ else if (pronunciation is not null)
             <audio class="media-player" controls src="@pronunciation.AudioNormalMedia.PublicUrl"></audio>
         }
 
+        <h3 class="detail-section-heading">Identity</h3>
         <div class="detail-grid">
             <div class="detail-item">
                 <span class="muted">Word</span>
@@ -64,6 +70,10 @@ else if (pronunciation is not null)
                 <span class="muted">Status</span>
                 <strong>@(pronunciation.IsActive ? "Active" : "Inactive")</strong>
             </div>
+        </div>
+
+        <h3 class="detail-section-heading">Phonetics</h3>
+        <div class="detail-grid">
             <div class="detail-item">
                 <span class="muted">IPA UK</span>
                 <strong>@pronunciation.IpaUk</strong>
@@ -84,6 +94,10 @@ else if (pronunciation is not null)
                 <span class="muted">Stress Pattern</span>
                 <strong>@pronunciation.StressPattern</strong>
             </div>
+        </div>
+
+        <h3 class="detail-section-heading">Coaching Notes</h3>
+        <div class="detail-grid">
             <div class="detail-item full">
                 <span class="muted">Mouth Position</span>
                 <strong>@pronunciation.MouthPosition</strong>
@@ -100,6 +114,10 @@ else if (pronunciation is not null)
                 <span class="muted">Practice Note</span>
                 <strong>@pronunciation.PracticeNote</strong>
             </div>
+        </div>
+
+        <h3 class="detail-section-heading">Metadata</h3>
+        <div class="detail-grid">
             <div class="detail-item">
                 <span class="muted">Created</span>
                 <strong>@FormatDate(pronunciation.CreatedAt)</strong>
@@ -120,55 +138,51 @@ else if (pronunciation is not null)
 
     @if (pronunciation.MinimalPairs.Count == 0)
     {
-        <section class="panel">
-            <p class="muted">No minimal pairs yet.</p>
+        <section class="panel empty-state left-aligned">
+            <span class="empty-state-icon"><Icon Name="pronunciation" Size="22" /></span>
+            <strong>No minimal pairs yet</strong>
+            <p>Add a minimal pair below to help learners contrast similar-sounding words.</p>
         </section>
     }
     else
     {
-        <section class="table-wrap">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Pair Word</th>
-                        <th>IPA</th>
-                        <th>Thai Reading</th>
-                        <th>Difference</th>
-                        <th>Audio</th>
-                        <th>Status</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var pair in pronunciation.MinimalPairs.OrderBy(item => item.SortOrder).ThenBy(item => item.PairWordText))
-                    {
-                        <tr>
-                            <td>
-                                <strong>@pair.PairWordText</strong>
-                                <span class="muted">#@pair.SortOrder</span>
-                            </td>
-                            <td>@pair.PairIpa</td>
-                            <td>@pair.PairThaiReading</td>
-                            <td>@pair.DifferenceNote</td>
-                            <td>
-                                @if (pair.AudioMedia is not null && !string.IsNullOrWhiteSpace(pair.AudioMedia.PublicUrl))
-                                {
-                                    <audio class="media-player compact" controls src="@pair.AudioMedia.PublicUrl"></audio>
-                                }
-                                else
-                                {
-                                    <span>-</span>
-                                }
-                            </td>
-                            <td>@(pair.IsActive ? "Active" : "Inactive")</td>
-                            <td class="row-actions">
-                                <button class="button small" type="button" @onclick="() => EditPair(pair)">Edit</button>
-                                <button class="button small danger" type="button" @onclick="() => DeletePairAsync(pair.Id)">Delete</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        <section class="panel">
+            <div class="repeater-list">
+                @{ var position = 0; }
+                @foreach (var pair in pronunciation.MinimalPairs.OrderBy(item => item.SortOrder).ThenBy(item => item.PairWordText))
+                {
+                    position++;
+                    <div class="repeater-item">
+                        <div class="repeater-item-header">
+                            <span class="repeater-item-index">@position</span>
+                            <span class="repeater-item-title">@pair.PairWordText</span>
+                            <span class="status-badge @(pair.IsActive ? "success" : "muted")">@(pair.IsActive ? "Active" : "Inactive")</span>
+                            <span class="row-actions">
+                                <button class="button small" type="button" @onclick="() => EditPair(pair)" aria-label="Edit @pair.PairWordText" title="Edit"><Icon Name="edit" Size="15" /></button>
+                                <button class="button small danger" type="button" @onclick="() => DeletePairAsync(pair.Id)" aria-label="Delete @pair.PairWordText" title="Delete"><Icon Name="trash" Size="15" /></button>
+                            </span>
+                        </div>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="muted">IPA</span>
+                                <strong>@pair.PairIpa</strong>
+                            </div>
+                            <div class="detail-item">
+                                <span class="muted">Thai Reading</span>
+                                <strong>@pair.PairThaiReading</strong>
+                            </div>
+                            <div class="detail-item full">
+                                <span class="muted">Difference</span>
+                                <strong>@pair.DifferenceNote</strong>
+                            </div>
+                        </div>
+                        @if (pair.AudioMedia is not null && !string.IsNullOrWhiteSpace(pair.AudioMedia.PublicUrl))
+                        {
+                            <audio class="media-player compact" controls src="@pair.AudioMedia.PublicUrl"></audio>
+                        }
+                    </div>
+                }
+            </div>
         </section>
     }
 
@@ -331,6 +345,6 @@ else if (pronunciation is not null)
 
     private static string FormatDate(DateTimeOffset value)
     {
-        return value.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+        return value.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
     }
 }

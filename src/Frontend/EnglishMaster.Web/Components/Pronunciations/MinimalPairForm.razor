@@ -16,6 +16,7 @@
         </div>
     }
 
+    <h3 class="detail-section-heading">Pair Details</h3>
     <div class="form-grid">
         <label>
             <span>Pair Word</span>
@@ -41,6 +42,17 @@
             <ValidationMessage For="@(() => Model.SortOrder)" />
         </label>
 
+        @if (ShowActiveToggle)
+        {
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="Model.IsActive" />
+                <span>Active</span>
+            </label>
+        }
+    </div>
+
+    <h3 class="detail-section-heading">Audio &amp; Notes</h3>
+    <div class="form-grid">
         <label class="span-2">
             <span>Audio</span>
             <InputSelect class="input" @bind-Value="Model.AudioMediaId">
@@ -57,14 +69,6 @@
             <InputTextArea class="input textarea" @bind-Value="Model.DifferenceNote" />
             <ValidationMessage For="@(() => Model.DifferenceNote)" />
         </label>
-
-        @if (ShowActiveToggle)
-        {
-            <label class="checkbox-row">
-                <InputCheckbox @bind-Value="Model.IsActive" />
-                <span>Active</span>
-            </label>
-        }
     </div>
 
     <div class="actions">

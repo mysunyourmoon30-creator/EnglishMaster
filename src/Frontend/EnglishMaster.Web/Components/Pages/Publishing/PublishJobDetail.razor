@@ -23,36 +23,76 @@
 }
 else if (job is null)
 {
-    <section class="panel">
-        <p class="muted">Publish job was not found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="publish" Size="22" /></span>
+        <strong>Publish job was not found</strong>
+        <p>It may have been deleted or the link is incorrect.</p>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.Publishing.Jobs.Index">Back to Publish Jobs</a>
+        </div>
     </section>
 }
 else
 {
-    <section class="panel detail-grid">
-        <div>
-            <span class="muted">Status</span>
-            <strong>@job.Status</strong>
-        </div>
-        <div>
-            <span class="muted">Source</span>
-            <strong>@job.SourceType</strong>
-        </div>
-        <div>
-            <span class="muted">Format</span>
-            <strong>@job.Format</strong>
-        </div>
-        <div>
-            <span class="muted">Output</span>
-            <strong>@(string.IsNullOrWhiteSpace(job.OutputFileName) ? "-" : job.OutputFileName)</strong>
-        </div>
-        @if (!string.IsNullOrWhiteSpace(job.ErrorMessage))
-        {
-            <div>
-                <span class="muted">Error</span>
-                <strong>@job.ErrorMessage</strong>
+    <section class="panel">
+        <h3 class="detail-section-heading">Overview</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Status</span>
+                <strong>@job.Status</strong>
             </div>
-        }
+            <div class="detail-item">
+                <span class="muted">Source</span>
+                <strong>@job.SourceType</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Source Id</span>
+                <strong>@job.SourceId</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Format</span>
+                <strong>@job.Format</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Requested By</span>
+                <strong>@(string.IsNullOrWhiteSpace(job.RequestedBy) ? "-" : job.RequestedBy)</strong>
+            </div>
+        </div>
+
+        <h3 class="detail-section-heading">Output</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Output</span>
+                <strong>@(string.IsNullOrWhiteSpace(job.OutputFileName) ? "-" : job.OutputFileName)</strong>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(job.ErrorMessage))
+            {
+                <div class="detail-item full">
+                    <span class="muted">Error</span>
+                    <strong>@job.ErrorMessage</strong>
+                </div>
+            }
+        </div>
+
+        <h3 class="detail-section-heading">Timing</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Started</span>
+                <strong>@(job.StartedAt.HasValue ? job.StartedAt.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) : "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Completed</span>
+                <strong>@(job.CompletedAt.HasValue ? job.CompletedAt.Value.LocalDateTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) : "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Created</span>
+                <strong>@job.CreatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Updated</span>
+                <strong>@job.UpdatedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)</strong>
+            </div>
+        </div>
     </section>
 
     <section class="panel">
@@ -63,10 +103,14 @@ else
     </section>
 
     <section class="table-wrap">
-        <h2>Artifacts</h2>
+        <h2><Icon Name="publish" Size="17" /> Artifacts</h2>
         @if (artifacts.Count == 0)
         {
-            <p class="muted">No artifacts generated yet.</p>
+            <section class="panel empty-state">
+                <span class="empty-state-icon"><Icon Name="publish" Size="22" /></span>
+                <strong>No artifacts yet</strong>
+                <p>Run this job to generate output files.</p>
+            </section>
         }
         else
         {
@@ -89,7 +133,7 @@ else
                             <td class="row-actions">
                                 @if (!string.IsNullOrWhiteSpace(artifact.PublicUrl))
                                 {
-                                    <a class="button small" href="@artifact.PublicUrl" target="_blank">Open</a>
+                                    <a class="button small" href="@artifact.PublicUrl" target="_blank" aria-label="Open @artifact.FileName" title="Open"><Icon Name="eye" Size="15" /></a>
                                 }
                             </td>
                         </tr>

@@ -6,10 +6,11 @@
 
 <section class="page-header">
     <div>
+        <p class="eyebrow">Learning Goals</p>
         <h1>Create Learning Goal</h1>
-        <p class="muted">Set a simple target for your study routine.</p>
+        <p class="page-subtitle">Set a simple target for your study routine.</p>
     </div>
-    <a class="button secondary" href="/learn/goals">Back</a>
+    <a class="button secondary" href="/learn/goals"><Icon Name="chevron-left" Size="15" /> Back</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -19,14 +20,14 @@
 
 <EditForm Model="form" OnValidSubmit="SaveAsync" FormName="create-learning-goal">
     <DataAnnotationsValidator />
-    <section class="form-grid">
+    <section class="panel form-grid">
         <label>Goal type <InputText @bind-Value="form.GoalType" /></label>
         <label>Title <InputText @bind-Value="form.Title" /></label>
         <label>Description <InputTextArea @bind-Value="form.Description" /></label>
         <label>Target value <InputNumber @bind-Value="form.TargetValue" /></label>
         <label>Unit <InputText @bind-Value="form.Unit" /></label>
     </section>
-    <button class="button" type="submit">Create</button>
+    <button class="button primary" type="submit"><Icon Name="plus" Size="15" /> Create</button>
 </EditForm>
 
 @code {

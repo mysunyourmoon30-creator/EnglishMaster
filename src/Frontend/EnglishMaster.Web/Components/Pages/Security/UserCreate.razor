@@ -3,12 +3,22 @@
 @inject ISecurityApiClient SecurityApiClient
 @inject NavigationManager NavigationManager
 
-<PageTitle>Create User</PageTitle>
+<PageTitle>Create User / เพิ่มผู้ใช้</PageTitle>
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Administration</p>
-        <h1>Create User</h1>
+        <p class="eyebrow">USERS / ผู้ใช้</p>
+        <h1>Create User / เพิ่มผู้ใช้</h1>
+        <p class="page-subtitle">Create a learner or admin account and assign the correct role. / สร้างบัญชีผู้เรียนหรือแอดมิน แล้วเลือก role ให้ถูกต้อง</p>
+    </div>
+    <a class="button" href="@AdminRoutes.Users.Index">Back to Users / กลับรายการผู้ใช้</a>
+</section>
+
+<section class="panel release-note">
+    <div>
+        <strong>For learners / สำหรับผู้เรียน</strong>
+        <p class="muted">Use a learner role only. Avoid admin roles unless this account will manage the system.</p>
+        <p class="muted">ถ้าเป็นคนเรียน ให้เลือกเฉพาะ role ผู้เรียน ไม่ควรให้ admin role เว้นแต่เป็นคนดูแลระบบ</p>
     </div>
 </section>
 
@@ -20,12 +30,12 @@
         <div class="alert error">@errorMessage</div>
     }
     <div class="form-grid">
-        <label><span>Email</span><InputText class="input" @bind-Value="model.Email" /></label>
-        <label><span>User Name</span><InputText class="input" @bind-Value="model.UserName" /></label>
-        <label><span>Display Name</span><InputText class="input" @bind-Value="model.DisplayName" /></label>
-        <label><span>Password</span><InputText class="input" type="password" @bind-Value="model.Password" /></label>
+        <label><span>Email / อีเมล</span><InputText class="input" @bind-Value="model.Email" /></label>
+        <label><span>User Name / ชื่อผู้ใช้</span><InputText class="input" @bind-Value="model.UserName" /></label>
+        <label><span>Display Name / ชื่อที่แสดง</span><InputText class="input" @bind-Value="model.DisplayName" /></label>
+        <label><span>Password / รหัสผ่าน</span><InputText class="input" type="password" @bind-Value="model.Password" /></label>
         <label class="span-2">
-            <span>Roles</span>
+            <span>Roles / สิทธิ์</span>
             <select class="input" multiple @onchange="SetRoles">
                 @foreach (var role in roles)
                 {
@@ -35,8 +45,8 @@
         </label>
     </div>
     <div class="actions">
-        <button class="button primary" type="submit" disabled="@isSaving">Create</button>
-        <a class="button" href="@AdminRoutes.Users.Index">Cancel</a>
+        <button class="button primary" type="submit" disabled="@isSaving">Create / สร้าง</button>
+        <a class="button" href="@AdminRoutes.Users.Index">Cancel / ยกเลิก</a>
     </div>
 </EditForm>
 

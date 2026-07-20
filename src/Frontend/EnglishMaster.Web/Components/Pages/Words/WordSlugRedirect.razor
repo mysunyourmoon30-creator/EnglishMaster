@@ -1,0 +1,196 @@
+@page "/dictionary/{Slug}"
+@rendermode InteractiveServer
+@layout PublicLayout
+@inject IWordsApiClient WordsApiClient
+
+<PageTitle>@(word is null ? "Dictionary / คำศัพท์" : $"{word.Text} / Dictionary")</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">DICTIONARY / คำศัพท์</p>
+        <h1>@(word is null ? "Opening word / กำลังเปิดคำศัพท์" : word.Text)</h1>
+        <p class="page-subtitle">Learn the meaning, example sentence, CEFR level, tags, and pronunciation in one place. / ดูความหมาย ตัวอย่าง ระดับ CEFR ป้ายกำกับ และการออกเสียงได้ในหน้าเดียว</p>
+    </div>
+    <div class="actions">
+        <a class="button secondary" href="/search?type=word"><Icon Name="search" Size="16" /> Search / ค้นหา</a>
+        <a class="button primary" href="/learn/practice"><Icon Name="quiz" Size="16" /> Practice / ฝึก</a>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error">@errorMessage</div>
+    <section class="panel">
+        <a class="button primary" href="/search?type=word"><Icon Name="search" Size="16" /> Search dictionary / ค้นหาคำศัพท์</a>
+    </section>
+}
+else if (isLoading)
+{
+    <section class="panel empty-state">
+        <strong>Loading word... / กำลังโหลดคำศัพท์</strong>
+        <span class="muted">Please wait while we find this word. / รอสักครู่ ระบบกำลังค้นหาคำนี้</span>
+    </section>
+}
+else if (word is not null)
+{
+    <section class="panel release-note">
+        <div>
+            <strong>@word.Text</strong>
+            <p class="muted">@FirstNonEmpty(word.MeaningEn, word.MeaningTh, "Open the sections below to study this word. / ดูรายละเอียดด้านล่างเพื่อเรียนคำนี้")</p>
+        </div>
+    </section>
+
+    <section class="panel">
+        @if (word.ImageMedia is not null && !string.IsNullOrWhiteSpace(word.ImageMedia.PublicUrl))
+        {
+            <img class="media-preview" src="@word.ImageMedia.PublicUrl" alt="@word.ImageMedia.AltText" />
+        }
+
+        @if (word.AudioMedia is not null && !string.IsNullOrWhiteSpace(word.AudioMedia.PublicUrl))
+        {
+            <audio class="media-player" controls src="@word.AudioMedia.PublicUrl"></audio>
+        }
+
+        <div class="list-card-badges">
+            <span class="pill">@FirstNonEmpty(word.PartOfSpeech, "Word / คำศัพท์")</span>
+            <span class="pill">@word.CefrLevel</span>
+            @if (word.Category is not null)
+            {
+                <span class="pill">@word.Category.Name</span>
+            }
+        </div>
+
+        <h3 class="detail-section-heading">Meaning / ความหมาย</h3>
+        <div class="detail-grid">
+            <div class="detail-item full">
+                <span class="muted">Thai / ภาษาไทย</span>
+                <strong>@FirstNonEmpty(word.MeaningTh, "-")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">English / ภาษาอังกฤษ</span>
+                <strong>@FirstNonEmpty(word.MeaningEn, "-")</strong>
+            </div>
+        </div>
+
+        <h3 class="detail-section-heading">Example / ตัวอย่าง</h3>
+        <div class="detail-grid">
+            <div class="detail-item full">
+                <span class="muted">English sentence / ประโยคอังกฤษ</span>
+                <strong>@FirstNonEmpty(word.ExampleEn, "-")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Thai meaning / คำแปลไทย</span>
+                <strong>@FirstNonEmpty(word.ExampleTh, "-")</strong>
+            </div>
+        </div>
+
+        <h3 class="detail-section-heading">Pronunciation / การออกเสียง</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">IPA UK</span>
+                <strong>@FirstNonEmpty(word.Pronunciation?.IpaUk, word.IpaUk, "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">IPA US</span>
+                <strong>@FirstNonEmpty(word.Pronunciation?.IpaUs, word.IpaUs, "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Thai reading / อ่านแบบไทย</span>
+                <strong>@FirstNonEmpty(word.Pronunciation?.ThaiReading, word.ThaiReading, "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Syllables / พยางค์</span>
+                <strong>@FirstNonEmpty(word.Pronunciation?.Syllables, "-")</strong>
+            </div>
+        </div>
+
+        @if (word.Pronunciation is not null)
+        {
+            <h3 class="detail-section-heading">Speaking Tips / เคล็ดลับการพูด</h3>
+            <div class="detail-grid">
+                <div class="detail-item full">
+                    <span class="muted">Practice note / วิธีฝึก</span>
+                    <strong>@FirstNonEmpty(word.Pronunciation.PracticeNote, "-")</strong>
+                </div>
+                <div class="detail-item full">
+                    <span class="muted">Common mistake / จุดที่มักผิด</span>
+                    <strong>@FirstNonEmpty(word.Pronunciation.CommonMistake, "-")</strong>
+                </div>
+            </div>
+        }
+
+        @if (word.Tags.Count > 0)
+        {
+            <h3 class="detail-section-heading">Tags / ป้ายกำกับ</h3>
+            <div class="list-card-badges">
+                @foreach (var tag in word.Tags)
+                {
+                    <span class="pill">@tag.Name</span>
+                }
+            </div>
+        }
+
+        <div class="actions">
+            <a class="button secondary" href="/search?type=word">Find another word / ค้นคำอื่น</a>
+            <a class="button primary" href="/learn/practice">Practice now / ฝึกทันที</a>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public string? Slug { get; set; }
+
+    private WordDto? word;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        word = null;
+
+        if (string.IsNullOrWhiteSpace(Slug))
+        {
+            errorMessage = "Word link is missing. / ลิงก์คำศัพท์ไม่ครบ";
+            isLoading = false;
+            return;
+        }
+
+        try
+        {
+            var result = await WordsApiClient.SearchAsync(
+                new WordSearchRequest(
+                    Slug.Trim(),
+                    CefrLevel: null,
+                    PartOfSpeech: null,
+                    IsActive: true,
+                    CategoryId: null,
+                    TagId: null,
+                    PageNumber: 1,
+                    PageSize: 10,
+                    SortBy: "Text",
+                    SortDirection: "Asc"),
+                CancellationToken.None);
+
+            word = result.Items.FirstOrDefault(item =>
+                string.Equals(item.Slug, Slug, StringComparison.OrdinalIgnoreCase));
+            if (word is null)
+            {
+                errorMessage = "Word was not found. / ไม่พบคำศัพท์นี้";
+            }
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static string FirstNonEmpty(params string?[] values) =>
+        values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
+}

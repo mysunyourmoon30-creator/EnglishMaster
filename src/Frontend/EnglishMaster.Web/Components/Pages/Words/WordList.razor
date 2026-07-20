@@ -4,26 +4,56 @@
 @inject ICategoriesApiClient CategoriesApiClient
 @inject ITagsApiClient TagsApiClient
 
-<PageTitle>Words</PageTitle>
+<PageTitle>Words / คำศัพท์</PageTitle>
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Vocabulary</p>
+        <p class="eyebrow">VOCABULARY / คำศัพท์</p>
         <h1>Words</h1>
+        <p class="page-subtitle">Manage the real 2,500 learner words with meanings, examples, CEFR level, categories, and tags. / จัดการคำศัพท์จริง 2,500 คำ พร้อมความหมาย ตัวอย่าง ระดับ CEFR หมวดหมู่ และป้ายกำกับ</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.Words.Create">New Word</a>
+    <div class="actions">
+        <a class="button" href="/search?type=word">Learner search / หน้าค้นหาผู้เรียน</a>
+        <a class="button primary" href="@AdminRoutes.Words.Create"><Icon Name="plus" Size="16" /> New Word / เพิ่มคำ</a>
+    </div>
+</section>
+
+<section class="panel word-mode-panel">
+    <div>
+        <strong>View / มุมมอง</strong>
+        <p class="muted">Keep real learning words separate from inactive performance test data. / แยกคำศัพท์ที่ใช้เรียนจริงออกจากข้อมูลทดสอบ performance ที่ปิดใช้งานไว้</p>
+    </div>
+    <div class="segmented-actions" role="group" aria-label="Word view mode">
+        <button class="button @(viewMode == WordViewMode.Learner ? "primary" : null)" type="button" @onclick="ShowLearnerWordsAsync">
+            Learning words / คำเรียนจริง
+        </button>
+        <button class="button @(viewMode == WordViewMode.Performance ? "primary" : null)" type="button" @onclick="ShowPerformanceWordsAsync">
+            Performance data / ข้อมูลทดสอบ
+        </button>
+        <button class="button @(viewMode == WordViewMode.All ? "primary" : null)" type="button" @onclick="ShowAllWordsAsync">
+            All / ทั้งหมด
+        </button>
+    </div>
+</section>
+
+<section class="panel release-note">
+    <div>
+        <strong>Recommended checks / สิ่งที่ควรตรวจ</strong>
+        <p class="muted">For learner words, check meaning, example sentence, CEFR, Common Rank tag, and active status before publishing to lessons and practice.</p>
+        <p class="muted">สำหรับคำเรียนจริง ให้ตรวจความหมาย ตัวอย่าง ระดับ CEFR tag กลุ่มความนิยม และสถานะ Active ก่อนนำไปใช้ในบทเรียน/แบบฝึก</p>
+    </div>
 </section>
 
 <section class="panel">
     <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
         <label>
-            <span>Search</span>
-            <input class="input" @bind="search" @bind:event="oninput" />
+            <span>Search / ค้นหา</span>
+            <input class="input" placeholder="word, meaning, or slug / คำ ความหมาย หรือ slug" @bind="search" @bind:event="oninput" />
         </label>
         <label>
-            <span>CEFR</span>
+            <span>CEFR / ระดับ</span>
             <select class="input" @bind="cefrLevel">
-                <option value="">All levels</option>
+                <option value="">All levels / ทุกระดับ</option>
                 @foreach (var option in CefrLevelOptions)
                 {
                     <option value="@option">@option</option>
@@ -31,9 +61,9 @@
             </select>
         </label>
         <label>
-            <span>Part of Speech</span>
+            <span>Part of Speech / ชนิดคำ</span>
             <select class="input" @bind="partOfSpeech">
-                <option value="">All parts</option>
+                <option value="">All parts / ทุกชนิด</option>
                 @foreach (var option in PartOfSpeechOptions)
                 {
                     <option value="@option">@option</option>
@@ -41,16 +71,16 @@
             </select>
         </label>
         <label>
-            <span>Status</span>
+            <span>Status / สถานะ</span>
             <select class="input" @bind="activeFilter">
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
+                <option value="true">Active / ใช้งาน</option>
+                <option value="false">Inactive / ปิด</option>
             </select>
         </label>
         <label>
-            <span>Category</span>
+            <span>Category / หมวดหมู่</span>
             <select class="input" @bind="categoryFilter">
-                <option value="">All categories</option>
+                <option value="">All categories / ทุกหมวด</option>
                 @foreach (var category in categories)
                 {
                     <option value="@category.Id">@category.Name</option>
@@ -58,9 +88,9 @@
             </select>
         </label>
         <label>
-            <span>Tag</span>
+            <span>Tag / ป้ายกำกับ</span>
             <select class="input" @bind="tagFilter">
-                <option value="">All tags</option>
+                <option value="">All tags / ทุกป้าย</option>
                 @foreach (var tag in tags)
                 {
                     <option value="@tag.Id">@tag.Name</option>
@@ -68,28 +98,28 @@
             </select>
         </label>
         <label>
-            <span>Sort By</span>
+            <span>Sort By / เรียงตาม</span>
             <select class="input" @bind="sortBy">
-                <option value="Text">Text</option>
-                <option value="CreatedAt">Created</option>
+                <option value="CreatedAt">Frequency Rank / ลำดับความนิยม</option>
+                <option value="Text">Text / ตัวอักษร</option>
             </select>
         </label>
         <label>
-            <span>Direction</span>
+            <span>Direction / ทิศทาง</span>
             <select class="input" @bind="sortDirection">
-                <option value="Asc">Ascending</option>
-                <option value="Desc">Descending</option>
+                <option value="Asc">Ascending / น้อยไปมาก</option>
+                <option value="Desc">Descending / มากไปน้อย</option>
             </select>
         </label>
         <label>
-            <span>Page Size</span>
+            <span>Page Size / จำนวนต่อหน้า</span>
             <select class="input" @bind="pageSize">
                 <option value="10">10</option>
                 <option value="20">20</option>
                 <option value="50">50</option>
             </select>
         </label>
-        <button class="button" type="submit">Search</button>
+        <button class="button" type="submit">Search / ค้นหา</button>
     </form>
 </section>
 
@@ -100,32 +130,37 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading words...</p>
+    <p class="muted">Loading words... / กำลังโหลดคำศัพท์</p>
 }
 else if (words.Count == 0)
 {
-    <section class="panel">
-        <p class="muted">No words found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="word" Size="22" /></span>
+        <strong>No words found / ยังไม่พบคำศัพท์</strong>
+        <p>Try changing filters or add a real learner word. / ลองเปลี่ยนตัวกรอง หรือเพิ่มคำศัพท์จริงสำหรับผู้เรียน</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.Words.Create"><Icon Name="plus" Size="16" /> New Word / เพิ่มคำ</a>
+        </div>
     </section>
 }
 else
 {
     <section class="table-wrap">
         <div class="pagination-summary">
-            <span class="muted">Showing page @searchResult.PageNumber of @searchResult.TotalPages (@searchResult.TotalCount words)</span>
+            <span class="muted">Page @searchResult.PageNumber of @searchResult.TotalPages / หน้า @searchResult.PageNumber จาก @searchResult.TotalPages</span>
+            <span class="status-badge neutral">@GetViewModeLabel()</span>
+            <span class="status-badge neutral">@searchResult.TotalCount words / @searchResult.TotalCount คำ</span>
         </div>
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Text</th>
-                    <th>Slug</th>
-                    <th>Meaning EN</th>
-                    <th>Category</th>
-                    <th>Tags</th>
-                    <th>Media</th>
-                    <th>Part</th>
+                    <th>Word / คำ</th>
+                    <th>Meaning / ความหมาย</th>
+                    <th>Category / หมวดหมู่</th>
+                    <th>Tags / ป้าย</th>
+                    <th>Part / ชนิดคำ</th>
                     <th>CEFR</th>
-                    <th>Status</th>
+                    <th>Status / สถานะ</th>
                     <th></th>
                 </tr>
             </thead>
@@ -135,34 +170,52 @@ else
                     <tr>
                         <td>
                             <strong>@word.Text</strong>
-                            <span class="muted">@word.IpaUk</span>
+                            <span class="muted">@word.IpaUk / @word.ThaiReading</span>
+                            <span class="category-slug">@word.Slug</span>
                         </td>
-                        <td>@word.Slug</td>
-                        <td>@word.MeaningEn</td>
+                        <td>
+                            <strong>@word.MeaningEn</strong>
+                            <span class="muted">@word.MeaningTh</span>
+                            <span class="muted">@word.ExampleEn</span>
+                        </td>
                         <td>@(word.Category?.Name ?? "-")</td>
                         <td>@FormatTags(word.Tags)</td>
-                        <td>@FormatMedia(word)</td>
                         <td>@word.PartOfSpeech</td>
                         <td>@word.CefrLevel</td>
-                        <td>@(word.IsActive ? "Active" : "Inactive")</td>
+                        <td>
+                            <span class="status-badge @(word.IsActive ? "success" : "muted")">
+                                @(word.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")
+                            </span>
+                            @if (IsPerformanceWord(word))
+                            {
+                                <span class="status-badge warning">Performance</span>
+                            }
+                        </td>
                         <td class="row-actions">
-                            <a class="button small" href="@AdminRoutes.Words.Detail(word.Id)">View</a>
-                            <a class="button small" href="@AdminRoutes.Words.Edit(word.Id)">Edit</a>
-                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(word.Id)">Delete</button>
+                            <a class="button small" href="@AdminRoutes.Words.Detail(word.Id)" aria-label="View @word.Text" title="View"><Icon Name="eye" Size="15" /></a>
+                            <a class="button small" href="@AdminRoutes.Words.Edit(word.Id)" aria-label="Edit @word.Text" title="Edit"><Icon Name="edit" Size="15" /></a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(word.Id)" aria-label="Delete @word.Text" title="Delete"><Icon Name="trash" Size="15" /></button>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
         <div class="pagination-row">
-            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous</button>
-            <span class="muted">Page @searchResult.PageNumber</span>
-            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next</button>
+            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous / ก่อนหน้า</button>
+            <span class="muted">Page @searchResult.PageNumber / หน้า @searchResult.PageNumber</span>
+            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next / ถัดไป</button>
         </div>
     </section>
 }
 
 @code {
+    private enum WordViewMode
+    {
+        Learner,
+        Performance,
+        All
+    }
+
     private static readonly string[] PartOfSpeechOptions =
     [
         "Noun",
@@ -190,12 +243,13 @@ else
     private string activeFilter = "true";
     private string? categoryFilter;
     private string? tagFilter;
-    private string sortBy = "Text";
+    private string sortBy = "CreatedAt";
     private string sortDirection = "Asc";
     private int pageNumber = 1;
     private int pageSize = 10;
     private string? errorMessage;
     private bool isLoading = true;
+    private WordViewMode viewMode = WordViewMode.Learner;
 
     protected override async Task OnInitializedAsync()
     {
@@ -231,7 +285,7 @@ else
         {
             searchResult = await WordsApiClient.SearchAsync(
                 new WordSearchRequest(
-                    search,
+                    GetEffectiveSearch(),
                     string.IsNullOrWhiteSpace(cefrLevel) ? null : cefrLevel,
                     string.IsNullOrWhiteSpace(partOfSpeech) ? null : partOfSpeech,
                     activeFilter == "false" ? false : true,
@@ -242,7 +296,7 @@ else
                     sortBy,
                     sortDirection),
                 CancellationToken.None);
-            words = searchResult.Items;
+            words = FilterWordsForView(searchResult.Items).ToArray();
         }
         catch (ApiRequestException exception)
         {
@@ -293,6 +347,65 @@ else
         }
     }
 
+    private async Task ShowLearnerWordsAsync()
+    {
+        viewMode = WordViewMode.Learner;
+        if (IsPerformanceSearch(search))
+        {
+            search = null;
+        }
+
+        activeFilter = "true";
+        pageNumber = 1;
+        await LoadAsync();
+    }
+
+    private async Task ShowPerformanceWordsAsync()
+    {
+        viewMode = WordViewMode.Performance;
+        search = "perf";
+        activeFilter = "false";
+        pageNumber = 1;
+        await LoadAsync();
+    }
+
+    private async Task ShowAllWordsAsync()
+    {
+        viewMode = WordViewMode.All;
+        pageNumber = 1;
+        await LoadAsync();
+    }
+
+    private string? GetEffectiveSearch()
+    {
+        if (viewMode == WordViewMode.Performance && string.IsNullOrWhiteSpace(search))
+        {
+            return "perf";
+        }
+
+        return search;
+    }
+
+    private IEnumerable<WordDto> FilterWordsForView(IEnumerable<WordDto> source)
+    {
+        return viewMode switch
+        {
+            WordViewMode.Learner => source.Where(word => !IsPerformanceWord(word)),
+            WordViewMode.Performance => source.Where(IsPerformanceWord),
+            _ => source
+        };
+    }
+
+    private string GetViewModeLabel()
+    {
+        return viewMode switch
+        {
+            WordViewMode.Performance => "Performance data / ข้อมูลทดสอบ",
+            WordViewMode.All => "All words / คำทั้งหมด",
+            _ => "Learning words / คำเรียนจริง"
+        };
+    }
+
     private static WordSearchResponse EmptySearchResult()
     {
         return new WordSearchResponse([], 1, 10, 0, 0, false, false);
@@ -310,19 +423,14 @@ else
             : string.Join(", ", wordTags.Select(tag => tag.Name));
     }
 
-    private static string FormatMedia(WordDto word)
+    private static bool IsPerformanceWord(WordDto word)
     {
-        var items = new List<string>();
-        if (word.ImageMedia is not null)
-        {
-            items.Add("Image");
-        }
+        return IsPerformanceSearch(word.Slug) || IsPerformanceSearch(word.Text);
+    }
 
-        if (word.AudioMedia is not null)
-        {
-            items.Add("Audio");
-        }
-
-        return items.Count == 0 ? "-" : string.Join(", ", items);
+    private static bool IsPerformanceSearch(string? value)
+    {
+        return value?.StartsWith("perf", StringComparison.OrdinalIgnoreCase) == true ||
+            value?.StartsWith("word-000", StringComparison.OrdinalIgnoreCase) == true;
     }
 }

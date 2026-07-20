@@ -33,7 +33,7 @@ public sealed class EfPublicSearchRepository : IPublicSearchRepository
                 .Where(word => criteria.CategoryId == null || word.CategoryId == criteria.CategoryId)
                 .Where(word => cefrFilter == null || word.CefrLevel == cefrFilter)
                 .Where(word => query == null || word.Text.Contains(query) || word.MeaningTh.Contains(query) || word.MeaningEn.Contains(query))
-                .OrderByDescending(word => word.UpdatedAt)
+                .OrderBy(word => word.CreatedAt)
                 .Take(PerTypeLimit)
                 .Select(word => new
                 {
@@ -44,6 +44,7 @@ public sealed class EfPublicSearchRepository : IPublicSearchRepository
                     word.MeaningEn,
                     word.CefrLevel,
                     word.CategoryId,
+                    word.CreatedAt,
                     word.UpdatedAt
                 })
                 .ToArrayAsync(cancellationToken);

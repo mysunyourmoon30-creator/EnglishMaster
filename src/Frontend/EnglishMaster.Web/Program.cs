@@ -33,6 +33,7 @@ using EnglishMaster.Web.Services.Tags;
 using EnglishMaster.Web.Services.Words;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Serilog;
@@ -53,7 +54,16 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+if (builder.Configuration["DataProtection:KeysPath"] is { Length: > 0 } dataProtectionKeysPath)
+{
+    Directory.CreateDirectory(dataProtectionKeysPath);
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+}
+
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<IApiSessionStore, InMemoryApiSessionStore>();
 builder.Services.AddAuthentication("EnglishMaster.Web")
     .AddCookie("EnglishMaster.Web", options =>
     {
@@ -127,6 +137,16 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.TryAdd("Referrer-Policy", "no-referrer");
+    context.Response.Headers.TryAdd("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+    context.Response.Headers.TryAdd("Content-Security-Policy", "frame-ancestors 'self'");
+    context.Response.Headers.TryAdd("X-Frame-Options", "SAMEORIGIN");
+    await next(context);
+});
+
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -148,6 +168,7 @@ app.UseAntiforgery();
 app.MapPost("/account/login", async (
     HttpContext httpContext,
     IAuthApiClient authApiClient,
+    IApiSessionStore apiSessionStore,
     CancellationToken cancellationToken) =>
 {
     var form = await httpContext.Request.ReadFormAsync(cancellationToken);
@@ -165,9 +186,12 @@ app.MapPost("/account/login", async (
         };
         claims.AddRange(login.User.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
         claims.AddRange(login.User.Permissions.Select(permission => new Claim("permission", permission)));
-        if (!string.IsNullOrWhiteSpace(apiCookie))
+        var apiSessionId = string.IsNullOrWhiteSpace(apiCookie)
+            ? null
+            : apiSessionStore.Store(apiCookie);
+        if (!string.IsNullOrWhiteSpace(apiSessionId))
         {
-            claims.Add(new Claim("api_cookie", apiCookie));
+            claims.Add(new Claim("api_session_id", apiSessionId));
         }
 
         await httpContext.SignInAsync(
@@ -187,18 +211,27 @@ app.MapPost("/account/login", async (
     {
         return Results.Redirect("/login?error=Invalid%20email%20or%20password.");
     }
-}).DisableAntiforgery();
+});
 
 app.MapPost("/logout", async (
     HttpContext httpContext,
     IAuthApiClient authApiClient,
+    IApiSessionStore apiSessionStore,
     CancellationToken cancellationToken) =>
 {
-    var apiCookie = httpContext.User.FindFirstValue("api_cookie");
+    var apiSessionId = httpContext.User.FindFirstValue("api_session_id");
+    var apiCookie = string.IsNullOrWhiteSpace(apiSessionId)
+        ? null
+        : apiSessionStore.Get(apiSessionId);
     await authApiClient.LogoutAsync(apiCookie, cancellationToken);
+    if (!string.IsNullOrWhiteSpace(apiSessionId))
+    {
+        apiSessionStore.Remove(apiSessionId);
+    }
+
     await httpContext.SignOutAsync("EnglishMaster.Web");
     return Results.Redirect("/login");
-}).DisableAntiforgery();
+});
 
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/health/live", new HealthCheckOptions

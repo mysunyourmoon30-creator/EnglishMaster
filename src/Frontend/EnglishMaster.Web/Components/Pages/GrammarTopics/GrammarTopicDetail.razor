@@ -6,15 +6,19 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Grammar</p>
+        <p class="eyebrow">GRAMMAR TOPIC / หัวข้อไวยากรณ์</p>
         <h1>@(topic is null ? "Grammar Topic" : topic.Title)</h1>
-    </div>
-    <div class="actions">
-        <a class="button" href="@AdminRoutes.GrammarTopics.Index">Back</a>
         @if (topic is not null)
         {
-            <a class="button primary" href="@AdminRoutes.GrammarTopics.Edit(topic.Id)">Edit</a>
-            <a class="button" href="@AdminRoutes.GrammarRules.CreateForTopic(topic.Id)">New Rule</a>
+            <p class="page-subtitle">Review this topic and the grammar rules learners will study inside it. / ตรวจหัวข้อนี้และกฎไวยากรณ์ที่ผู้เรียนจะเรียนภายในหัวข้อนี้</p>
+        }
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.GrammarTopics.Index">Back / กลับ</a>
+        @if (topic is not null)
+        {
+            <a class="button" href="@AdminRoutes.GrammarRules.CreateForTopic(topic.Id)"><Icon Name="plus" Size="15" /> New Rule / เพิ่มกฎ</a>
+            <a class="button primary" href="@AdminRoutes.GrammarTopics.Edit(topic.Id)"><Icon Name="edit" Size="15" /> Edit / แก้ไข</a>
         }
     </div>
 </section>
@@ -26,17 +30,30 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading grammar topic...</p>
+    <p class="muted">Loading grammar topic... / กำลังโหลดหัวข้อไวยากรณ์</p>
 }
 else if (notFound)
 {
-    <section class="panel">
-        <p class="muted">Grammar topic was not found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="grammar" Size="22" /></span>
+        <strong>Grammar topic was not found / ไม่พบหัวข้อไวยากรณ์</strong>
+        <p>It may have been deleted or the link is incorrect. / อาจถูกลบแล้ว หรือลิงก์ไม่ถูกต้อง</p>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.GrammarTopics.Index">Back to Grammar Topics / กลับรายการหัวข้อ</a>
+        </div>
     </section>
 }
 else if (topic is not null)
 {
+    <section class="panel release-note">
+        <div>
+            <strong>@rules.Count rules in this topic / มีกฎ @rules.Count รายการในหัวข้อนี้</strong>
+            <p class="muted">Keep each rule short, practical, and connected to examples. / แต่ละกฎควรสั้น ใช้ได้จริง และมีตัวอย่างประกอบ</p>
+        </div>
+    </section>
+
     <section class="panel">
+        <h3 class="detail-section-heading">Identity / ข้อมูลหลัก</h3>
         <div class="detail-grid">
             <div class="detail-item">
                 <span class="muted">Slug</span>
@@ -47,15 +64,19 @@ else if (topic is not null)
                 <strong>@topic.CefrLevel</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Sort Order</span>
+                <span class="muted">Sort Order / ลำดับ</span>
                 <strong>@topic.SortOrder</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Status</span>
-                <strong>@(topic.IsActive ? "Active" : "Inactive")</strong>
+                <span class="muted">Status / สถานะ</span>
+                <strong>@(topic.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")</strong>
             </div>
+        </div>
+
+        <h3 class="detail-section-heading">Description / คำอธิบาย</h3>
+        <div class="detail-grid">
             <div class="detail-item full">
-                <span class="muted">Summary</span>
+                <span class="muted">Summary / สรุป</span>
                 <strong>@topic.Summary</strong>
             </div>
         </div>
@@ -63,15 +84,20 @@ else if (topic is not null)
 
     <section class="page-header section-header">
         <div>
-            <p class="eyebrow">Rules</p>
-            <h1>Grammar Rules</h1>
+            <p class="eyebrow">RULES / กฎ</p>
+            <h1>Grammar Rules / กฎในหัวข้อนี้</h1>
         </div>
     </section>
 
     @if (rules.Count == 0)
     {
-        <section class="panel">
-            <p class="muted">No grammar rules found for this topic.</p>
+        <section class="panel empty-state left-aligned">
+            <span class="empty-state-icon"><Icon Name="grammar" Size="22" /></span>
+            <strong>No grammar rules found for this topic / หัวข้อนี้ยังไม่มีกฎ</strong>
+            <p>Create the first rule to start building this topic's content. / เพิ่มกฎแรกเพื่อเริ่มสร้างเนื้อหาในหัวข้อนี้</p>
+            <div class="actions">
+                <a class="button primary" href="@AdminRoutes.GrammarRules.CreateForTopic(topic.Id)"><Icon Name="plus" Size="16" /> New Rule / เพิ่มกฎ</a>
+            </div>
         </section>
     }
     else
@@ -80,9 +106,9 @@ else if (topic is not null)
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Title</th>
-                        <th>Sort</th>
-                        <th>Status</th>
+                        <th>Rule / กฎ</th>
+                        <th>Sort / ลำดับ</th>
+                        <th>Status / สถานะ</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -95,10 +121,14 @@ else if (topic is not null)
                                 <span class="muted">@rule.StructurePattern</span>
                             </td>
                             <td>@rule.SortOrder</td>
-                            <td>@(rule.IsActive ? "Active" : "Inactive")</td>
+                            <td>
+                                <span class="status-badge @(rule.IsActive ? "success" : "muted")">
+                                    @(rule.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")
+                                </span>
+                            </td>
                             <td class="row-actions">
-                                <a class="button small" href="@AdminRoutes.GrammarRules.Detail(rule.Id)">View</a>
-                                <a class="button small" href="@AdminRoutes.GrammarRules.Edit(rule.Id)">Edit</a>
+                                <a class="button small" href="@AdminRoutes.GrammarRules.Detail(rule.Id)" aria-label="View @rule.Title" title="View"><Icon Name="eye" Size="15" /></a>
+                                <a class="button small" href="@AdminRoutes.GrammarRules.Edit(rule.Id)" aria-label="Edit @rule.Title" title="Edit"><Icon Name="edit" Size="15" /></a>
                             </td>
                         </tr>
                     }

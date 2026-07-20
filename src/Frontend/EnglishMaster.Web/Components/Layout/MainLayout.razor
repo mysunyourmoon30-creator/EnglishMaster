@@ -3,104 +3,150 @@
 @inject INotificationsApiClient NotificationsApiClient
 
 <div class="app-shell">
-    <header class="topbar">
-        <a class="brand" href="@AdminRoutes.Dashboard">EnglishMaster</a>
-        <nav class="topnav" aria-label="Main navigation">
-            <NavLink href="@AdminRoutes.Dashboard" Match="NavLinkMatch.All">Dashboard</NavLink>
-            <NavLink href="/search">Search</NavLink>
+    <aside class="sidebar @(collapsed ? "collapsed" : "")">
+        <a class="sidebar-brand" href="@AdminRoutes.Dashboard" aria-label="EnglishMaster admin dashboard">
+            <span class="sidebar-brand-mark">EM</span>
+            <span class="sidebar-brand-text">
+                <span class="brand-title">EnglishMaster</span>
+                <span class="brand-subtitle">Admin / จัดการระบบ</span>
+            </span>
+        </a>
+
+        <nav class="sidebar-nav" aria-label="Main navigation / เมนูหลัก">
+            <NavLink class="sidebar-link" href="@AdminRoutes.Dashboard" Match="NavLinkMatch.All">
+                <Icon Name="dashboard" /> <span>Dashboard</span>
+            </NavLink>
+            <NavLink class="sidebar-link" href="/search">
+                <Icon Name="search" /> <span>Search</span>
+            </NavLink>
+
             @if (IsAuthenticated)
             {
-                <NavLink href="/learn/recommendations">Recommendations</NavLink>
-                <NavLink href="/learn/practice">Practice</NavLink>
-                <NavLink href="/learn/goals">Goals</NavLink>
-                <NavLink href="/learn/study-plan">Study Plan</NavLink>
-                <NavLink href="/learn/motivation">Motivation</NavLink>
-                <NavLink href="/learn/reports">Reports</NavLink>
-                <NavLink href="/learn/analytics">Analytics</NavLink>
+                <SidebarGroup Title="Learning" Icon="lesson">
+                    <NavLink class="sidebar-link" href="/learn/recommendations"><Icon Name="lesson" /> <span>Recommendations</span></NavLink>
+                    <NavLink class="sidebar-link" href="/learn/practice"><Icon Name="quiz" /> <span>Practice</span></NavLink>
+                    <NavLink class="sidebar-link" href="/learn/goals"><Icon Name="quality" /> <span>Goals</span></NavLink>
+                    <NavLink class="sidebar-link" href="/learn/study-plan"><Icon Name="revision" /> <span>Study Plan</span></NavLink>
+                    <NavLink class="sidebar-link" href="/learn/motivation"><Icon Name="health" /> <span>Motivation</span></NavLink>
+                    <NavLink class="sidebar-link" href="/learn/reports"><Icon Name="report" /> <span>Reports</span></NavLink>
+                    <NavLink class="sidebar-link" href="/learn/analytics"><Icon Name="analytics" /> <span>Analytics</span></NavLink>
+                </SidebarGroup>
             }
-            <NavLink href="@AdminRoutes.Words.Index">Words</NavLink>
-            <NavLink href="@AdminRoutes.Categories.Index">Categories</NavLink>
-            <NavLink href="@AdminRoutes.Tags.Index">Tags</NavLink>
-            <NavLink href="@AdminRoutes.Media.Index">Media</NavLink>
-            <NavLink href="@AdminRoutes.Pronunciations.Index">Pronunciation</NavLink>
-            <NavLink href="@AdminRoutes.GrammarTopics.Index">Grammar Topics</NavLink>
-            <NavLink href="@AdminRoutes.GrammarRules.Index">Grammar Rules</NavLink>
-            <NavLink href="@AdminRoutes.Lessons.Index">Lessons</NavLink>
-            <NavLink href="@AdminRoutes.Courses.Index">Courses</NavLink>
-            <NavLink href="@AdminRoutes.Books.Index">Books</NavLink>
-            <NavLink href="@AdminRoutes.Quizzes.Index">Quizzes</NavLink>
-            @if (HasPermission("certificates.read"))
-            {
-                <NavLink href="@AdminRoutes.CertificateTemplates.Index">Certificate Templates</NavLink>
-            }
-            @if (HasPermission("reports.read"))
-            {
-                <NavLink href="@AdminRoutes.Reports.Index">Reports</NavLink>
-                <NavLink href="@AdminRoutes.Analytics.Index">Analytics</NavLink>
-            }
-            @if (HasPermission("system-health.read"))
-            {
-                <NavLink href="@AdminRoutes.SystemHealth.Index">System Health</NavLink>
-            }
-            @if (IsAuthenticated)
-            {
-                <NavLink href="@AdminRoutes.Notifications.Mine">Notifications@if (unreadNotificationCount > 0)
-                    {
-                        <span class="nav-badge">@unreadNotificationCount</span>
-                    }</NavLink>
-            }
-            @if (HasPermission("notifications.manage"))
-            {
-                <NavLink href="@AdminRoutes.Notifications.Index">Admin Notifications</NavLink>
-            }
-            @if (HasPermission("email.read"))
-            {
-                <NavLink href="@AdminRoutes.EmailMessages.Index">Email</NavLink>
-            }
-            @if (HasPermission("content-quality.read"))
-            {
-                <NavLink href="@AdminRoutes.ContentQuality.Index">Quality</NavLink>
-            }
-            @if (HasPermission("content-revisions.read"))
-            {
-                <NavLink href="@AdminRoutes.ContentRevisions.Index">Revisions</NavLink>
-            }
-            @if (HasPermission("bulk-operations.read"))
-            {
-                <NavLink href="@AdminRoutes.BulkOperations.Index">Bulk Operations</NavLink>
-            }
-            @if (HasPermission("import.read"))
-            {
-                <NavLink href="@AdminRoutes.ImportJobs.Index">Import Jobs</NavLink>
-            }
-            @if (HasPermission("achievements.manage"))
-            {
-                <NavLink href="/admin/achievement-definitions">Achievement Definitions</NavLink>
-            }
-            <NavLink href="@AdminRoutes.Publishing.Jobs.Index">Publishing</NavLink>
-            <NavLink href="@AdminRoutes.ImportExport.Import">Import</NavLink>
-            <NavLink href="@AdminRoutes.ImportExport.Export">Export</NavLink>
+
+            <SidebarGroup Title="Content" Icon="word">
+                <NavLink class="sidebar-link" href="@AdminRoutes.Words.Index"><Icon Name="word" /> <span>Words</span></NavLink>
+                <NavLink class="sidebar-link" href="@AdminRoutes.Categories.Index"><Icon Name="category" /> <span>Categories</span></NavLink>
+                <NavLink class="sidebar-link" href="@AdminRoutes.Tags.Index"><Icon Name="tag" /> <span>Tags</span></NavLink>
+                <NavLink class="sidebar-link" href="@AdminRoutes.Media.Index"><Icon Name="media" /> <span>Media</span></NavLink>
+                <NavLink class="sidebar-link" href="@AdminRoutes.Pronunciations.Index"><Icon Name="pronunciation" /> <span>Pronunciation</span></NavLink>
+                <NavLink class="sidebar-link" href="@AdminRoutes.GrammarTopics.Index"><Icon Name="grammar" /> <span>Grammar Topics</span></NavLink>
+                <NavLink class="sidebar-link" href="@AdminRoutes.GrammarRules.Index"><span>Grammar Rules</span></NavLink>
+                <NavLink class="sidebar-link" href="@AdminRoutes.Lessons.Index"><Icon Name="lesson" /> <span>Lessons</span></NavLink>
+                <NavLink class="sidebar-link" href="@AdminRoutes.Courses.Index"><Icon Name="course" /> <span>Courses</span></NavLink>
+                <NavLink class="sidebar-link" href="@AdminRoutes.Books.Index"><Icon Name="book" /> <span>Books</span></NavLink>
+                <NavLink class="sidebar-link" href="@AdminRoutes.Quizzes.Index"><Icon Name="quiz" /> <span>Quizzes</span></NavLink>
+                @if (HasPermission("certificates.read"))
+                {
+                    <NavLink class="sidebar-link" href="@AdminRoutes.CertificateTemplates.Index"><Icon Name="certificate" /> <span>Certificate Templates</span></NavLink>
+                }
+            </SidebarGroup>
+
+            <SidebarGroup Title="Operations" Icon="report">
+                @if (HasPermission("reports.read"))
+                {
+                    <NavLink class="sidebar-link" href="@AdminRoutes.Reports.Index"><Icon Name="report" /> <span>Reports</span></NavLink>
+                    <NavLink class="sidebar-link" href="@AdminRoutes.Analytics.Index"><Icon Name="analytics" /> <span>Analytics</span></NavLink>
+                }
+                @if (HasPermission("system-health.read"))
+                {
+                    <NavLink class="sidebar-link" href="@AdminRoutes.SystemHealth.Index"><Icon Name="health" /> <span>System Health</span></NavLink>
+                }
+                @if (HasPermission("notifications.manage"))
+                {
+                    <NavLink class="sidebar-link" href="@AdminRoutes.Notifications.Index"><Icon Name="bell" /> <span>Admin Notifications</span></NavLink>
+                }
+                @if (HasPermission("email.read"))
+                {
+                    <NavLink class="sidebar-link" href="@AdminRoutes.EmailMessages.Index"><Icon Name="mail" /> <span>Email</span></NavLink>
+                }
+                @if (HasPermission("content-quality.read"))
+                {
+                    <NavLink class="sidebar-link" href="@AdminRoutes.ContentQuality.Index"><Icon Name="quality" /> <span>Quality</span></NavLink>
+                }
+                @if (HasPermission("content-revisions.read"))
+                {
+                    <NavLink class="sidebar-link" href="@AdminRoutes.ContentRevisions.Index"><Icon Name="revision" /> <span>Revisions</span></NavLink>
+                }
+                @if (HasPermission("bulk-operations.read"))
+                {
+                    <NavLink class="sidebar-link" href="@AdminRoutes.BulkOperations.Index"><Icon Name="bulk-ops" /> <span>Bulk Operations</span></NavLink>
+                }
+                @if (HasPermission("import.read"))
+                {
+                    <NavLink class="sidebar-link" href="@AdminRoutes.ImportJobs.Index"><Icon Name="import" /> <span>Import Jobs</span></NavLink>
+                }
+                @if (HasPermission("achievements.manage"))
+                {
+                    <NavLink class="sidebar-link" href="/admin/achievement-definitions"><Icon Name="certificate" /> <span>Achievement Definitions</span></NavLink>
+                }
+                <NavLink class="sidebar-link" href="@AdminRoutes.Publishing.Jobs.Index"><Icon Name="publish" /> <span>Publishing</span></NavLink>
+                <NavLink class="sidebar-link" href="@AdminRoutes.ImportExport.Import"><Icon Name="import" /> <span>Import</span></NavLink>
+                <NavLink class="sidebar-link" href="@AdminRoutes.ImportExport.Export"><Icon Name="export" /> <span>Export</span></NavLink>
+            </SidebarGroup>
+
             @if (HasSecurityAccess)
             {
-                <NavLink href="@AdminRoutes.Users.Index">Users</NavLink>
-                <NavLink href="@AdminRoutes.Roles.Index">Roles</NavLink>
-                <NavLink href="@AdminRoutes.Permissions.Index">Permissions</NavLink>
+                <SidebarGroup Title="Security" Icon="shield">
+                    @if (HasPermission("users.read"))
+                    {
+                        <NavLink class="sidebar-link" href="@AdminRoutes.Users.Index"><span>Users</span></NavLink>
+                    }
+                    @if (HasPermission("roles.read"))
+                    {
+                        <NavLink class="sidebar-link" href="@AdminRoutes.Roles.Index"><span>Roles</span></NavLink>
+                    }
+                    @if (HasPermission("permissions.read"))
+                    {
+                        <NavLink class="sidebar-link" href="@AdminRoutes.Permissions.Index"><span>Permissions</span></NavLink>
+                    }
+                </SidebarGroup>
             }
         </nav>
-        <div class="topbar-user">
-            @if (IsAuthenticated)
-            {
-                <span>@DisplayName</span>
-                <form method="post" action="@AdminRoutes.Logout">
-                    <button class="button small" type="submit">Logout</button>
-                </form>
-            }
-        </div>
-    </header>
 
-    <main class="main-content">
-        @Body
-    </main>
+        <button class="sidebar-collapse-toggle" type="button" @onclick="ToggleCollapsed" aria-label="Toggle sidebar">
+            <Icon Name="menu" />
+        </button>
+    </aside>
+
+    <div class="app-main">
+        <header class="app-header">
+            <Breadcrumb />
+            <div class="app-header-actions">
+                @if (IsAuthenticated)
+                {
+                    @if (HasPermission("notifications.read"))
+                    {
+                        <a class="header-icon-button" href="@AdminRoutes.Notifications.Mine" aria-label="Notifications">
+                            <Icon Name="bell" Size="20" />
+                            @if (unreadNotificationCount > 0)
+                            {
+                                <span class="nav-badge">@unreadNotificationCount</span>
+                            }
+                        </a>
+                    }
+                    <span class="user-name">@DisplayName</span>
+                    <form method="post" action="@AdminRoutes.Logout">
+                        <AntiforgeryToken />
+                        <button class="button small" type="submit"><Icon Name="logout" Size="14" /> Logout</button>
+                    </form>
+                }
+            </div>
+        </header>
+
+        <main class="main-content">
+            @Body
+        </main>
+    </div>
 </div>
 
 @code {
@@ -113,6 +159,7 @@
         HasPermission("users.read") || HasPermission("roles.read") || HasPermission("permissions.read");
 
     private int unreadNotificationCount;
+    private bool collapsed;
 
     protected override async Task OnInitializedAsync()
     {
@@ -133,6 +180,11 @@
 
     private bool HasPermission(string permission) =>
         HttpContextAccessor.HttpContext?.User.HasClaim("permission", permission) == true;
+
+    private void ToggleCollapsed()
+    {
+        collapsed = !collapsed;
+    }
 }
 
 <div id="blazor-error-ui" data-nosnippet>

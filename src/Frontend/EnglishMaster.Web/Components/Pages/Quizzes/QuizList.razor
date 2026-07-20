@@ -10,22 +10,60 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Exercises</p>
-        <h1>Quizzes</h1>
+        <p class="eyebrow">QUIZZES / แบบฝึก</p>
+        <h1>Quiz Management</h1>
+        <p class="page-subtitle">Create practice quizzes, connect them to lessons, and publish them to the learner page. / สร้างแบบฝึก เชื่อมกับบทเรียน แล้วเผยแพร่ให้ผู้เรียนใช้งาน</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.Quizzes.Create">New Quiz</a>
+    <div class="actions">
+        <a class="button" href="/learn/practice">Learner practice / หน้าฝึกของผู้เรียน</a>
+        <a class="button primary" href="@AdminRoutes.Quizzes.Create"><Icon Name="plus" Size="16" /> New Quiz / เพิ่มแบบฝึก</a>
+    </div>
 </section>
 
-<section class="panel">
+<section class="panel release-note">
+    <div>
+        <strong>Recommended flow / ลำดับที่แนะนำ</strong>
+        <p class="muted">1. Create quiz -> 2. Add questions and choices -> 3. Check learner link -> 4. Publish when ready.</p>
+        <p class="muted">สร้างแบบฝึก -> เพิ่มคำถามและตัวเลือก -> ตรวจหน้าผู้เรียน -> เผยแพร่เมื่อพร้อม</p>
+    </div>
+</section>
+
+<section class="stat-grid quiz-overview" aria-label="Quiz overview">
+    <div class="panel stat-card">
+        <span class="stat-label">Total / ทั้งหมด</span>
+        <strong class="stat-value">@searchResult.TotalCount</strong>
+    </div>
+    <div class="panel stat-card status-ok">
+        <span class="stat-label">Published / เผยแพร่แล้ว</span>
+        <strong class="stat-value">@publishedCount</strong>
+    </div>
+    <div class="panel stat-card">
+        <span class="stat-label">Draft / ฉบับร่าง</span>
+        <strong class="stat-value">@draftCount</strong>
+    </div>
+    <div class="panel stat-card">
+        <span class="stat-label">Questions / จำนวนคำถาม</span>
+        <strong class="stat-value">@questionCount</strong>
+    </div>
+</section>
+
+<section class="panel filter-panel">
+    <div class="section-header-row">
+        <div>
+            <h2>Find quizzes / ค้นหาแบบฝึก</h2>
+            <p class="muted">Use the filters that matter now. / เลือกตัวกรองเท่าที่จำเป็นก่อน</p>
+        </div>
+        <button class="button small" type="button" @onclick="ClearFiltersAsync">Clear / ล้าง</button>
+    </div>
     <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
         <label>
-            <span>Search</span>
-            <input class="input" @bind="search" @bind:event="oninput" />
+            <span>Search / ค้นหา</span>
+            <input class="input" placeholder="Title, lesson, or summary / ชื่อ บทเรียน หรือคำอธิบาย" @bind="search" @bind:event="oninput" />
         </label>
         <label>
             <span>CEFR</span>
             <select class="input" @bind="cefrLevel">
-                <option value="">All</option>
+                <option value="">All / ทุกระดับ</option>
                 @foreach (var level in CefrLevels)
                 {
                     <option value="@level">@level</option>
@@ -33,9 +71,9 @@
             </select>
         </label>
         <label>
-            <span>Category</span>
+            <span>Category / หมวดหมู่</span>
             <select class="input" @bind="categoryId">
-                <option value="">All</option>
+                <option value="">All / ทั้งหมด</option>
                 @foreach (var category in categories)
                 {
                     <option value="@category.Id">@category.Name</option>
@@ -43,9 +81,9 @@
             </select>
         </label>
         <label>
-            <span>Lesson</span>
+            <span>Lesson / บทเรียน</span>
             <select class="input" @bind="lessonId">
-                <option value="">All</option>
+                <option value="">All / ทั้งหมด</option>
                 @foreach (var lesson in lessons)
                 {
                     <option value="@lesson.Id">@lesson.Title</option>
@@ -53,9 +91,9 @@
             </select>
         </label>
         <label>
-            <span>Course</span>
+            <span>Course / คอร์ส</span>
             <select class="input" @bind="courseId">
-                <option value="">All</option>
+                <option value="">All / ทั้งหมด</option>
                 @foreach (var course in courses)
                 {
                     <option value="@course.Id">@course.Title</option>
@@ -63,9 +101,9 @@
             </select>
         </label>
         <label>
-            <span>Book</span>
+            <span>Book / หนังสือ</span>
             <select class="input" @bind="bookId">
-                <option value="">All</option>
+                <option value="">All / ทั้งหมด</option>
                 @foreach (var book in books)
                 {
                     <option value="@book.Id">@book.Title</option>
@@ -73,37 +111,37 @@
             </select>
         </label>
         <label>
-            <span>Published</span>
+            <span>Published / การเผยแพร่</span>
             <select class="input" @bind="publishedFilter">
-                <option value="">All</option>
-                <option value="true">Published</option>
-                <option value="false">Draft</option>
+                <option value="">All / ทั้งหมด</option>
+                <option value="true">Published / เผยแพร่แล้ว</option>
+                <option value="false">Draft / ฉบับร่าง</option>
             </select>
         </label>
         <label>
-            <span>Status</span>
+            <span>Status / สถานะ</span>
             <select class="input" @bind="activeFilter">
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-                <option value="">All</option>
+                <option value="true">Active / ใช้งาน</option>
+                <option value="false">Inactive / ปิดใช้งาน</option>
+                <option value="">All / ทั้งหมด</option>
             </select>
         </label>
         <label>
-            <span>Sort</span>
+            <span>Sort / เรียงตาม</span>
             <select class="input" @bind="sortBy">
-                <option value="Title">Title</option>
-                <option value="CreatedAt">Created</option>
+                <option value="Title">Title / ชื่อ</option>
+                <option value="CreatedAt">Created / วันที่สร้าง</option>
             </select>
         </label>
         <label>
-            <span>Page Size</span>
+            <span>Page Size / จำนวนต่อหน้า</span>
             <select class="input" @bind="pageSize">
                 <option value="10">10</option>
                 <option value="20">20</option>
                 <option value="50">50</option>
             </select>
         </label>
-        <button class="button" type="submit">Search</button>
+        <button class="button filter-submit" type="submit">Search / ค้นหา</button>
     </form>
 </section>
 
@@ -114,19 +152,29 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading quizzes...</p>
+    <section class="panel empty-state" aria-live="polite">
+        <strong>Loading quizzes...</strong>
+        <p class="muted">กำลังโหลดแบบทดสอบ</p>
+    </section>
 }
 else if (quizzes.Count == 0)
 {
-    <section class="panel">
-        <p class="muted">No quizzes found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="quiz" Size="22" /></span>
+        <strong>No quizzes found / ไม่พบแบบฝึก</strong>
+        <p>Try clearing filters or create a new quiz. / ลองล้างตัวกรอง หรือเพิ่มแบบฝึกใหม่</p>
+        <div class="actions">
+            <button class="button" type="button" @onclick="ClearFiltersAsync">Clear filters / ล้างตัวกรอง</button>
+            <a class="button primary" href="@AdminRoutes.Quizzes.Create"><Icon Name="plus" Size="16" /> New Quiz / เพิ่มแบบฝึก</a>
+        </div>
     </section>
 }
 else
 {
     <section class="table-wrap">
         <div class="pagination-summary">
-            <span class="muted">Showing page @searchResult.PageNumber of @searchResult.TotalPages (@searchResult.TotalCount quizzes)</span>
+            <span class="muted">Page @searchResult.PageNumber of @searchResult.TotalPages / หน้า @searchResult.PageNumber จาก @searchResult.TotalPages</span>
+            <span class="pill">@searchResult.TotalCount quizzes / @searchResult.TotalCount รายการ</span>
         </div>
         <table class="data-table">
             <thead>
@@ -135,9 +183,10 @@ else
                     <th>CEFR</th>
                     <th>Category</th>
                     <th>Lesson</th>
-                    <th>Questions</th>
-                    <th>Published</th>
-                    <th>Status</th>
+                    <th>Questions / คำถาม</th>
+                    <th>Learner page / หน้าผู้เรียน</th>
+                    <th>Published / เผยแพร่</th>
+                    <th>Status / สถานะ</th>
                     <th></th>
                 </tr>
             </thead>
@@ -153,21 +202,31 @@ else
                         <td>@(quiz.Category?.Name ?? "-")</td>
                         <td>@(quiz.Lesson?.Title ?? "-")</td>
                         <td>@quiz.Questions.Count</td>
-                        <td>@(quiz.IsPublished ? "Published" : "Draft")</td>
-                        <td>@(quiz.IsActive ? "Active" : "Inactive")</td>
+                        <td>
+                            @if (quiz.IsPublished && !string.IsNullOrWhiteSpace(quiz.Slug))
+                            {
+                                <a class="button small" href="@PublicQuizUrl(quiz.Slug)">Open / เปิดดู</a>
+                            }
+                            else
+                            {
+                                <span class="muted">Publish first / เผยแพร่ก่อน</span>
+                            }
+                        </td>
+                        <td><span class="@GetPublishedBadgeClass(quiz.IsPublished)">@(quiz.IsPublished ? "Published / เผยแพร่แล้ว" : "Draft / ร่าง")</span></td>
+                        <td><span class="@GetActiveBadgeClass(quiz.IsActive)">@(quiz.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")</span></td>
                         <td class="row-actions">
-                            <a class="button small" href="@AdminRoutes.Quizzes.Detail(quiz.Id)">View</a>
-                            <a class="button small" href="@AdminRoutes.Quizzes.Edit(quiz.Id)">Edit</a>
-                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(quiz.Id)">Delete</button>
+                            <a class="button small" href="@AdminRoutes.Quizzes.Detail(quiz.Id)" aria-label="View @quiz.Title" title="View / ดู"><Icon Name="eye" Size="15" /></a>
+                            <a class="button small" href="@AdminRoutes.Quizzes.Edit(quiz.Id)" aria-label="Edit @quiz.Title" title="Edit / แก้ไข"><Icon Name="edit" Size="15" /></a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(quiz.Id)" aria-label="Delete @quiz.Title" title="Delete / ลบ"><Icon Name="trash" Size="15" /></button>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
         <div class="pagination-row">
-            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous</button>
-            <span class="muted">Page @searchResult.PageNumber</span>
-            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next</button>
+            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous / ก่อนหน้า</button>
+            <span class="muted">Page @searchResult.PageNumber / หน้า @searchResult.PageNumber</span>
+            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next / ถัดไป</button>
         </div>
     </section>
 }
@@ -194,6 +253,9 @@ else
     private int pageSize = 10;
     private string? errorMessage;
     private bool isLoading = true;
+    private int publishedCount => quizzes.Count(quiz => quiz.IsPublished);
+    private int draftCount => quizzes.Count(quiz => !quiz.IsPublished);
+    private int questionCount => quizzes.Sum(quiz => quiz.Questions.Count);
 
     protected override async Task OnInitializedAsync()
     {
@@ -223,6 +285,21 @@ else
 
     private async Task SearchAsync()
     {
+        pageNumber = 1;
+        await LoadAsync();
+    }
+
+    private async Task ClearFiltersAsync()
+    {
+        search = null;
+        cefrLevel = null;
+        categoryId = null;
+        lessonId = null;
+        courseId = null;
+        bookId = null;
+        publishedFilter = "";
+        activeFilter = "true";
+        sortBy = "Title";
         pageNumber = 1;
         await LoadAsync();
     }
@@ -324,6 +401,14 @@ else
             _ => null
         };
     }
+
+    private static string GetPublishedBadgeClass(bool isPublished) =>
+        isPublished ? "status-badge success" : "status-badge warning";
+
+    private static string GetActiveBadgeClass(bool isActive) =>
+        isActive ? "status-badge neutral" : "status-badge muted";
+
+    private static string PublicQuizUrl(string slug) => $"/quizzes/{slug}";
 
     private static QuizSearchResponse EmptySearchResult()
     {

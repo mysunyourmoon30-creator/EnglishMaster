@@ -5,16 +5,19 @@
 @inject IMotivationApiClient MotivationApiClient
 @inject ILearningReportApiClient LearningReportApiClient
 
-<PageTitle>Learning Dashboard</PageTitle>
+<PageTitle>Learning Dashboard / ภาพรวมการเรียน</PageTitle>
 
 <section class="page-header">
     <div>
-        <h1>Learning Dashboard</h1>
-        <p class="muted">Continue learning and review recommended content.</p>
+        <p class="eyebrow">Learning Dashboard / ภาพรวมการเรียน</p>
+        <h1>Your Learning Today / การเรียนของวันนี้</h1>
+        <p class="page-subtitle">ดูแผนวันนี้ เริ่มฝึก และติดตามความคืบหน้าโดยไม่ต้องเปิดหลายหน้า.</p>
     </div>
-    <a class="button" href="/learn/recommendations">Recommendations</a>
-    <a class="button secondary" href="/learn/practice">Start Practice</a>
-    <button class="button secondary" type="button" @onclick="GeneratePlanAsync">Generate Today Plan</button>
+    <div class="actions">
+        <a class="button primary" href="/learn/study-plan"><Icon Name="revision" Size="15" /> Study Plan / แผนวันนี้</a>
+        <a class="button secondary" href="/learn/practice"><Icon Name="quiz" Size="15" /> Practice / ฝึก</a>
+        <button class="button secondary" type="button" disabled="@isBusy" @onclick="GeneratePlanAsync"><Icon Name="plus" Size="15" /> Create plan / สร้างแผน</button>
+    </div>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -23,54 +26,98 @@
 }
 else if (isLoading)
 {
-    <p class="muted">Loading dashboard...</p>
+    <section class="panel empty-state">
+        <strong>Loading dashboard... / กำลังโหลดภาพรวม</strong>
+    </section>
 }
 else
 {
-    <RecommendationSection Title="Continue Learning" Items="summary.ContinueLearning" />
-    <section class="metrics-grid">
-        <article class="metric-card"><span>Active Goals</span><strong>@goalSummary.ActiveCount</strong></article>
-        <article class="metric-card"><span>Plans This Week</span><strong>@studyPlanSummary.PlansThisWeek</strong></article>
-        <article class="metric-card"><span>Study Minutes</span><strong>@studyPlanSummary.CompletedMinutes</strong></article>
-        <article class="metric-card"><span>Current Streak</span><strong>@motivationSummary.CurrentStreakDays</strong></article>
-        <article class="metric-card"><span>Achievements</span><strong>@motivationSummary.EarnedAchievementCount</strong></article>
-    </section>
     <section class="content-section">
-        <h2>Today's Study Plan</h2>
+        <div class="section-header-row">
+            <div>
+                <h2>Today&apos;s Study Plan / แผนเรียนวันนี้</h2>
+                <p class="muted">เริ่มตรงนี้ก่อนถ้าไม่แน่ใจว่าควรเรียนอะไร.</p>
+            </div>
+            <a class="button secondary" href="/learn/study-plan">Open / เปิด</a>
+        </div>
+
         @if (todayPlan is null)
         {
-            <p class="muted">No study plan generated for today yet.</p>
+            <div class="panel study-empty">
+                <div>
+                    <p class="eyebrow">Ready / พร้อม</p>
+                    <h2>No plan generated yet / ยังไม่มีแผนวันนี้</h2>
+                    <p class="muted">กดสร้างแผน แล้วระบบจะจัดงานจากคำศัพท์ บทเรียน แบบฝึก และสิ่งที่ควรทบทวน.</p>
+                </div>
+                <div class="study-quick-actions">
+                    <button class="button primary" type="button" disabled="@isBusy" @onclick="GeneratePlanAsync">Create today&apos;s plan / สร้างแผนวันนี้</button>
+                    <a class="button secondary" href="/learn/practice">Practice / ฝึกทันที</a>
+                </div>
+            </div>
         }
         else
         {
-            <p class="muted">@todayPlan.CompletedItems / @todayPlan.TotalItems items completed.</p>
-            <a class="button secondary" href="/learn/study-plan">Open study plan</a>
+            <section class="study-overview panel">
+                <div class="study-overview-main">
+                    <span class="@StatusBadgeClass(todayPlan.Status)">@StatusLabel(todayPlan.Status)</span>
+                    <h2>@GetProgressPercent(todayPlan)% done / สำเร็จแล้ว @GetProgressPercent(todayPlan)%</h2>
+                    <p class="muted">@todayPlan.CompletedItems / @todayPlan.TotalItems tasks / งาน · @todayPlan.CompletedMinutes / @todayPlan.TargetMinutes minutes / นาที</p>
+                    <div class="study-progress" aria-label="Today progress">
+                        <span style="width: @GetProgressPercent(todayPlan)%"></span>
+                    </div>
+                </div>
+                <div class="actions">
+                    <a class="button primary" href="/learn/study-plan">Continue / เรียนต่อ</a>
+                </div>
+            </section>
         }
     </section>
+
+    <section class="stat-grid">
+        <article class="panel stat-card"><Icon Name="quality" Size="18" /><span class="stat-label">Goals / เป้าหมาย</span><span class="stat-value">@goalSummary.ActiveCount</span></article>
+        <article class="panel stat-card"><Icon Name="revision" Size="18" /><span class="stat-label">Plans / แผนสัปดาห์นี้</span><span class="stat-value">@studyPlanSummary.PlansThisWeek</span></article>
+        <article class="panel stat-card"><Icon Name="book" Size="18" /><span class="stat-label">Minutes / นาทีเรียน</span><span class="stat-value">@studyPlanSummary.CompletedMinutes</span></article>
+        <article class="panel stat-card"><Icon Name="health" Size="18" /><span class="stat-label">Streak / วันต่อเนื่อง</span><span class="stat-value">@motivationSummary.CurrentStreakDays</span></article>
+        <article class="panel stat-card"><Icon Name="certificate" Size="18" /><span class="stat-label">Achievements / รางวัล</span><span class="stat-value">@motivationSummary.EarnedAchievementCount</span></article>
+    </section>
+
+    <RecommendationSection Title="Continue Learning / เรียนต่อ" Items="summary.ContinueLearning" />
+
     <section class="content-section">
-        <h2>Weekly Report</h2>
+        <div class="section-header-row">
+            <div>
+                <h2>Weekly Report / รายงานสัปดาห์นี้</h2>
+                <p class="muted">สรุปเวลาเรียน บทเรียน แบบฝึก และคะแนนเฉลี่ย.</p>
+            </div>
+        </div>
+
         @if (weeklyReport is null)
         {
-            <p class="muted">No weekly report generated yet.</p>
-            <button class="button secondary" type="button" @onclick="GenerateWeeklyReportAsync">Generate report</button>
+            <div class="panel empty-state">
+                <span class="empty-state-icon"><Icon Name="report" Size="20" /></span>
+                <strong>No weekly report yet / ยังไม่มีรายงานสัปดาห์นี้</strong>
+                <p>สร้างรายงานเพื่อดูภาพรวมการเรียนของสัปดาห์.</p>
+                <div class="actions">
+                    <button class="button primary" type="button" disabled="@isBusy" @onclick="GenerateWeeklyReportAsync"><Icon Name="plus" Size="15" /> Generate report / สร้างรายงาน</button>
+                </div>
+            </div>
         }
         else
         {
-            <section class="metrics-grid">
-                <article class="metric-card"><span>Study minutes</span><strong>@weeklyReport.TotalStudyMinutes</strong></article>
-                <article class="metric-card"><span>Lessons completed</span><strong>@weeklyReport.LessonsCompleted</strong></article>
-                <article class="metric-card"><span>Practice sessions</span><strong>@weeklyReport.PracticeSessionsCompleted</strong></article>
-                <article class="metric-card"><span>Quiz average</span><strong>@weeklyReport.AverageQuizScore.ToString("0.#")%</strong></article>
+            <section class="stat-grid">
+                <article class="panel stat-card"><Icon Name="book" Size="18" /><span class="stat-label">Study minutes / นาทีเรียน</span><span class="stat-value">@weeklyReport.TotalStudyMinutes</span></article>
+                <article class="panel stat-card"><Icon Name="lesson" Size="18" /><span class="stat-label">Lessons / บทเรียน</span><span class="stat-value">@weeklyReport.LessonsCompleted</span></article>
+                <article class="panel stat-card"><Icon Name="quiz" Size="18" /><span class="stat-label">Practice / รอบฝึก</span><span class="stat-value">@weeklyReport.PracticeSessionsCompleted</span></article>
+                <article class="panel stat-card"><Icon Name="quality" Size="18" /><span class="stat-label">Quiz average / คะแนนเฉลี่ย</span><span class="stat-value">@weeklyReport.AverageQuizScore.ToString("0.#")%</span></article>
             </section>
-            <a class="button secondary" href="/learn/reports/current-week">Open weekly report</a>
+            <a class="button secondary" href="/learn/reports/current-week">Open weekly report / เปิดรายงาน</a>
         }
     </section>
-    <RecommendationCards Title="Recommended Courses" Items="summary.RecommendedCourses" />
-    <RecommendationCards Title="Recommended Lessons" Items="summary.RecommendedLessons" />
-    <RecommendationCards Title="Recommended Words" Items="summary.RecommendedWords" />
-    <RecommendationCards Title="Recommended Grammar" Items="summary.RecommendedGrammar" />
-    <RecommendationCards Title="Recommended Quizzes" Items="summary.RecommendedQuizzes" />
-    <RecommendationCards Title="Review Weak Areas" Items="summary.ReviewRecommendations" />
+
+    <RecommendationCards Title="Recommended Lessons / บทเรียนแนะนำ" Items="summary.RecommendedLessons" />
+    <RecommendationCards Title="Recommended Words / คำศัพท์แนะนำ" Items="summary.RecommendedWords" />
+    <RecommendationCards Title="Recommended Quizzes / แบบฝึกแนะนำ" Items="summary.RecommendedQuizzes" />
+    <RecommendationCards Title="Review Weak Areas / จุดที่ควรทบทวน" Items="summary.ReviewRecommendations" />
 }
 
 @code {
@@ -81,6 +128,7 @@ else
     private MotivationSummaryDto motivationSummary = new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, [], []);
     private WeeklyLearningReportDto? weeklyReport;
     private bool isLoading = true;
+    private bool isBusy;
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
@@ -96,7 +144,7 @@ else
         }
         catch (ApiRequestException)
         {
-            errorMessage = "Learning recommendations are unavailable right now.";
+            errorMessage = "Learning dashboard is unavailable right now. / ตอนนี้ยังโหลดภาพรวมการเรียนไม่ได้";
         }
         finally
         {
@@ -106,12 +154,57 @@ else
 
     private async Task GeneratePlanAsync()
     {
-        todayPlan = await StudyPlanApiClient.GenerateTodayAsync(CancellationToken.None);
-        studyPlanSummary = await StudyPlanApiClient.GetSummaryAsync(CancellationToken.None);
+        await RunBusyAsync(async () =>
+        {
+            todayPlan = await StudyPlanApiClient.GenerateTodayAsync(CancellationToken.None);
+            studyPlanSummary = await StudyPlanApiClient.GetSummaryAsync(CancellationToken.None);
+        });
     }
 
     private async Task GenerateWeeklyReportAsync()
     {
-        weeklyReport = await LearningReportApiClient.GenerateCurrentWeekAsync(CancellationToken.None);
+        await RunBusyAsync(async () =>
+        {
+            weeklyReport = await LearningReportApiClient.GenerateCurrentWeekAsync(CancellationToken.None);
+        });
     }
+
+    private async Task RunBusyAsync(Func<Task> action)
+    {
+        errorMessage = null;
+        isBusy = true;
+        try
+        {
+            await action();
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Action failed. Please try again. / ทำรายการไม่สำเร็จ ลองใหม่อีกครั้ง";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private static int GetProgressPercent(DailyStudyPlanDto plan) => plan.TotalItems == 0
+        ? 0
+        : Math.Clamp((int)Math.Round(plan.CompletedItems * 100m / plan.TotalItems), 0, 100);
+
+    private static string StatusLabel(string status) => status.ToLowerInvariant() switch
+    {
+        "completed" => "Completed / เสร็จแล้ว",
+        "skipped" => "Skipped / ข้ามแล้ว",
+        "inprogress" or "in_progress" => "In progress / กำลังทำ",
+        "planned" or "pending" => "Planned / รอทำ",
+        _ => $"{status} / สถานะ"
+    };
+
+    private static string StatusBadgeClass(string status) => status.ToLowerInvariant() switch
+    {
+        "completed" => "status-badge success",
+        "skipped" => "status-badge muted",
+        "inprogress" or "in_progress" => "status-badge warning",
+        _ => "status-badge neutral"
+    };
 }

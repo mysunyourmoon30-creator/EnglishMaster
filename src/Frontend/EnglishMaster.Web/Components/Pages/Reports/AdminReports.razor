@@ -6,14 +6,15 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Admin</p>
+        <p class="eyebrow">ADMIN REPORTS / รายงานผู้ดูแล</p>
         <h1>Reports</h1>
+        <p class="page-subtitle">Content status, quiz analytics, learning progress, and recent activity. / สถานะเนื้อหา ผลแบบฝึก ความคืบหน้าผู้เรียน และกิจกรรมล่าสุด</p>
     </div>
 </section>
 
 @if (isLoading)
 {
-    <div class="panel">Loading reports...</div>
+    <div class="panel">Loading reports... / กำลังโหลดรายงาน</div>
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))
 {
@@ -23,73 +24,79 @@ else if (dashboard is not null && learning is not null)
 {
     <section class="stat-grid">
         <div class="panel stat-card">
-            <span class="stat-label">Students</span>
+            <Icon Name="users" Size="18" />
+            <span class="stat-label">Students / ผู้เรียน</span>
             <span class="stat-value">@dashboard.Overview.TotalStudents</span>
         </div>
         <div class="panel stat-card">
-            <span class="stat-label">Words</span>
+            <Icon Name="word" Size="18" />
+            <span class="stat-label">Words / คำศัพท์</span>
             <span class="stat-value">@dashboard.Overview.TotalWords</span>
         </div>
         <div class="panel stat-card">
-            <span class="stat-label">Lessons</span>
+            <Icon Name="lesson" Size="18" />
+            <span class="stat-label">Lessons / บทเรียน</span>
             <span class="stat-value">@dashboard.Overview.TotalLessons</span>
         </div>
         <div class="panel stat-card">
-            <span class="stat-label">Quizzes</span>
+            <Icon Name="quiz" Size="18" />
+            <span class="stat-label">Quizzes / แบบฝึก</span>
             <span class="stat-value">@dashboard.Overview.TotalQuizzes</span>
         </div>
     </section>
 
     <section class="content-grid">
         <article class="panel">
-            <h2>Content Status</h2>
+            <h2><Icon Name="quality" Size="17" /> Content Status / สถานะเนื้อหา</h2>
             <dl class="metric-list">
-                <dt>Published lessons</dt>
+                <dt>Published lessons / บทเรียนเผยแพร่แล้ว</dt>
                 <dd>@dashboard.ContentStatus.PublishedLessons</dd>
-                <dt>Draft lessons</dt>
+                <dt>Draft lessons / บทเรียนร่าง</dt>
                 <dd>@dashboard.ContentStatus.DraftLessons</dd>
-                <dt>Published courses</dt>
+                <dt>Published courses / คอร์สเผยแพร่แล้ว</dt>
                 <dd>@dashboard.ContentStatus.PublishedCourses</dd>
-                <dt>Published books</dt>
+                <dt>Published books / หนังสือเผยแพร่แล้ว</dt>
                 <dd>@dashboard.ContentStatus.PublishedBooks</dd>
-                <dt>Published quizzes</dt>
+                <dt>Published quizzes / แบบฝึกเผยแพร่แล้ว</dt>
                 <dd>@dashboard.ContentStatus.PublishedQuizzes</dd>
             </dl>
         </article>
 
         <article class="panel">
-            <h2>Quiz Analytics</h2>
+            <h2><Icon Name="quiz" Size="17" /> Quiz Analytics / ผลแบบฝึก</h2>
             <dl class="metric-list">
-                <dt>Total attempts</dt>
+                <dt>Total attempts / จำนวนครั้งที่ทำ</dt>
                 <dd>@dashboard.QuizAnalytics.TotalAttempts</dd>
-                <dt>Average score</dt>
+                <dt>Average score / คะแนนเฉลี่ย</dt>
                 <dd>@dashboard.QuizAnalytics.AverageScore</dd>
-                <dt>Passed</dt>
+                <dt>Passed / ผ่าน</dt>
                 <dd>@dashboard.QuizAnalytics.PassedCount</dd>
-                <dt>Failed</dt>
+                <dt>Failed / ไม่ผ่าน</dt>
                 <dd>@dashboard.QuizAnalytics.FailedCount</dd>
             </dl>
         </article>
 
         <article class="panel">
-            <h2>Learning Progress</h2>
+            <h2><Icon Name="analytics" Size="17" /> Learning Progress / ความคืบหน้าการเรียน</h2>
             <dl class="metric-list">
-                <dt>Course started</dt>
+                <dt>Course started / เริ่มคอร์ส</dt>
                 <dd>@learning.CourseProgress.StartedCount</dd>
-                <dt>Course completed</dt>
+                <dt>Course completed / จบคอร์ส</dt>
                 <dd>@learning.CourseProgress.CompletedCount</dd>
-                <dt>Book started</dt>
+                <dt>Book started / เริ่มหนังสือ</dt>
                 <dd>@learning.BookProgress.StartedCount</dd>
-                <dt>Book completed</dt>
+                <dt>Book completed / จบหนังสือ</dt>
                 <dd>@learning.BookProgress.CompletedCount</dd>
             </dl>
         </article>
 
         <article class="panel">
-            <h2>Recent Activity</h2>
+            <h2><Icon Name="revision" Size="17" /> Recent Activity / กิจกรรมล่าสุด</h2>
             @if (dashboard.RecentActivity.Count == 0)
             {
-                <p class="muted">No recent activity.</p>
+                <div class="empty-state left-aligned">
+                    <p>No recent activity. / ยังไม่มีกิจกรรมล่าสุด</p>
+                </div>
             }
             else
             {
@@ -99,7 +106,7 @@ else if (dashboard is not null && learning is not null)
                         <li>
                             <strong>@item.Type</strong>
                             <span>@item.Title</span>
-                            <span class="muted">@item.OccurredAt.LocalDateTime.ToString("g")</span>
+                            <span class="muted">@item.OccurredAt.LocalDateTime.ToString("g", CultureInfo.InvariantCulture)</span>
                         </li>
                     }
                 </ul>

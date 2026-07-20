@@ -8,20 +8,25 @@
     <div>
         <p class="eyebrow">Content Operations</p>
         <h1>Import</h1>
+        <p class="page-subtitle">Bulk-import vocabulary entries from a CSV or JSON file.</p>
     </div>
 </section>
 
 <section class="panel">
-    <h2>Words</h2>
-    <div class="form-grid">
-        <label>
-            <span>CSV or JSON file</span>
-            <InputFile OnChange="OnFileSelected" accept=".csv,.json,text/csv,application/json" />
-        </label>
+    <h2><Icon Name="word" Size="17" /> Words</h2>
+    <div class="upload-dropzone">
+        <Icon Name="import" Size="28" />
+        <strong>Drop a file here or click to browse</strong>
+        <p class="muted">Supported: CSV or JSON.</p>
+        <InputFile OnChange="OnFileSelected" accept=".csv,.json,text/csv,application/json" />
+        @if (selectedFile is not null)
+        {
+            <p class="muted">@selectedFile.Name - @selectedFile.ContentType</p>
+        }
     </div>
     <div class="form-actions">
         <button class="button primary" type="button" disabled="@(selectedFile is null || isImporting)" @onclick="ImportWordsAsync">
-            @(isImporting ? "Importing..." : "Import Words")
+            <Icon Name="import" Size="16" /> @(isImporting ? "Importing..." : "Import Words")
         </button>
     </div>
 </section>
@@ -35,18 +40,18 @@
 {
     <section class="panel">
         <h2>Import Result</h2>
-        <div class="stats-grid">
-            <div>
-                <span class="muted">Rows</span>
-                <strong>@importResult.TotalRows</strong>
+        <div class="stat-grid">
+            <div class="panel stat-card">
+                <span class="stat-label">Rows</span>
+                <span class="stat-value">@importResult.TotalRows</span>
             </div>
-            <div>
-                <span class="muted">Imported</span>
-                <strong>@importResult.ImportedCount</strong>
+            <div class="panel stat-card">
+                <span class="stat-label">Imported</span>
+                <span class="stat-value">@importResult.ImportedCount</span>
             </div>
-            <div>
-                <span class="muted">Failed</span>
-                <strong>@importResult.FailedCount</strong>
+            <div class="panel stat-card @(importResult.FailedCount > 0 ? "status-bad" : "status-ok")">
+                <span class="stat-label">Failed</span>
+                <span class="stat-value">@importResult.FailedCount</span>
             </div>
         </div>
 

@@ -1,16 +1,27 @@
 @page "/learn/study-plan"
 @inject IDailyStudyPlanApiClient StudyPlanApiClient
 
-<PageTitle>Study Plan</PageTitle>
+<PageTitle>Study Plan / แผนเรียน</PageTitle>
 
-<section class="page-header">
+<section class="page-header study-plan-header">
     <div>
-        <h1>Today's Study Plan</h1>
-        <p class="muted">A simple plan built from due practice, continue learning, and recommendations.</p>
+        <p class="eyebrow">STUDY PLAN / แผนเรียน</p>
+        <h1>Today's Learning Plan</h1>
+        <p class="page-subtitle">Create a small plan for today, finish one task at a time, and track your progress. / สร้างแผนเล็ก ๆ สำหรับวันนี้ ทำทีละงาน แล้วดูความคืบหน้าได้ทันที</p>
     </div>
     <div class="actions">
-        <button class="button" type="button" @onclick="GenerateAsync">Generate today plan</button>
-        <a class="button secondary" href="/learn/study-plan/history">History</a>
+        <button class="button primary" type="button" disabled="@isBusy" @onclick="GenerateAsync">
+            @(plan is null ? "Create today's plan / สร้างแผนวันนี้" : "Refresh plan / ปรับแผนใหม่")
+        </button>
+        <a class="button secondary" href="/learn/study-plan/history"><Icon Name="revision" Size="15" /> History / ประวัติ</a>
+    </div>
+</section>
+
+<section class="panel release-note">
+    <div>
+        <strong>How to use / วิธีใช้</strong>
+        <p class="muted">Create today's plan, open the first task, then press Done when finished. Skip only when you want to leave it for later.</p>
+        <p class="muted">กดสร้างแผนวันนี้ เปิดงานแรก แล้วกด Done เมื่อทำเสร็จ ใช้ Skip เฉพาะงานที่อยากข้ามไว้ก่อน</p>
     </div>
 </section>
 
@@ -20,48 +31,122 @@
 }
 else if (isLoading)
 {
-    <p class="muted">Loading study plan...</p>
+    <section class="panel empty-state">
+        <strong>Loading today's plan... / กำลังโหลดแผนวันนี้</strong>
+        <span class="muted">Please wait while we check today's learning tasks. / รอสักครู่ ระบบกำลังตรวจงานเรียนวันนี้</span>
+    </section>
 }
 else if (plan is null)
 {
-    <p class="muted">No plan for today yet.</p>
+    <section class="panel study-empty">
+        <div>
+            <p class="eyebrow">READY WHEN YOU ARE / พร้อมเริ่มได้เลย</p>
+            <h2>No plan for today yet / วันนี้ยังไม่มีแผน</h2>
+            <p class="muted">Create a plan and the system will prepare words, lessons, quizzes, and review tasks for today. / กดสร้างแผน ระบบจะจัดคำศัพท์ บทเรียน แบบฝึก และงานทบทวนสำหรับวันนี้</p>
+        </div>
+        <div class="study-quick-actions">
+            <button class="button primary" type="button" disabled="@isBusy" @onclick="GenerateAsync">Create plan / สร้างแผน</button>
+            <a class="button secondary" href="/learn/practice">Practice / ฝึกทันที</a>
+            <a class="button secondary" href="/search">Search / ค้นหาเนื้อหา</a>
+        </div>
+    </section>
 }
 else
 {
-    <section class="metrics-grid">
-        <article class="metric-card"><span>Target minutes</span><strong>@plan.TargetMinutes</strong></article>
-        <article class="metric-card"><span>Completed minutes</span><strong>@plan.CompletedMinutes</strong></article>
-        <article class="metric-card"><span>Items</span><strong>@plan.CompletedItems / @plan.TotalItems</strong></article>
-        <article class="metric-card"><span>Status</span><strong>@plan.Status</strong></article>
+    <section class="study-overview panel">
+        <div class="study-overview-main">
+            <span class="@StatusBadgeClass(plan.Status)">@StatusLabel(plan.Status)</span>
+            <h2>@ProgressPercent% done / สำเร็จแล้ว @ProgressPercent%</h2>
+            <p class="muted">Today's goal: @plan.TargetMinutes minutes. Done: @plan.CompletedMinutes minutes. Remaining: about @RemainingMinutes minutes. / เป้าหมายวันนี้ @plan.TargetMinutes นาที ทำแล้ว @plan.CompletedMinutes นาที เหลือประมาณ @RemainingMinutes นาที</p>
+            <div class="study-progress" aria-label="Today progress">
+                <span style="width: @ProgressPercent%"></span>
+            </div>
+        </div>
+        <div class="study-overview-stats">
+            <article>
+                <span>Tasks / งาน</span>
+                <strong>@plan.CompletedItems / @plan.TotalItems</strong>
+            </article>
+            <article>
+                <span>Minutes / นาที</span>
+                <strong>@plan.CompletedMinutes / @plan.TargetMinutes</strong>
+            </article>
+            <article>
+                <span>Date / วันที่</span>
+                <strong>@plan.PlanDate.ToString("dd MMM", CultureInfo.InvariantCulture)</strong>
+            </article>
+        </div>
     </section>
 
-    <section class="content-section">
-        <h2>Plan Items</h2>
+    @if (NextItem is not null)
+    {
+        <section class="study-next panel">
+            <div>
+                <p class="eyebrow">NEXT STEP / ทำข้อนี้ก่อน</p>
+                <h2>@NextItem.Title</h2>
+                <p class="muted">@ItemTypeLabel(NextItem) · @NextItem.EstimatedMinutes minutes / @NextItem.EstimatedMinutes นาที</p>
+            </div>
+            <div class="actions">
+                @if (!string.IsNullOrWhiteSpace(NextItem.Url))
+                {
+                    <a class="button primary" href="@NextItem.Url">Start / เริ่ม</a>
+                }
+                <button class="button" type="button" disabled="@isBusy" @onclick="() => CompleteItemAsync(NextItem.Id)">Done / เสร็จแล้ว</button>
+                <button class="button secondary" type="button" disabled="@isBusy" @onclick="() => SkipItemAsync(NextItem.Id)">Skip / ข้าม</button>
+            </div>
+        </section>
+    }
+
+    <section class="content-section study-plan-section">
+        <div class="section-header-row">
+            <div>
+                <h2>Today's Tasks / งานวันนี้</h2>
+                <p class="muted">Work from top to bottom, or open the task you want to do first. / ทำจากบนลงล่าง หรือเปิดงานที่อยากเริ่มก่อนก็ได้</p>
+            </div>
+            <div class="actions">
+                <a class="button secondary" href="/learn/goals">Goals / เป้าหมาย</a>
+                <a class="button secondary" href="/learn/practice">Practice / ฝึก</a>
+            </div>
+        </div>
+
         @if (plan.Items.Count == 0)
         {
-            <p class="muted">No plan items available yet.</p>
+            <div class="panel empty-state">
+                <strong>No tasks yet / ยังไม่มีงานในแผน</strong>
+                <span class="muted">Try refreshing the plan or start from Practice. / ลองปรับแผนใหม่ หรือไปฝึกในหน้า Practice ก่อน</span>
+            </div>
         }
         else
         {
-            <div class="card-grid">
+            <div class="study-task-list">
                 @foreach (var item in plan.Items.OrderBy(item => item.SortOrder))
                 {
-                    <article class="list-card">
-                        <span class="pill">@item.ItemType</span>
-                        <h3>@item.Title</h3>
-                        <p class="muted">@item.EstimatedMinutes minutes - @item.Status</p>
+                    <article class="study-task">
+                        <div class="study-task-index">@item.SortOrder</div>
+                        <div class="study-task-body">
+                            <div class="study-task-meta">
+                                <span class="pill">@ItemTypeLabel(item)</span>
+                                <span class="@StatusBadgeClass(item.Status)">@StatusLabel(item.Status)</span>
+                                <span class="muted">@item.EstimatedMinutes min / @item.EstimatedMinutes นาที</span>
+                            </div>
+                            <h3>@item.Title</h3>
+                            <p class="muted">@ActionHint(item)</p>
+                        </div>
                         <div class="actions">
                             @if (!string.IsNullOrWhiteSpace(item.Url))
                             {
-                                <a class="button secondary" href="@item.Url">Open</a>
+                                <a class="button primary" href="@item.Url">Open / เปิด</a>
                             }
-                            <button class="button" type="button" @onclick="() => CompleteItemAsync(item.Id)">Complete</button>
-                            <button class="button secondary" type="button" @onclick="() => SkipItemAsync(item.Id)">Skip</button>
+                            <button class="button" type="button" disabled="@(isBusy || IsCompleted(item))" @onclick="() => CompleteItemAsync(item.Id)">Done / เสร็จ</button>
+                            <button class="button secondary" type="button" disabled="@(isBusy || IsCompleted(item))" @onclick="() => SkipItemAsync(item.Id)">Skip / ข้าม</button>
                         </div>
                     </article>
                 }
             </div>
-            <button class="button" type="button" @onclick="CompletePlanAsync">Complete plan</button>
+            <div class="study-finish-row">
+                <button class="button primary" type="button" disabled="@(isBusy || plan.TotalItems == 0)" @onclick="CompletePlanAsync">Complete today / จบแผนวันนี้</button>
+                <a class="button secondary" href="/learn/reports">View reports / ดูผลเรียน</a>
+            </div>
         }
     </section>
 }
@@ -69,7 +154,20 @@ else
 @code {
     private DailyStudyPlanDto? plan;
     private bool isLoading = true;
+    private bool isBusy;
     private string? errorMessage;
+
+    private int ProgressPercent => plan is null || plan.TotalItems == 0
+        ? 0
+        : Math.Clamp((int)Math.Round(plan.CompletedItems * 100m / plan.TotalItems), 0, 100);
+
+    private int RemainingMinutes => plan is null
+        ? 0
+        : Math.Max(plan.TargetMinutes - plan.CompletedMinutes, 0);
+
+    private DailyStudyPlanItemDto? NextItem => plan?.Items
+        .OrderBy(item => item.SortOrder)
+        .FirstOrDefault(item => !IsCompleted(item) && !IsSkipped(item));
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
@@ -81,7 +179,7 @@ else
         }
         catch (ApiRequestException)
         {
-            errorMessage = "Study plan is unavailable right now.";
+            errorMessage = "Study plan is unavailable right now. / ตอนนี้ยังโหลดแผนเรียนไม่ได้";
         }
         finally
         {
@@ -91,26 +189,104 @@ else
 
     private async Task GenerateAsync()
     {
-        plan = await StudyPlanApiClient.GenerateTodayAsync(CancellationToken.None);
+        await RunBusyAsync(async () => plan = await StudyPlanApiClient.GenerateTodayAsync(CancellationToken.None));
     }
 
     private async Task CompleteItemAsync(Guid id)
     {
-        await StudyPlanApiClient.CompleteItemAsync(id, CancellationToken.None);
-        await LoadAsync();
+        await RunBusyAsync(async () =>
+        {
+            await StudyPlanApiClient.CompleteItemAsync(id, CancellationToken.None);
+            await LoadAsync();
+        });
     }
 
     private async Task SkipItemAsync(Guid id)
     {
-        await StudyPlanApiClient.SkipItemAsync(id, CancellationToken.None);
-        await LoadAsync();
+        await RunBusyAsync(async () =>
+        {
+            await StudyPlanApiClient.SkipItemAsync(id, CancellationToken.None);
+            await LoadAsync();
+        });
     }
 
     private async Task CompletePlanAsync()
     {
         if (plan is not null)
         {
-            plan = await StudyPlanApiClient.CompletePlanAsync(plan.Id, CancellationToken.None);
+            await RunBusyAsync(async () => plan = await StudyPlanApiClient.CompletePlanAsync(plan.Id, CancellationToken.None));
         }
+    }
+
+    private async Task RunBusyAsync(Func<Task> action)
+    {
+        errorMessage = null;
+        isBusy = true;
+        try
+        {
+            await action();
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Study plan action failed. Please try again. / ทำรายการไม่สำเร็จ ลองใหม่อีกครั้ง";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private static bool IsCompleted(DailyStudyPlanItemDto item) =>
+        string.Equals(item.Status, "Completed", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsSkipped(DailyStudyPlanItemDto item) =>
+        string.Equals(item.Status, "Skipped", StringComparison.OrdinalIgnoreCase);
+
+    private static string StatusLabel(string status) => status.ToLowerInvariant() switch
+    {
+        "completed" => "Completed / เสร็จแล้ว",
+        "skipped" => "Skipped / ข้ามแล้ว",
+        "inprogress" or "in_progress" => "In progress / กำลังทำ",
+        "planned" or "pending" => "Planned / รอทำ",
+        _ => $"{status} / สถานะ"
+    };
+
+    private static string StatusBadgeClass(string status) => status.ToLowerInvariant() switch
+    {
+        "completed" => "status-badge success",
+        "skipped" => "status-badge muted",
+        "inprogress" or "in_progress" => "status-badge warning",
+        _ => "status-badge neutral"
+    };
+
+    private static string ItemTypeLabel(DailyStudyPlanItemDto item) => item.ItemType.ToLowerInvariant() switch
+    {
+        "practice" => "Practice / ฝึก",
+        "review" => "Review / ทบทวน",
+        "lesson" => "Lesson / บทเรียน",
+        "quiz" => "Quiz / แบบฝึก",
+        "word" => "Words / คำศัพท์",
+        _ => $"{item.ItemType} / งานเรียน"
+    };
+
+    private static string ActionHint(DailyStudyPlanItemDto item)
+    {
+        if (IsCompleted(item))
+        {
+            return "Good job. This task is done. / ทำเสร็จแล้ว";
+        }
+
+        if (IsSkipped(item))
+        {
+            return "Skipped for now. You can refresh the plan later. / ข้ามไว้ก่อน";
+        }
+
+        return item.ContentType.ToLowerInvariant() switch
+        {
+            "word" => "Open and review the meaning, example, and pronunciation. / เปิดดูความหมาย ตัวอย่าง และการออกเสียง",
+            "quiz" => "Open the quiz, answer carefully, then mark this task done. / เปิดแบบฝึก ทำให้เสร็จ แล้วกด Done",
+            "lesson" => "Read the lesson, then come back to mark it done. / อ่านบทเรียน แล้วกลับมากด Done",
+            _ => "Open this task or mark it done when finished. / เปิดงานนี้ หรือกด Done เมื่อทำเสร็จ"
+        };
     }
 }

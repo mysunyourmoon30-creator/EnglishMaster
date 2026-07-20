@@ -6,10 +6,11 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Admin</p>
-        <h1>Import Job</h1>
+        <p class="eyebrow">Import Jobs</p>
+        <h1>@(job is null ? "Import Job" : $"Import Job · {job.ImportType}")</h1>
+        <p class="page-subtitle">Validate, run, and manage the lifecycle of this import job.</p>
     </div>
-    <a class="button secondary" href="@AdminRoutes.ImportJobs.Index">Back</a>
+    <a class="button" href="@AdminRoutes.ImportJobs.Index">Back to Import Jobs</a>
 </section>
 
 @if (isLoading)
@@ -27,20 +28,47 @@ else if (job is not null)
             <div class="detail-item"><span class="muted">Type</span><strong>@job.ImportType</strong></div>
             <div class="detail-item"><span class="muted">Format</span><strong>@job.Format</strong></div>
             <div class="detail-item"><span class="muted">Status</span><strong>@job.Status</strong></div>
-            <div class="detail-item"><span class="muted">Rows</span><strong>@job.TotalRows</strong></div>
-            <div class="detail-item"><span class="muted">Valid</span><strong>@job.ValidRows</strong></div>
-            <div class="detail-item"><span class="muted">Invalid</span><strong>@job.InvalidRows</strong></div>
-            <div class="detail-item"><span class="muted">Imported</span><strong>@job.ImportedRows</strong></div>
-            <div class="detail-item"><span class="muted">Failed</span><strong>@job.FailedRows</strong></div>
         </div>
+    </section>
+
+    <h3 class="detail-section-heading">Row Summary</h3>
+    <section class="stat-grid">
+        <div class="panel stat-card">
+            <Icon Name="import" Size="18" />
+            <span class="stat-label">Total Rows</span>
+            <span class="stat-value">@job.TotalRows</span>
+        </div>
+        <div class="panel stat-card">
+            <Icon Name="import" Size="18" />
+            <span class="stat-label">Valid</span>
+            <span class="stat-value">@job.ValidRows</span>
+        </div>
+        <div class="panel stat-card">
+            <Icon Name="import" Size="18" />
+            <span class="stat-label">Invalid</span>
+            <span class="stat-value">@job.InvalidRows</span>
+        </div>
+        <div class="panel stat-card">
+            <Icon Name="import" Size="18" />
+            <span class="stat-label">Imported</span>
+            <span class="stat-value">@job.ImportedRows</span>
+        </div>
+        <div class="panel stat-card">
+            <Icon Name="import" Size="18" />
+            <span class="stat-label">Failed</span>
+            <span class="stat-value">@job.FailedRows</span>
+        </div>
+    </section>
+
+    <section class="panel">
         <div class="form-actions">
             <button class="button" @onclick="ValidateAsync" disabled="@isSaving">Validate</button>
             <button class="button" @onclick="ConfirmAsync" disabled="@isSaving">Confirm</button>
             <button class="button primary" @onclick="RunAsync" disabled="@isSaving">Run</button>
             <button class="button secondary" @onclick="CancelAsync" disabled="@isSaving">Cancel</button>
             <button class="button secondary" @onclick="RollbackAsync" disabled="@isSaving">Rollback</button>
-            <a class="button secondary" href="@AdminRoutes.ImportJobs.Rows(job.Id)">Rows</a>
-            <a class="button secondary" href="@AdminRoutes.ImportJobs.Errors(job.Id)">Errors</a>
+            <a class="button secondary" href="@AdminRoutes.ImportJobs.Rows(job.Id)"><Icon Name="eye" Size="15" /> Rows</a>
+            <a class="button secondary" href="@AdminRoutes.ImportJobs.Errors(job.Id)"><Icon Name="eye" Size="15" /> Errors</a>
         </div>
     </section>
 }

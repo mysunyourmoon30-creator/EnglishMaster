@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using EnglishMaster.Application.Features.ImportExport;
@@ -125,13 +126,13 @@ internal sealed class ContentImportExportService(
             errors));
     }
 
-    public async Task<Result<ContentExportResult>> ExportWordsAsync(string? format, CancellationToken cancellationToken)
+    public Task<Result<ContentExportStream>> ExportWordsAsync(string? format, CancellationToken cancellationToken)
     {
-        var rows = (await dbContext.Words
-                .AsNoTracking()
-                .OrderBy(word => word.Text)
-                .ToListAsync(cancellationToken))
-            .Select(word => new Dictionary<string, string?>
+        return ExportStreamAsync(
+            "words",
+            format,
+            dbContext.Words.AsNoTracking().OrderBy(word => word.Text),
+            word => new Dictionary<string, string?>
             {
                 ["Id"] = word.Id.ToString(),
                 ["Text"] = word.Text,
@@ -151,19 +152,16 @@ internal sealed class ContentImportExportService(
                 ["IsActive"] = word.IsActive.ToString(CultureInfo.InvariantCulture),
                 ["CreatedAt"] = word.CreatedAt.ToString("O", CultureInfo.InvariantCulture),
                 ["UpdatedAt"] = word.UpdatedAt.ToString("O", CultureInfo.InvariantCulture)
-            })
-            .ToList();
-
-        return Export("words", rows, format);
+            });
     }
 
-    public async Task<Result<ContentExportResult>> ExportGrammarTopicsAsync(string? format, CancellationToken cancellationToken)
+    public Task<Result<ContentExportStream>> ExportGrammarTopicsAsync(string? format, CancellationToken cancellationToken)
     {
-        var rows = (await dbContext.GrammarTopics
-                .AsNoTracking()
-                .OrderBy(topic => topic.Title)
-                .ToListAsync(cancellationToken))
-            .Select(topic => new Dictionary<string, string?>
+        return ExportStreamAsync(
+            "grammar-topics",
+            format,
+            dbContext.GrammarTopics.AsNoTracking().OrderBy(topic => topic.Title),
+            topic => new Dictionary<string, string?>
             {
                 ["Id"] = topic.Id.ToString(),
                 ["Title"] = topic.Title,
@@ -174,19 +172,16 @@ internal sealed class ContentImportExportService(
                 ["IsActive"] = topic.IsActive.ToString(CultureInfo.InvariantCulture),
                 ["CreatedAt"] = topic.CreatedAt.ToString("O", CultureInfo.InvariantCulture),
                 ["UpdatedAt"] = topic.UpdatedAt.ToString("O", CultureInfo.InvariantCulture)
-            })
-            .ToList();
-
-        return Export("grammar-topics", rows, format);
+            });
     }
 
-    public async Task<Result<ContentExportResult>> ExportLessonsAsync(string? format, CancellationToken cancellationToken)
+    public Task<Result<ContentExportStream>> ExportLessonsAsync(string? format, CancellationToken cancellationToken)
     {
-        var rows = (await dbContext.Lessons
-                .AsNoTracking()
-                .OrderBy(lesson => lesson.Title)
-                .ToListAsync(cancellationToken))
-            .Select(lesson => new Dictionary<string, string?>
+        return ExportStreamAsync(
+            "lessons",
+            format,
+            dbContext.Lessons.AsNoTracking().OrderBy(lesson => lesson.Title),
+            lesson => new Dictionary<string, string?>
             {
                 ["Id"] = lesson.Id.ToString(),
                 ["Title"] = lesson.Title,
@@ -202,19 +197,16 @@ internal sealed class ContentImportExportService(
                 ["IsActive"] = lesson.IsActive.ToString(CultureInfo.InvariantCulture),
                 ["CreatedAt"] = lesson.CreatedAt.ToString("O", CultureInfo.InvariantCulture),
                 ["UpdatedAt"] = lesson.UpdatedAt.ToString("O", CultureInfo.InvariantCulture)
-            })
-            .ToList();
-
-        return Export("lessons", rows, format);
+            });
     }
 
-    public async Task<Result<ContentExportResult>> ExportCoursesAsync(string? format, CancellationToken cancellationToken)
+    public Task<Result<ContentExportStream>> ExportCoursesAsync(string? format, CancellationToken cancellationToken)
     {
-        var rows = (await dbContext.Courses
-                .AsNoTracking()
-                .OrderBy(course => course.Title)
-                .ToListAsync(cancellationToken))
-            .Select(course => new Dictionary<string, string?>
+        return ExportStreamAsync(
+            "courses",
+            format,
+            dbContext.Courses.AsNoTracking().OrderBy(course => course.Title),
+            course => new Dictionary<string, string?>
             {
                 ["Id"] = course.Id.ToString(),
                 ["Title"] = course.Title,
@@ -230,19 +222,16 @@ internal sealed class ContentImportExportService(
                 ["IsActive"] = course.IsActive.ToString(CultureInfo.InvariantCulture),
                 ["CreatedAt"] = course.CreatedAt.ToString("O", CultureInfo.InvariantCulture),
                 ["UpdatedAt"] = course.UpdatedAt.ToString("O", CultureInfo.InvariantCulture)
-            })
-            .ToList();
-
-        return Export("courses", rows, format);
+            });
     }
 
-    public async Task<Result<ContentExportResult>> ExportBooksAsync(string? format, CancellationToken cancellationToken)
+    public Task<Result<ContentExportStream>> ExportBooksAsync(string? format, CancellationToken cancellationToken)
     {
-        var rows = (await dbContext.Books
-                .AsNoTracking()
-                .OrderBy(book => book.Title)
-                .ToListAsync(cancellationToken))
-            .Select(book => new Dictionary<string, string?>
+        return ExportStreamAsync(
+            "books",
+            format,
+            dbContext.Books.AsNoTracking().OrderBy(book => book.Title),
+            book => new Dictionary<string, string?>
             {
                 ["Id"] = book.Id.ToString(),
                 ["Title"] = book.Title,
@@ -263,19 +252,16 @@ internal sealed class ContentImportExportService(
                 ["IsActive"] = book.IsActive.ToString(CultureInfo.InvariantCulture),
                 ["CreatedAt"] = book.CreatedAt.ToString("O", CultureInfo.InvariantCulture),
                 ["UpdatedAt"] = book.UpdatedAt.ToString("O", CultureInfo.InvariantCulture)
-            })
-            .ToList();
-
-        return Export("books", rows, format);
+            });
     }
 
-    public async Task<Result<ContentExportResult>> ExportQuizzesAsync(string? format, CancellationToken cancellationToken)
+    public Task<Result<ContentExportStream>> ExportQuizzesAsync(string? format, CancellationToken cancellationToken)
     {
-        var rows = (await dbContext.Quizzes
-                .AsNoTracking()
-                .OrderBy(quiz => quiz.Title)
-                .ToListAsync(cancellationToken))
-            .Select(quiz => new Dictionary<string, string?>
+        return ExportStreamAsync(
+            "quizzes",
+            format,
+            dbContext.Quizzes.AsNoTracking().OrderBy(quiz => quiz.Title),
+            quiz => new Dictionary<string, string?>
             {
                 ["Id"] = quiz.Id.ToString(),
                 ["Title"] = quiz.Title,
@@ -294,10 +280,7 @@ internal sealed class ContentImportExportService(
                 ["IsActive"] = quiz.IsActive.ToString(CultureInfo.InvariantCulture),
                 ["CreatedAt"] = quiz.CreatedAt.ToString("O", CultureInfo.InvariantCulture),
                 ["UpdatedAt"] = quiz.UpdatedAt.ToString("O", CultureInfo.InvariantCulture)
-            })
-            .ToList();
-
-        return Export("quizzes", rows, format);
+            });
     }
 
     private static List<ValidationError> ValidateImportFile(string fileName, string contentType, long fileSize)
@@ -450,47 +433,90 @@ internal sealed class ContentImportExportService(
         return errors;
     }
 
-    private static Result<ContentExportResult> Export(
+    private static Task<Result<ContentExportStream>> ExportStreamAsync<T>(
         string entityName,
-        IReadOnlyCollection<IReadOnlyDictionary<string, string?>> rows,
-        string? format)
+        string? format,
+        IQueryable<T> query,
+        Func<T, IReadOnlyDictionary<string, string?>> map)
     {
         var normalizedFormat = string.IsNullOrWhiteSpace(format)
             ? "csv"
             : format.Trim().ToLowerInvariant();
 
-        return normalizedFormat switch
+        if (normalizedFormat is not ("csv" or "json"))
         {
-            "json" => Result<ContentExportResult>.Success(new ContentExportResult(
-                $"{entityName}.json",
-                "application/json",
-                JsonSerializer.SerializeToUtf8Bytes(rows, JsonOptions))),
-            "csv" => Result<ContentExportResult>.Success(new ContentExportResult(
-                $"{entityName}.csv",
-                "text/csv",
-                Encoding.UTF8.GetBytes(ToCsv(rows)))),
-            _ => Result<ContentExportResult>.Validation(
-                new ValidationError("format", "Format must be csv or json."))
-        };
-    }
-
-    private static string ToCsv(IReadOnlyCollection<IReadOnlyDictionary<string, string?>> rows)
-    {
-        var headers = rows.FirstOrDefault()?.Keys.ToArray() ?? [];
-        if (headers.Length == 0)
-        {
-            return string.Empty;
+            return Task.FromResult(Result<ContentExportStream>.Validation(
+                new ValidationError("format", "Format must be csv or json.")));
         }
 
-        var builder = new StringBuilder();
-        builder.AppendLine(string.Join(",", headers.Select(EscapeCsv)));
-        foreach (var row in rows)
+        // Row mapping happens per-entity as each database row streams in below, not materialized
+        // into a List<T> up front - this is what keeps a 1M-row export from allocating everything at once.
+        var rows = StreamRowsAsync(query, map);
+        var exportStream = normalizedFormat == "json"
+            ? new ContentExportStream(
+                $"{entityName}.json",
+                "application/json",
+                (stream, cancellationToken) => WriteJsonAsync(stream, rows, cancellationToken))
+            : new ContentExportStream(
+                $"{entityName}.csv",
+                "text/csv",
+                (stream, cancellationToken) => WriteCsvAsync(stream, rows, cancellationToken));
+
+        return Task.FromResult(Result<ContentExportStream>.Success(exportStream));
+    }
+
+    private static async IAsyncEnumerable<IReadOnlyDictionary<string, string?>> StreamRowsAsync<T>(
+        IQueryable<T> query,
+        Func<T, IReadOnlyDictionary<string, string?>> map,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        await foreach (var entity in query.AsAsyncEnumerable().WithCancellation(cancellationToken))
         {
-            builder.AppendLine(string.Join(",", headers.Select(header =>
+            yield return map(entity);
+        }
+    }
+
+    private static async Task WriteCsvAsync(
+        Stream stream,
+        IAsyncEnumerable<IReadOnlyDictionary<string, string?>> rows,
+        CancellationToken cancellationToken)
+    {
+        await using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
+        string[]? headers = null;
+        await foreach (var row in rows.WithCancellation(cancellationToken))
+        {
+            if (headers is null)
+            {
+                headers = row.Keys.ToArray();
+                await writer.WriteLineAsync(string.Join(",", headers.Select(EscapeCsv)));
+            }
+
+            await writer.WriteLineAsync(string.Join(",", headers.Select(header =>
                 EscapeCsv(row.TryGetValue(header, out var value) ? value : null))));
         }
 
-        return builder.ToString();
+        await writer.FlushAsync(cancellationToken);
+    }
+
+    private static async Task WriteJsonAsync(
+        Stream stream,
+        IAsyncEnumerable<IReadOnlyDictionary<string, string?>> rows,
+        CancellationToken cancellationToken)
+    {
+        await using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
+        writer.WriteStartArray();
+        await foreach (var row in rows.WithCancellation(cancellationToken))
+        {
+            writer.WriteStartObject();
+            foreach (var (key, value) in row)
+            {
+                writer.WriteString(key, value);
+            }
+
+            writer.WriteEndObject();
+        }
+
+        writer.WriteEndArray();
     }
 
     private static List<string> ParseCsvLine(string line)

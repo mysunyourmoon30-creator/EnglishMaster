@@ -13,7 +13,7 @@
         <a class="button" href="@AdminRoutes.CertificateTemplates.Index">Back</a>
         @if (template is not null)
         {
-            <a class="button primary" href="@AdminRoutes.CertificateTemplates.Edit(template.Id)">Edit</a>
+            <a class="button primary" href="@AdminRoutes.CertificateTemplates.Edit(template.Id)"><Icon Name="edit" Size="15" /> Edit</a>
         }
     </div>
 </section>
@@ -29,13 +29,19 @@
 }
 else if (notFound)
 {
-    <section class="panel">
-        <p class="muted">Certificate template was not found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="certificate" Size="22" /></span>
+        <strong>Certificate template was not found</strong>
+        <p>It may have been deleted or the link is incorrect.</p>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.CertificateTemplates.Index">Back to Certificate Templates</a>
+        </div>
     </section>
 }
 else if (template is not null)
 {
     <section class="panel">
+        <h3 class="detail-section-heading">Identity</h3>
         <div class="detail-grid">
             <div class="detail-item">
                 <span class="muted">Code</span>
@@ -45,6 +51,10 @@ else if (template is not null)
                 <span class="muted">Status</span>
                 <strong>@(template.IsActive ? "Active" : "Inactive")</strong>
             </div>
+        </div>
+
+        <h3 class="detail-section-heading">Content</h3>
+        <div class="detail-grid">
             <div class="detail-item full">
                 <span class="muted">Description</span>
                 <strong>@template.Description</strong>

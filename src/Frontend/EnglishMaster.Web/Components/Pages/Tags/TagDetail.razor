@@ -2,18 +2,19 @@
 @rendermode InteractiveServer
 @inject ITagsApiClient TagsApiClient
 
-<PageTitle>@(tag is null ? "Tag" : tag.Name)</PageTitle>
+<PageTitle>@(tag is null ? "Tag / ป้ายกำกับ" : tag.Name)</PageTitle>
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Vocabulary</p>
-        <h1>@(tag is null ? "Tag" : tag.Name)</h1>
+        <p class="eyebrow">VOCABULARY TAG / ป้ายกำกับคำศัพท์</p>
+        <h1>@(tag is null ? "Tag / ป้ายกำกับ" : tag.Name)</h1>
+        <p class="page-subtitle">Check what this tag is used for and whether it is ready for learning content. / ตรวจว่าป้ายนี้ใช้จัดกลุ่มคำศัพท์แบบไหน และพร้อมใช้กับเนื้อหาเรียนหรือไม่</p>
     </div>
     <div class="actions">
-        <a class="button" href="@AdminRoutes.Tags.Index">Back</a>
+        <a class="button" href="@AdminRoutes.Tags.Index">Back / กลับ</a>
         @if (tag is not null)
         {
-            <a class="button primary" href="@AdminRoutes.Tags.Edit(tag.Id)">Edit</a>
+            <a class="button primary" href="@AdminRoutes.Tags.Edit(tag.Id)"><Icon Name="edit" Size="15" /> Edit / แก้ไข</a>
         }
     </div>
 </section>
@@ -25,20 +26,26 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading tag...</p>
+    <p class="muted">Loading tag... / กำลังโหลดป้ายกำกับ</p>
 }
 else if (notFound)
 {
-    <section class="panel">
-        <p class="muted">Tag was not found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="tag" Size="22" /></span>
+        <strong>Tag was not found / ไม่พบป้ายกำกับ</strong>
+        <p>This tag may have been deleted or the link is incorrect. / ป้ายนี้อาจถูกลบแล้ว หรือลิงก์ไม่ถูกต้อง</p>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.Tags.Index">Back to Tags / กลับไปหน้าป้ายกำกับ</a>
+        </div>
     </section>
 }
 else if (tag is not null)
 {
     <section class="panel">
+        <h3 class="detail-section-heading">Identity / ข้อมูลหลัก</h3>
         <div class="detail-grid">
             <div class="detail-item">
-                <span class="muted">Name</span>
+                <span class="muted">Name / ชื่อ</span>
                 <strong>@tag.Name</strong>
             </div>
             <div class="detail-item">
@@ -46,12 +53,24 @@ else if (tag is not null)
                 <strong>@tag.Slug</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Status</span>
-                <strong>@(tag.IsActive ? "Active" : "Inactive")</strong>
+                <span class="muted">Type / ประเภท</span>
+                <strong>@GetTagType(tag)</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Status / สถานะ</span>
+                <strong>@(tag.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")</strong>
+            </div>
+        </div>
+
+        <h3 class="detail-section-heading">Details / รายละเอียด</h3>
+        <div class="detail-grid">
+            <div class="detail-item full">
+                <span class="muted">Use / ใช้สำหรับ</span>
+                <strong>@GetTagUse(tag)</strong>
             </div>
             <div class="detail-item full">
-                <span class="muted">Description</span>
-                <strong>@tag.Description</strong>
+                <span class="muted">Description / คำอธิบาย</span>
+                <strong>@(string.IsNullOrWhiteSpace(tag.Description) ? "-" : tag.Description)</strong>
             </div>
         </div>
     </section>
@@ -65,6 +84,15 @@ else if (tag is not null)
     private string? errorMessage;
     private bool isLoading = true;
     private bool notFound;
+    private static readonly HashSet<string> CefrTags = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "a1",
+        "a2",
+        "b1",
+        "b2",
+        "c1",
+        "c2"
+    };
 
     protected override async Task OnParametersSetAsync()
     {
@@ -85,5 +113,38 @@ else if (tag is not null)
         {
             isLoading = false;
         }
+    }
+
+    private static string GetTagType(TagDto tag)
+    {
+        if (tag.Slug.StartsWith("common-rank-", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Frequency group / กลุ่มความถี่";
+        }
+
+        if (CefrTags.Contains(tag.Slug))
+        {
+            return "CEFR level / ระดับ CEFR";
+        }
+
+        return "Custom / กำหนดเอง";
+    }
+
+    private static string GetTagUse(TagDto tag)
+    {
+        if (tag.Slug.StartsWith("common-rank-", StringComparison.OrdinalIgnoreCase))
+        {
+            var range = tag.Name.Replace("Common Rank", string.Empty, StringComparison.OrdinalIgnoreCase).Trim();
+            return string.IsNullOrWhiteSpace(range)
+                ? "จัดชุดคำตามลำดับความนิยม"
+                : $"คำยอดนิยมลำดับ {range}";
+        }
+
+        if (CefrTags.Contains(tag.Slug))
+        {
+            return $"ระดับผู้เรียน {tag.Name}";
+        }
+
+        return "ใช้จัดกลุ่มและค้นหาคำศัพท์ในระบบ";
     }
 }

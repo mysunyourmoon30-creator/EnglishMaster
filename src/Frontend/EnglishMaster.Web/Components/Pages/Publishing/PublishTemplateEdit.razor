@@ -10,7 +10,7 @@
         <p class="eyebrow">Publishing</p>
         <h1>Edit Publish Template</h1>
     </div>
-    <a class="button" href="@AdminRoutes.Publishing.Templates.Index">Back</a>
+    <a class="button" href="@AdminRoutes.Publishing.Templates.Index">Back to Templates</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -26,6 +26,7 @@ else if (notFound)
 {
     <section class="panel">
         <p class="muted">Publish template was not found.</p>
+        <a class="button" href="@AdminRoutes.Publishing.Templates.Index">Back to Templates</a>
     </section>
 }
 else
@@ -66,7 +67,7 @@ else
                 <InputTextArea class="input" @bind-Value="model.TemplateContent" />
             </label>
             <div class="form-actions">
-                <button class="button primary" type="submit" disabled="@isSaving">@(isSaving ? "Saving..." : "Save")</button>
+                <button class="button primary" type="submit" disabled="@isSaving"><Icon Name="edit" Size="16" /> @(isSaving ? "Saving..." : "Save")</button>
             </div>
         </EditForm>
     </section>

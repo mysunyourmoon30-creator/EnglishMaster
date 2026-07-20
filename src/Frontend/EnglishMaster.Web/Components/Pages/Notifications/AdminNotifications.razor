@@ -8,6 +8,7 @@
     <div>
         <p class="eyebrow">Admin</p>
         <h1>Notifications</h1>
+        <p class="page-subtitle">Track outbound notification delivery and troubleshoot failures.</p>
     </div>
 </section>
 
@@ -27,7 +28,11 @@ else if (!string.IsNullOrWhiteSpace(errorMessage))
 }
 else if (notifications.Count == 0)
 {
-    <div class="panel">No notifications found.</div>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="bell" Size="22" /></span>
+        <strong>No notifications found</strong>
+        <p>Try adjusting your filters, or check back once events have been triggered.</p>
+    </section>
 }
 else
 {
@@ -37,7 +42,7 @@ else
             <article class="panel">
                 <div class="item-header">
                     <div>
-                        <h2>@notification.Title</h2>
+                        <h2><Icon Name="bell" Size="17" /> @notification.Title</h2>
                         <p class="muted">@notification.EventType · @notification.RecipientUserId</p>
                     </div>
                     <span class="badge">@notification.Status</span>

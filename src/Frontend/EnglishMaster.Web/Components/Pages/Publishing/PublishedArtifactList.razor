@@ -8,6 +8,7 @@
     <div>
         <p class="eyebrow">Publishing</p>
         <h1>Published Artifacts</h1>
+        <p class="page-subtitle">Review generated output files from completed publish jobs.</p>
     </div>
 </section>
 
@@ -22,12 +23,22 @@
 }
 else if (artifacts.Count == 0)
 {
-    <section class="panel">
-        <p class="muted">No published artifacts found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="publish" Size="22" /></span>
+        <strong>No published artifacts found</strong>
+        <p>Artifacts appear here once a publish job completes successfully.</p>
     </section>
 }
 else
 {
+    <section class="stat-grid">
+        <div class="panel stat-card">
+            <Icon Name="publish" Size="18" />
+            <span class="stat-label">Total Artifacts</span>
+            <span class="stat-value">@artifacts.Count</span>
+        </div>
+    </section>
+
     <section class="table-wrap">
         <table class="data-table">
             <thead>
@@ -50,7 +61,7 @@ else
                         <td class="row-actions">
                             @if (!string.IsNullOrWhiteSpace(artifact.PublicUrl))
                             {
-                                <a class="button small" href="@artifact.PublicUrl" target="_blank">Open</a>
+                                <a class="button small" href="@artifact.PublicUrl" target="_blank" aria-label="Open @artifact.FileName" title="Open"><Icon Name="eye" Size="15" /></a>
                             }
                         </td>
                     </tr>

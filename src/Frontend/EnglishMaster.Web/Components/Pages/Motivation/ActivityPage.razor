@@ -5,10 +5,11 @@
 
 <section class="page-header">
     <div>
+        <p class="eyebrow">Motivation</p>
         <h1>Learning Activity</h1>
-        <p class="muted">Recent study activity across lessons, quizzes, practice, and goals.</p>
+        <p class="page-subtitle">Recent study activity across lessons, quizzes, practice, and goals.</p>
     </div>
-    <a class="button secondary" href="/learn/motivation">Motivation</a>
+    <a class="button secondary" href="/learn/motivation"><Icon Name="chevron-left" Size="15" /> Motivation</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -17,11 +18,20 @@
 }
 else if (isLoading)
 {
-    <p class="muted">Loading activity...</p>
+    <section class="panel empty-state">
+        <strong>Loading activity...</strong>
+    </section>
 }
 else if (activities.Count == 0)
 {
-    <p class="muted">No learning activity recorded yet.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="analytics" Size="20" /></span>
+        <strong>No learning activity recorded yet</strong>
+        <p>Complete a lesson, quiz, or practice session and it will show up here.</p>
+        <div class="actions">
+            <a class="button primary" href="/learn/practice">Start practice</a>
+        </div>
+    </section>
 }
 else
 {
@@ -31,7 +41,7 @@ else
             <article class="list-card">
                 <span class="pill">@activity.ActivityType</span>
                 <h3>@activity.Title</h3>
-                <p class="muted">@activity.MinutesSpent minutes - @activity.OccurredAt.ToString("yyyy-MM-dd")</p>
+                <p class="muted">@activity.MinutesSpent minutes - @activity.OccurredAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</p>
             </article>
         }
     </div>

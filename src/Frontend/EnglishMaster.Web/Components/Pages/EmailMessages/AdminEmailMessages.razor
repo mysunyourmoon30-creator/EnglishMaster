@@ -8,6 +8,7 @@
     <div>
         <p class="eyebrow">Admin</p>
         <h1>Email Messages</h1>
+        <p class="page-subtitle">Review outbound email delivery status and troubleshoot failures.</p>
     </div>
 </section>
 
@@ -27,7 +28,11 @@ else if (!string.IsNullOrWhiteSpace(errorMessage))
 }
 else if (emailMessages.Count == 0)
 {
-    <div class="panel">No email messages found.</div>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="mail" Size="22" /></span>
+        <strong>No email messages found</strong>
+        <p>Try adjusting your filters, or check back once emails have been sent.</p>
+    </section>
 }
 else
 {
@@ -37,8 +42,8 @@ else
             <article class="panel">
                 <div class="item-header">
                     <div>
-                        <h2>@email.Subject</h2>
-                        <p class="muted">@email.ToEmail · @email.CreatedAt.LocalDateTime.ToString("g")</p>
+                        <h2><Icon Name="mail" Size="17" /> @email.Subject</h2>
+                        <p class="muted">@email.ToEmail · @email.CreatedAt.LocalDateTime.ToString("g", CultureInfo.InvariantCulture)</p>
                     </div>
                     <span class="badge">@email.Status</span>
                 </div>

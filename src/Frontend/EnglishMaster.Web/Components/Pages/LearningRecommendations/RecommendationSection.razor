@@ -4,7 +4,11 @@
     <h2>@Title</h2>
     @if (Items.Count == 0)
     {
-        <p class="muted">Nothing in progress yet.</p>
+        <div class="panel empty-state">
+            <span class="empty-state-icon"><Icon Name="revision" Size="20" /></span>
+            <strong>Nothing in progress yet / ยังไม่มีรายการที่เรียนค้างไว้</strong>
+            <p>เริ่มบทเรียน แบบฝึก หรือคำศัพท์ แล้วรายการที่ทำค้างไว้จะมาแสดงตรงนี้.</p>
+        </div>
     }
     else
     {
@@ -12,10 +16,13 @@
             @foreach (var item in Items)
             {
                 <article class="list-card">
-                    <span class="pill">@item.ContentType</span>
+                    <div class="list-card-badges">
+                        <span class="pill">@ContentTypeLabel(item.ContentType)</span>
+                        <span class="pill">@item.ProgressPercent% done</span>
+                    </div>
                     <h3><a href="@item.Url">@item.Title</a></h3>
                     <p>@item.Summary</p>
-                    <p class="muted">@item.ProgressPercent% complete · @item.RecommendationReason</p>
+                    <p class="muted">@item.ProgressPercent% complete / สำเร็จแล้ว @item.ProgressPercent% · @GetReasonText(item)</p>
                 </article>
             }
         </div>
@@ -25,5 +32,24 @@
 @code {
     [Parameter] public string Title { get; set; } = string.Empty;
     [Parameter] public IReadOnlyCollection<ContinueLearningItemDto> Items { get; set; } = [];
-}
 
+    private static string ContentTypeLabel(string value) => value.ToLowerInvariant() switch
+    {
+        "course" => "Course / คอร์ส",
+        "lesson" => "Lesson / บทเรียน",
+        "word" => "Word / คำศัพท์",
+        "grammar" => "Grammar / ไวยากรณ์",
+        "quiz" => "Quiz / แบบฝึก",
+        _ => value
+    };
+
+    private static string GetReasonText(ContinueLearningItemDto item)
+    {
+        if (!string.IsNullOrWhiteSpace(item.RecommendationReason))
+        {
+            return item.RecommendationReason;
+        }
+
+        return "Continue from where you left off / เรียนต่อจากจุดเดิม";
+    }
+}

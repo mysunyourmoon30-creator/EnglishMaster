@@ -7,17 +7,21 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Courses</p>
+        <p class="eyebrow">COURSE / คอร์ส</p>
         <h1>@(course is null ? "Course" : course.Title)</h1>
-    </div>
-    <div class="actions">
-        <a class="button" href="@AdminRoutes.Courses.Index">Back</a>
         @if (course is not null)
         {
-            <a class="button" href="@AdminRoutes.ContentRevisions.Timeline("Course", course.Id)">Revision History</a>
-            <a class="button primary" href="@AdminRoutes.Courses.Edit(course.Id)">Edit</a>
+            <p class="page-subtitle">A course groups lessons into a guided learning path. / คอร์สใช้จัดบทเรียนหลายบทให้เป็นเส้นทางเรียน</p>
+        }
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.Courses.Index">Back / กลับ</a>
+        @if (course is not null)
+        {
+            <a class="button" href="@AdminRoutes.ContentRevisions.Timeline("Course", course.Id)"><Icon Name="revision" Size="15" /> History / ประวัติ</a>
+            <a class="button primary" href="@AdminRoutes.Courses.Edit(course.Id)"><Icon Name="edit" Size="15" /> Edit / แก้ไข</a>
             <button class="button" type="button" @onclick="TogglePublishAsync">
-                @(course.IsPublished ? "Unpublish" : "Publish")
+                <Icon Name="publish" Size="15" /> @(course.IsPublished ? "Unpublish / ปิดเผยแพร่" : "Publish / เผยแพร่")
             </button>
         }
     </div>
@@ -30,12 +34,17 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading course...</p>
+    <p class="muted">Loading course... / กำลังโหลดคอร์ส</p>
 }
 else if (notFound)
 {
-    <section class="panel">
-        <p class="muted">Course was not found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="course" Size="22" /></span>
+        <strong>Course was not found / ไม่พบคอร์ส</strong>
+        <p>It may have been deleted or the link is incorrect. / อาจถูกลบแล้ว หรือลิงก์ไม่ถูกต้อง</p>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.Courses.Index">Back to Courses / กลับรายการคอร์ส</a>
+        </div>
     </section>
 }
 else if (course is not null)
@@ -45,6 +54,8 @@ else if (course is not null)
         {
             <img class="thumbnail" src="@course.ThumbnailMedia.PublicUrl" alt="@course.ThumbnailMedia.AltText" />
         }
+
+        <h3 class="detail-section-heading">Overview / ภาพรวม</h3>
         <div class="detail-grid">
             <div class="detail-item">
                 <span class="muted">Slug</span>
@@ -55,31 +66,39 @@ else if (course is not null)
                 <strong>@(course.CefrLevel ?? "-")</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Category</span>
+                <span class="muted">Category / หมวดหมู่</span>
                 <strong>@(course.Category?.Name ?? "-")</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Estimated Minutes</span>
+                <span class="muted">Estimated Minutes / เวลาประมาณ</span>
                 <strong>@course.EstimatedMinutes</strong>
             </div>
+        </div>
+
+        <h3 class="detail-section-heading">Publishing Status / สถานะเผยแพร่</h3>
+        <div class="detail-grid">
             <div class="detail-item">
-                <span class="muted">Sort Order</span>
+                <span class="muted">Sort Order / ลำดับ</span>
                 <strong>@course.SortOrder</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Published</span>
-                <strong>@(course.IsPublished ? "Published" : "Draft")</strong>
+                <span class="muted">Published / เผยแพร่</span>
+                <strong>@(course.IsPublished ? "Published / เผยแพร่แล้ว" : "Draft / ร่าง")</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Status</span>
-                <strong>@(course.IsActive ? "Active" : "Inactive")</strong>
+                <span class="muted">Status / สถานะ</span>
+                <strong>@(course.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")</strong>
             </div>
+        </div>
+
+        <h3 class="detail-section-heading">Description / คำอธิบาย</h3>
+        <div class="detail-grid">
             <div class="detail-item full">
-                <span class="muted">Summary</span>
+                <span class="muted">Summary / สรุป</span>
                 <strong>@course.Summary</strong>
             </div>
             <div class="detail-item full">
-                <span class="muted">Description</span>
+                <span class="muted">Description / รายละเอียด</span>
                 <strong>@course.Description</strong>
             </div>
         </div>
@@ -87,8 +106,8 @@ else if (course is not null)
 
     <section class="page-header section-header">
         <div>
-            <p class="eyebrow">Learning Path</p>
-            <h1>Lessons</h1>
+            <p class="eyebrow">LEARNING PATH / เส้นทางเรียน</p>
+            <h1>Lessons / บทเรียน</h1>
         </div>
     </section>
 
@@ -100,9 +119,9 @@ else if (course is not null)
 
         <div class="filters-grid">
             <label>
-                <span>Lesson</span>
+                <span>Lesson / บทเรียน</span>
                 <InputSelect class="input" @bind-Value="selectedLessonId">
-                    <option value="">Select lesson</option>
+                    <option value="">Select lesson / เลือกบทเรียน</option>
                     @foreach (var lesson in AvailableLessons())
                     {
                         <option value="@lesson.Id">@lesson.Title</option>
@@ -111,16 +130,16 @@ else if (course is not null)
             </label>
             <label class="checkbox-row">
                 <InputCheckbox @bind-Value="selectedLessonIsRequired" />
-                <span>Required</span>
+                <span>Required / ต้องเรียน</span>
             </label>
-            <button class="button" type="button" @onclick="AddLessonAsync">Add Lesson</button>
+            <button class="button" type="button" @onclick="AddLessonAsync">Add Lesson / เพิ่มบทเรียน</button>
         </div>
     </section>
 
     @if (courseLessons.Count == 0)
     {
         <section class="panel nested-table">
-            <p class="muted">No lessons added yet.</p>
+            <p class="muted">No lessons added yet. / ยังไม่มีบทเรียนในคอร์สนี้</p>
         </section>
     }
     else
@@ -129,10 +148,10 @@ else if (course is not null)
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Lesson</th>
+                        <th>Lesson / บทเรียน</th>
                         <th>CEFR</th>
-                        <th>Required</th>
-                        <th>Sort</th>
+                        <th>Required / ต้องเรียน</th>
+                        <th>Sort / ลำดับ</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -145,13 +164,13 @@ else if (course is not null)
                                 <span class="muted">@relation.LessonSummary</span>
                             </td>
                             <td>@(relation.LessonCefrLevel ?? "-")</td>
-                            <td>@(relation.IsRequired ? "Required" : "Optional")</td>
+                            <td>@(relation.IsRequired ? "Required / ต้องเรียน" : "Optional / เสริม")</td>
                             <td>@relation.SortOrder</td>
                             <td class="row-actions">
-                                <button class="button small" type="button" @onclick="() => MoveLessonUpAsync(relation.Id)">Up</button>
-                                <button class="button small" type="button" @onclick="() => MoveLessonDownAsync(relation.Id)">Down</button>
-                                <a class="button small" href="@AdminRoutes.Lessons.Detail(relation.LessonId)">View</a>
-                                <button class="button small danger" type="button" @onclick="() => RemoveLessonAsync(relation.LessonId)">Remove</button>
+                                <button class="button small" type="button" @onclick="() => MoveLessonUpAsync(relation.Id)">Up / ขึ้น</button>
+                                <button class="button small" type="button" @onclick="() => MoveLessonDownAsync(relation.Id)">Down / ลง</button>
+                                <a class="button small" href="@AdminRoutes.Lessons.Detail(relation.LessonId)">View / ดู</a>
+                                <button class="button small danger" type="button" @onclick="() => RemoveLessonAsync(relation.LessonId)">Remove / ลบออก</button>
                             </td>
                         </tr>
                     }

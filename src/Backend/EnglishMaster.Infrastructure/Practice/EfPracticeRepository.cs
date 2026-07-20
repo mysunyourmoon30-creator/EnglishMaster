@@ -64,6 +64,11 @@ public sealed class EfPracticeRepository : IPracticeRepository
             created += AddIfMissing(profile.Id, existing, "quiz", quiz.Id, "QuizReview", now);
         }
 
+        if (created == 0)
+        {
+            created += AddDemoPracticeItems(profile.Id, existing, now);
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
         return created;
     }
@@ -315,6 +320,16 @@ public sealed class EfPracticeRepository : IPracticeRepository
             }
         }
 
+        if (byContentType.TryGetValue("demo", out var demoItems))
+        {
+            foreach (var item in demoItems)
+            {
+                results[item.Id] = DemoPromptAnswers.GetValueOrDefault(
+                    item.ContentId,
+                    ("Say this sentence aloud: I am learning English today.", "I am learning English today."));
+            }
+        }
+
         foreach (var item in items)
         {
             results.TryAdd(item.Id, ("Practice item", string.Empty));
@@ -331,4 +346,25 @@ public sealed class EfPracticeRepository : IPracticeRepository
 
     private static PracticeSessionItemDto ToDto(PracticeSessionItem item) =>
         new(item.Id, item.PracticeSessionId, item.PracticeItemId, item.ContentType, item.ContentId, item.PracticeType, item.PromptText, item.AnswerText, item.UserAnswer, item.Result?.ToString(), item.IsCorrect, item.PracticedAt);
+
+    private int AddDemoPracticeItems(Guid profileId, ISet<string> existing, DateTimeOffset now)
+    {
+        var created = 0;
+        foreach (var item in DemoPromptAnswers)
+        {
+            created += AddIfMissing(profileId, existing, "demo", item.Key, "StarterPractice", now);
+        }
+
+        return created;
+    }
+
+    private static readonly IReadOnlyDictionary<Guid, (string Prompt, string Answer)> DemoPromptAnswers =
+        new Dictionary<Guid, (string Prompt, string Answer)>
+        {
+            [Guid.Parse("9b24ec40-36d5-4a5e-bbeb-0dd6f4364f01")] = ("What does 'learn' mean in Thai?", "เรียนรู้"),
+            [Guid.Parse("3be5172e-9e61-4a6f-af2e-6497673c0f72")] = ("Choose a simple sentence: I ___ English every day.", "study"),
+            [Guid.Parse("356225e0-5f87-475c-87c4-3ec872901054")] = ("Say this aloud: Practice makes progress.", "Practice makes progress."),
+            [Guid.Parse("175e4d76-c969-4a2e-8f1e-39fffb20fe1c")] = ("What is the opposite of 'easy'?", "hard"),
+            [Guid.Parse("247a7a8e-5c9e-45d9-98cb-4b679f36e071")] = ("Translate: วันนี้ฉันจะฝึกภาษาอังกฤษ", "Today I will practice English.")
+        };
 }

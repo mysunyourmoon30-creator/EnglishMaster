@@ -6,10 +6,11 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Admin</p>
+        <p class="eyebrow">Bulk Operations</p>
         <h1>Bulk Operations</h1>
+        <p class="page-subtitle">Run and track batch actions across content, from publishing to tagging.</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.BulkOperations.Create">Create</a>
+    <a class="button primary" href="@AdminRoutes.BulkOperations.Create"><Icon Name="plus" Size="16" /> Create</a>
 </section>
 
 <section class="panel">
@@ -58,7 +59,14 @@ else if (!string.IsNullOrWhiteSpace(errorMessage))
 }
 else if (operations.Count == 0)
 {
-    <div class="panel">No bulk operations found.</div>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="bulk-ops" Size="22" /></span>
+        <strong>No bulk operations found</strong>
+        <p>Try adjusting your filters, or start a new bulk operation.</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.BulkOperations.Create"><Icon Name="plus" Size="16" /> Create</a>
+        </div>
+    </section>
 }
 else
 {
@@ -81,9 +89,9 @@ else
                         <td>@operation.OperationType</td>
                         <td>@operation.ContentType</td>
                         <td>@operation.Status</td>
-                        <td>@operation.RequestedBy at @operation.RequestedAt.LocalDateTime.ToString("g")</td>
+                        <td>@operation.RequestedBy at @operation.RequestedAt.LocalDateTime.ToString("g", CultureInfo.InvariantCulture)</td>
                         <td>@operation.SucceededItems / @operation.TotalItems</td>
-                        <td><a class="button small" href="@AdminRoutes.BulkOperations.Detail(operation.Id)">Open</a></td>
+                        <td class="row-actions"><a class="button small" href="@AdminRoutes.BulkOperations.Detail(operation.Id)" aria-label="View operation" title="View"><Icon Name="eye" Size="15" /></a></td>
                     </tr>
                 }
             </tbody>

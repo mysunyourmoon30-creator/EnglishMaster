@@ -7,15 +7,19 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Grammar</p>
+        <p class="eyebrow">GRAMMAR RULE / กฎไวยากรณ์</p>
         <h1>@(rule is null ? "Grammar Rule" : rule.Title)</h1>
-    </div>
-    <div class="actions">
-        <a class="button" href="@AdminRoutes.GrammarRules.Index">Back</a>
         @if (rule is not null)
         {
-            <a class="button" href="@AdminRoutes.GrammarTopics.Detail(rule.GrammarTopicId)">Topic</a>
-            <a class="button primary" href="@AdminRoutes.GrammarRules.Edit(rule.Id)">Edit</a>
+            <p class="page-subtitle">Check the rule, structure, examples, common mistakes, and related words. / ตรวจเนื้อหากฎ โครงสร้าง ตัวอย่าง จุดที่มักผิด และคำศัพท์ที่เกี่ยวข้อง</p>
+        }
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.GrammarRules.Index">Back / กลับ</a>
+        @if (rule is not null)
+        {
+            <a class="button" href="@AdminRoutes.GrammarTopics.Detail(rule.GrammarTopicId)"><Icon Name="grammar" Size="15" /> Topic / หัวข้อ</a>
+            <a class="button primary" href="@AdminRoutes.GrammarRules.Edit(rule.Id)"><Icon Name="edit" Size="15" /> Edit / แก้ไข</a>
         }
     </div>
 </section>
@@ -27,56 +31,78 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading grammar rule...</p>
+    <p class="muted">Loading grammar rule... / กำลังโหลดกฎไวยากรณ์</p>
 }
 else if (notFound)
 {
-    <section class="panel">
-        <p class="muted">Grammar rule was not found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="grammar" Size="22" /></span>
+        <strong>Grammar rule was not found / ไม่พบกฎไวยากรณ์</strong>
+        <p>It may have been deleted or the link is incorrect. / อาจถูกลบแล้ว หรือลิงก์ไม่ถูกต้อง</p>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.GrammarRules.Index">Back to Grammar Rules / กลับรายการกฎ</a>
+        </div>
     </section>
 }
 else if (rule is not null)
 {
+    <section class="panel release-note">
+        <div>
+            <strong>Teaching readiness / ความพร้อมสำหรับสอน</strong>
+            <p class="muted">Use this page to check whether the learner can understand the pattern without technical language.</p>
+            <p class="muted">ใช้หน้านี้ตรวจว่าผู้เรียนอ่านแล้วเข้าใจโครงสร้างได้ โดยไม่รู้สึกว่าเป็นภาษาวิชาการเกินไป</p>
+        </div>
+    </section>
+
     <section class="panel">
+        <h3 class="detail-section-heading">Identity / ข้อมูลหลัก</h3>
         <div class="detail-grid">
             <div class="detail-item">
-                <span class="muted">Topic</span>
+                <span class="muted">Topic / หัวข้อ</span>
                 <strong>@(rule.Topic?.Title ?? rule.GrammarTopicId.ToString())</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Status</span>
-                <strong>@(rule.IsActive ? "Active" : "Inactive")</strong>
+                <span class="muted">Status / สถานะ</span>
+                <strong>@(rule.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")</strong>
             </div>
             <div class="detail-item">
                 <span class="muted">Slug</span>
                 <strong>@rule.Slug</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Sort Order</span>
+                <span class="muted">Sort Order / ลำดับ</span>
                 <strong>@rule.SortOrder</strong>
             </div>
+        </div>
+
+        <h3 class="detail-section-heading">Rule Content / เนื้อหากฎ</h3>
+        <div class="detail-grid">
             <div class="detail-item full">
-                <span class="muted">Rule Text</span>
+                <span class="muted">Rule Text / ข้อความกฎ</span>
                 <strong>@rule.RuleText</strong>
             </div>
             <div class="detail-item full">
-                <span class="muted">Structure Pattern</span>
+                <span class="muted">Structure Pattern / โครงสร้างประโยค</span>
                 <strong>@rule.StructurePattern</strong>
             </div>
+        </div>
+
+        <h3 class="detail-section-heading">Explanations / คำอธิบาย</h3>
+        <div class="detail-grid">
             <div class="detail-item full">
-                <span class="muted">Thai Explanation</span>
+                <span class="muted">Thai Explanation / คำอธิบายภาษาไทย</span>
                 <strong>@rule.ExplanationTh</strong>
             </div>
             <div class="detail-item full">
-                <span class="muted">English Explanation</span>
+                <span class="muted">English Explanation / คำอธิบายภาษาอังกฤษ</span>
                 <strong>@rule.ExplanationEn</strong>
             </div>
             <div class="detail-item full">
-                <span class="muted">Common Mistake</span>
+                <span class="muted">Common Mistake / จุดที่มักผิด</span>
                 <strong>@rule.CommonMistake</strong>
             </div>
             <div class="detail-item full">
-                <span class="muted">Correct Usage Note</span>
+                <span class="muted">Correct Usage Note / วิธีใช้ที่ถูกต้อง</span>
                 <strong>@rule.CorrectUsageNote</strong>
             </div>
         </div>
@@ -84,8 +110,8 @@ else if (rule is not null)
 
     <section class="page-header section-header">
         <div>
-            <p class="eyebrow">Vocabulary</p>
-            <h1>Related Words</h1>
+            <p class="eyebrow">VOCABULARY / คำศัพท์</p>
+            <h1>Related Words / คำศัพท์ที่เกี่ยวข้อง</h1>
         </div>
     </section>
 
@@ -97,23 +123,25 @@ else if (rule is not null)
 
         <div class="filters-grid">
             <label>
-                <span>Word</span>
+                <span>Word / คำศัพท์</span>
                 <InputSelect class="input" @bind-Value="selectedWordId">
-                    <option value="">Select word</option>
+                    <option value="">Select word / เลือกคำศัพท์</option>
                     @foreach (var word in AvailableWords())
                     {
                         <option value="@word.Id">@word.Text</option>
                     }
                 </InputSelect>
             </label>
-            <button class="button" type="button" @onclick="AddRelatedWordAsync">Add Word</button>
+            <button class="button" type="button" @onclick="AddRelatedWordAsync">Add Word / เพิ่มคำศัพท์</button>
         </div>
     </section>
 
     @if (rule.RelatedWords.Count == 0)
     {
-        <section class="panel nested-table">
-            <p class="muted">No related words yet.</p>
+        <section class="panel nested-table empty-state left-aligned">
+            <span class="empty-state-icon"><Icon Name="word" Size="22" /></span>
+            <strong>No related words yet / ยังไม่มีคำศัพท์ที่เกี่ยวข้อง</strong>
+            <p>Add a word above to link it with this rule. / เลือกคำศัพท์ด้านบนเพื่อผูกกับกฎนี้</p>
         </section>
     }
     else
@@ -122,8 +150,8 @@ else if (rule is not null)
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Word</th>
-                        <th>Meaning TH</th>
+                        <th>Word / คำศัพท์</th>
+                        <th>Meaning TH / ความหมายไทย</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -137,8 +165,8 @@ else if (rule is not null)
                             </td>
                             <td>@word.MeaningTh</td>
                             <td class="row-actions">
-                                <a class="button small" href="@AdminRoutes.Words.Detail(word.Id)">View</a>
-                                <button class="button small danger" type="button" @onclick="() => RemoveRelatedWordAsync(word.Id)">Remove</button>
+                                <a class="button small" href="@AdminRoutes.Words.Detail(word.Id)" aria-label="View @word.Text" title="View"><Icon Name="eye" Size="15" /></a>
+                                <button class="button small danger" type="button" @onclick="() => RemoveRelatedWordAsync(word.Id)" aria-label="Remove @word.Text" title="Remove"><Icon Name="trash" Size="15" /></button>
                             </td>
                         </tr>
                     }
@@ -149,54 +177,63 @@ else if (rule is not null)
 
     <section class="page-header section-header">
         <div>
-            <p class="eyebrow">Examples</p>
-            <h1>Grammar Examples</h1>
+            <p class="eyebrow">EXAMPLES / ตัวอย่าง</p>
+            <h1>Grammar Examples / ตัวอย่างประโยค</h1>
         </div>
     </section>
 
     @if (examples.Count == 0)
     {
-        <section class="panel">
-            <p class="muted">No grammar examples yet.</p>
+        <section class="panel empty-state left-aligned">
+            <span class="empty-state-icon"><Icon Name="grammar" Size="22" /></span>
+            <strong>No grammar examples yet / ยังไม่มีตัวอย่าง</strong>
+            <p>Add the first example using the form below. / เพิ่มตัวอย่างแรกจากฟอร์มด้านล่าง</p>
         </section>
     }
     else
     {
-        <section class="table-wrap">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Example</th>
-                        <th>Translation</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var example in examples.OrderBy(item => item.SortOrder).ThenBy(item => item.ExampleEn))
-                    {
-                        <tr>
-                            <td>
-                                <strong>@example.ExampleEn</strong>
-                                <span class="muted">@example.ExplanationTh</span>
-                            </td>
-                            <td>@example.TranslationTh</td>
-                            <td>@(example.IsCorrectExample ? "Correct" : "Mistake")</td>
-                            <td>@(example.IsActive ? "Active" : "Inactive")</td>
-                            <td class="row-actions">
-                                <button class="button small" type="button" @onclick="() => EditExample(example)">Edit</button>
-                                <button class="button small danger" type="button" @onclick="() => DeleteExampleAsync(example.Id)">Delete</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </section>
+        var orderedExamples = examples.OrderBy(item => item.SortOrder).ThenBy(item => item.ExampleEn).ToList();
+
+        <div class="repeater-list">
+            @for (var index = 0; index < orderedExamples.Count; index++)
+            {
+                var example = orderedExamples[index];
+                var displayIndex = index + 1;
+
+                <div class="repeater-item">
+                    <div class="repeater-item-header">
+                        <span class="repeater-item-index">@displayIndex</span>
+                        <span class="repeater-item-title">@example.ExampleEn</span>
+                        <div class="row-actions">
+                            <button class="button small" type="button" @onclick="() => EditExample(example)" aria-label="Edit example @displayIndex" title="Edit"><Icon Name="edit" Size="15" /></button>
+                            <button class="button small danger" type="button" @onclick="() => DeleteExampleAsync(example.Id)" aria-label="Delete example @displayIndex" title="Delete"><Icon Name="trash" Size="15" /></button>
+                        </div>
+                    </div>
+                    <div class="detail-grid">
+                        <div class="detail-item full">
+                            <span class="muted">Translation / คำแปล</span>
+                            <strong>@example.TranslationTh</strong>
+                        </div>
+                        <div class="detail-item full">
+                            <span class="muted">Thai Explanation / คำอธิบายไทย</span>
+                            <strong>@example.ExplanationTh</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span class="muted">Type / ประเภท</span>
+                            <strong>@(example.IsCorrectExample ? "Correct / ถูกต้อง" : "Mistake / ตัวอย่างผิด")</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span class="muted">Status / สถานะ</span>
+                            <strong>@(example.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")</strong>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     }
 
     <section class="panel pair-form-panel">
-        <h2>@(editingExampleId.HasValue ? "Edit Grammar Example" : "Add Grammar Example")</h2>
+        <h2>@(editingExampleId.HasValue ? "Edit Grammar Example / แก้ไขตัวอย่าง" : "Add Grammar Example / เพิ่มตัวอย่าง")</h2>
         @if (!string.IsNullOrWhiteSpace(exampleErrorMessage))
         {
             <div class="alert error">@exampleErrorMessage</div>
@@ -205,7 +242,7 @@ else if (rule is not null)
                             ValidationErrors="exampleValidationErrors"
                             IsSaving="isExampleSaving"
                             ShowActiveToggle="@editingExampleId.HasValue"
-                            SubmitText="@(editingExampleId.HasValue ? "Save Example" : "Add Example")"
+                            SubmitText="@(editingExampleId.HasValue ? "Save Example / บันทึก" : "Add Example / เพิ่ม")"
                             OnValidSubmit="SaveExampleAsync"
                             OnCancel="CancelExampleEditAsync" />
     </section>

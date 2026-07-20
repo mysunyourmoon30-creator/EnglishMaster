@@ -8,12 +8,16 @@
     <div>
         <p class="eyebrow">Admin</p>
         <h1>Revision Restore Requests</h1>
+        <p class="page-subtitle">Review and action requests to restore content to a prior revision.</p>
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.ContentRevisions.Index">Back to Revisions</a>
     </div>
 </section>
 
 @if (isLoading)
 {
-    <div class="panel">Loading restore requests...</div>
+    <p class="muted">Loading restore requests...</p>
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))
 {
@@ -21,7 +25,11 @@ else if (!string.IsNullOrWhiteSpace(errorMessage))
 }
 else if (requests.Count == 0)
 {
-    <div class="panel">No restore requests found.</div>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="revision" Size="22" /></span>
+        <strong>No restore requests found</strong>
+        <p>Restore requests appear here once someone asks to revert content to an earlier revision.</p>
+    </section>
 }
 else
 {
@@ -29,10 +37,14 @@ else
         @foreach (var request in requests)
         {
             <article class="panel">
-                <h2>@request.Status</h2>
-                <p class="muted">@request.RequestedBy at @request.RequestedAt.LocalDateTime.ToString("g")</p>
+                <div class="item-header">
+                    <div>
+                        <h2><Icon Name="revision" Size="17" /> @request.Status</h2>
+                        <p class="muted">@request.RequestedBy at @request.RequestedAt.LocalDateTime.ToString("g", CultureInfo.InvariantCulture)</p>
+                    </div>
+                    <a class="button small" href="@AdminRoutes.ContentRevisions.RestoreDetail(request.Id)" aria-label="View restore request" title="View"><Icon Name="eye" Size="15" /></a>
+                </div>
                 <p>@request.Reason</p>
-                <a class="button secondary" href="@AdminRoutes.ContentRevisions.RestoreDetail(request.Id)">Open</a>
             </article>
         }
     </section>

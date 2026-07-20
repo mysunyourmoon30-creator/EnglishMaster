@@ -5,10 +5,11 @@
 
 <section class="page-header">
     <div>
+        <p class="eyebrow">Learning</p>
         <h1>Learning Goals</h1>
-        <p class="muted">Track active and completed learning goals.</p>
+        <p class="page-subtitle">Track active and completed learning goals.</p>
     </div>
-    <a class="button" href="/learn/goals/create">Create goal</a>
+    <a class="button primary" href="/learn/goals/create"><Icon Name="plus" Size="15" /> Create goal</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -17,22 +18,31 @@
 }
 else if (isLoading)
 {
-    <p class="muted">Loading goals...</p>
+    <section class="panel empty-state">
+        <strong>Loading goals...</strong>
+    </section>
 }
 else
 {
-    <section class="metrics-grid">
-        <article class="metric-card"><span>Active</span><strong>@summary.ActiveCount</strong></article>
-        <article class="metric-card"><span>Completed</span><strong>@summary.CompletedCount</strong></article>
-        <article class="metric-card"><span>Paused</span><strong>@summary.PausedCount</strong></article>
-        <article class="metric-card"><span>Cancelled</span><strong>@summary.CancelledCount</strong></article>
+    <section class="stat-grid">
+        <article class="panel stat-card"><span class="stat-label">Active</span><span class="stat-value">@summary.ActiveCount</span></article>
+        <article class="panel stat-card"><span class="stat-label">Completed</span><span class="stat-value">@summary.CompletedCount</span></article>
+        <article class="panel stat-card"><span class="stat-label">Paused</span><span class="stat-value">@summary.PausedCount</span></article>
+        <article class="panel stat-card"><span class="stat-label">Cancelled</span><span class="stat-value">@summary.CancelledCount</span></article>
     </section>
 
     <section class="content-section">
         <h2>Active Goals</h2>
         @if (!goals.Any(goal => goal.Status == "Active"))
         {
-            <p class="muted">No active goals yet.</p>
+            <div class="panel empty-state">
+                <span class="empty-state-icon"><Icon Name="quality" Size="20" /></span>
+                <strong>No active goals yet</strong>
+                <p>Set a goal to track your daily study routine and progress.</p>
+                <div class="actions">
+                    <a class="button primary" href="/learn/goals/create"><Icon Name="plus" Size="15" /> Create goal</a>
+                </div>
+            </div>
         }
         else
         {
@@ -53,7 +63,11 @@ else
         <h2>Completed Goals</h2>
         @if (!goals.Any(goal => goal.Status == "Completed"))
         {
-            <p class="muted">No completed goals yet.</p>
+            <div class="panel empty-state">
+                <span class="empty-state-icon"><Icon Name="certificate" Size="20" /></span>
+                <strong>No completed goals yet</strong>
+                <p>Finished goals will appear here once you complete them.</p>
+            </div>
         }
         else
         {

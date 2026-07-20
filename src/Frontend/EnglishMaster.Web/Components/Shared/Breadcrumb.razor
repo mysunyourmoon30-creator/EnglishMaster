@@ -1,0 +1,148 @@
+@implements IDisposable
+@inject NavigationManager Navigation
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    @for (var i = 0; i < crumbs.Count; i++)
+    {
+        var crumb = crumbs[i];
+        var isLast = i == crumbs.Count - 1;
+
+        @if (i > 0)
+        {
+            <Icon Name="chevron-right" Size="12" />
+        }
+
+        @if (isLast || crumb.Href is null)
+        {
+            <span class="breadcrumb-current">@crumb.Label</span>
+        }
+        else
+        {
+            <a href="@crumb.Href">@crumb.Label</a>
+        }
+    }
+</nav>
+
+@code {
+    private static readonly Dictionary<string, string> SegmentLabels = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["admin"] = "Admin",
+        ["learn"] = "Learn",
+        ["words"] = "Words",
+        ["categories"] = "Categories",
+        ["tags"] = "Tags",
+        ["media"] = "Media",
+        ["upload"] = "Upload",
+        ["pronunciations"] = "Pronunciation",
+        ["grammar-topics"] = "Grammar Topics",
+        ["grammar-rules"] = "Grammar Rules",
+        ["grammar-examples"] = "Grammar Examples",
+        ["lessons"] = "Lessons",
+        ["courses"] = "Courses",
+        ["books"] = "Books",
+        ["quizzes"] = "Quizzes",
+        ["certificate-templates"] = "Certificate Templates",
+        ["certificates"] = "Certificates",
+        ["reports"] = "Reports",
+        ["analytics"] = "Analytics",
+        ["system-health"] = "System Health",
+        ["notifications"] = "Notifications",
+        ["email-messages"] = "Email",
+        ["content-quality"] = "Content Quality",
+        ["checks"] = "Checks",
+        ["rules"] = "Rules",
+        ["content-revisions"] = "Content Revisions",
+        ["content-revision-restores"] = "Revision Restores",
+        ["content-review"] = "Content Review",
+        ["bulk-operations"] = "Bulk Operations",
+        ["import-jobs"] = "Import Jobs",
+        ["rows"] = "Rows",
+        ["errors"] = "Errors",
+        ["publishing"] = "Publishing",
+        ["jobs"] = "Jobs",
+        ["templates"] = "Templates",
+        ["artifacts"] = "Artifacts",
+        ["import"] = "Import",
+        ["export"] = "Export",
+        ["users"] = "Users",
+        ["roles"] = "Roles",
+        ["permissions"] = "Permissions",
+        ["achievement-definitions"] = "Achievement Definitions",
+        ["dashboard"] = "Dashboard",
+        ["recommendations"] = "Recommendations",
+        ["practice"] = "Practice",
+        ["history"] = "History",
+        ["session"] = "Session",
+        ["goals"] = "Goals",
+        ["create"] = "Create",
+        ["edit"] = "Edit",
+        ["study-plan"] = "Study Plan",
+        ["motivation"] = "Motivation",
+        ["achievements"] = "Achievements",
+        ["activity"] = "Activity",
+        ["current-week"] = "Current Week",
+        ["search"] = "Search",
+    };
+
+    private List<Crumb> crumbs = [];
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+        BuildCrumbs();
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs args)
+    {
+        BuildCrumbs();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void BuildCrumbs()
+    {
+        var relative = Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', 2)[0];
+        var segments = relative.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        var result = new List<Crumb> { new("Dashboard", "/admin") };
+
+        if (segments.Length == 0)
+        {
+            crumbs = result;
+            return;
+        }
+
+        var path = "";
+        foreach (var segment in segments)
+        {
+            path += "/" + segment;
+
+            if (segment.Equals("admin", StringComparison.OrdinalIgnoreCase) && path == "/admin")
+            {
+                continue;
+            }
+
+            var label = Guid.TryParse(segment, out _)
+                ? "Detail"
+                : SegmentLabels.GetValueOrDefault(segment, ToTitleCase(segment));
+
+            result.Add(new Crumb(label, path));
+        }
+
+        crumbs = result;
+    }
+
+    private static string ToTitleCase(string segment)
+    {
+        var withSpaces = segment.Replace('-', ' ');
+        return string.IsNullOrEmpty(withSpaces)
+            ? withSpaces
+            : char.ToUpperInvariant(withSpaces[0]) + withSpaces[1..];
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+
+    private sealed record Crumb(string Label, string? Href);
+}

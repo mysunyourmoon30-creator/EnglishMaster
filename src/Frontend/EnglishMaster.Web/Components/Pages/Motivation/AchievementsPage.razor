@@ -5,10 +5,14 @@
 
 <section class="page-header">
     <div>
+        <p class="eyebrow">Motivation</p>
         <h1>Achievements</h1>
-        <p class="muted">Review earned and in-progress achievements.</p>
+        <p class="page-subtitle">Review earned and in-progress achievements.</p>
     </div>
-    <button class="button" type="button" @onclick="EvaluateAsync">Evaluate</button>
+    <div class="actions">
+        <a class="button secondary" href="/learn/motivation"><Icon Name="chevron-left" Size="15" /> Back</a>
+        <button class="button primary" type="button" @onclick="EvaluateAsync"><Icon Name="quality" Size="15" /> Evaluate</button>
+    </div>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -17,11 +21,20 @@
 }
 else if (isLoading)
 {
-    <p class="muted">Loading achievements...</p>
+    <section class="panel empty-state">
+        <strong>Loading achievements...</strong>
+    </section>
 }
 else if (achievements.Count == 0)
 {
-    <p class="muted">No achievement progress yet.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="certificate" Size="20" /></span>
+        <strong>No achievement progress yet</strong>
+        <p>Complete lessons, quizzes, and practice to start earning achievements.</p>
+        <div class="actions">
+            <button class="button primary" type="button" @onclick="EvaluateAsync"><Icon Name="quality" Size="15" /> Evaluate</button>
+        </div>
+    </section>
 }
 else
 {

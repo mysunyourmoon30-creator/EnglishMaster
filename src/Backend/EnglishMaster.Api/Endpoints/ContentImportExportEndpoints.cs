@@ -58,7 +58,7 @@ public static class ContentImportExportEndpoints
         CancellationToken cancellationToken)
     {
         var result = await exportService.ExportWordsAsync(format, cancellationToken);
-        return ToFileResult(result);
+        return ToStreamResult(result, cancellationToken);
     }
 
     private static async Task<IResult> ExportGrammarTopicsAsync(
@@ -67,7 +67,7 @@ public static class ContentImportExportEndpoints
         CancellationToken cancellationToken)
     {
         var result = await exportService.ExportGrammarTopicsAsync(format, cancellationToken);
-        return ToFileResult(result);
+        return ToStreamResult(result, cancellationToken);
     }
 
     private static async Task<IResult> ExportLessonsAsync(
@@ -76,7 +76,7 @@ public static class ContentImportExportEndpoints
         CancellationToken cancellationToken)
     {
         var result = await exportService.ExportLessonsAsync(format, cancellationToken);
-        return ToFileResult(result);
+        return ToStreamResult(result, cancellationToken);
     }
 
     private static async Task<IResult> ExportCoursesAsync(
@@ -85,7 +85,7 @@ public static class ContentImportExportEndpoints
         CancellationToken cancellationToken)
     {
         var result = await exportService.ExportCoursesAsync(format, cancellationToken);
-        return ToFileResult(result);
+        return ToStreamResult(result, cancellationToken);
     }
 
     private static async Task<IResult> ExportBooksAsync(
@@ -94,7 +94,7 @@ public static class ContentImportExportEndpoints
         CancellationToken cancellationToken)
     {
         var result = await exportService.ExportBooksAsync(format, cancellationToken);
-        return ToFileResult(result);
+        return ToStreamResult(result, cancellationToken);
     }
 
     private static async Task<IResult> ExportQuizzesAsync(
@@ -103,16 +103,16 @@ public static class ContentImportExportEndpoints
         CancellationToken cancellationToken)
     {
         var result = await exportService.ExportQuizzesAsync(format, cancellationToken);
-        return ToFileResult(result);
+        return ToStreamResult(result, cancellationToken);
     }
 
-    private static IResult ToFileResult(Result<ContentExportResult> result)
+    private static IResult ToStreamResult(Result<ContentExportStream> result, CancellationToken cancellationToken)
     {
         return result.Status switch
         {
-            ResultStatus.Success => Results.File(
-                result.Value!.Content,
-                result.Value.ContentType,
+            ResultStatus.Success => Results.Stream(
+                stream => result.Value!.WriteToAsync(stream, cancellationToken),
+                result.Value!.ContentType,
                 result.Value.FileName),
             ResultStatus.ValidationError => Results.ValidationProblem(ToValidationDictionary(result.Errors)),
             _ => Results.Problem()

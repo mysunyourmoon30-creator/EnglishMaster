@@ -18,13 +18,13 @@
 
     <div class="form-grid">
         <label class="span-2">
-            <span>Title</span>
+            <span>Title / ชื่อส่วนบทเรียน</span>
             <InputText class="input" @bind-Value="Model.Title" />
             <ValidationMessage For="@(() => Model.Title)" />
         </label>
 
         <label>
-            <span>Section Type</span>
+            <span>Section Type / ประเภทเนื้อหา</span>
             <InputSelect class="input" @bind-Value="Model.SectionType">
                 @foreach (var sectionType in SectionTypes)
                 {
@@ -34,9 +34,9 @@
         </label>
 
         <label>
-            <span>Media</span>
+            <span>Media / สื่อประกอบ</span>
             <InputSelect class="input" @bind-Value="Model.MediaId">
-                <option value="">No media</option>
+                <option value="">No media / ไม่มีสื่อประกอบ</option>
                 @foreach (var media in MediaOptions)
                 {
                     <option value="@media.Id">@media.OriginalFileName</option>
@@ -45,13 +45,13 @@
         </label>
 
         <label class="span-2">
-            <span>Content (Markdown)</span>
+            <span>Content / เนื้อหา</span>
             <InputTextArea class="input textarea" @bind-Value="Model.ContentMarkdown" />
             <ValidationMessage For="@(() => Model.ContentMarkdown)" />
         </label>
 
         <label>
-            <span>Sort Order</span>
+            <span>Sort Order / ลำดับ</span>
             <InputNumber class="input" @bind-Value="Model.SortOrder" />
             <ValidationMessage For="@(() => Model.SortOrder)" />
         </label>
@@ -60,14 +60,14 @@
         {
             <label class="checkbox-row">
                 <InputCheckbox @bind-Value="Model.IsActive" />
-                <span>Active</span>
+                <span>Active / ใช้งาน</span>
             </label>
         }
     </div>
 
     <div class="actions">
         <button class="button primary" type="submit" disabled="@IsSaving">@SubmitText</button>
-        <button class="button" type="button" @onclick="CancelAsync">Cancel</button>
+        <button class="button" type="button" @onclick="CancelAsync">Cancel / ยกเลิก</button>
     </div>
 </EditForm>
 

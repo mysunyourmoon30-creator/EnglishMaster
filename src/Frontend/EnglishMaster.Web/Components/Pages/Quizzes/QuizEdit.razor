@@ -14,6 +14,7 @@
         <p class="eyebrow">Quizzes</p>
         <h1>Edit Quiz</h1>
     </div>
+    <a class="button" href="@AdminRoutes.Quizzes.Index">Back to Quizzes</a>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -27,8 +28,13 @@
 }
 else if (notFound)
 {
-    <section class="panel">
-        <p class="muted">Quiz was not found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="quiz" Size="22" /></span>
+        <strong>Quiz was not found</strong>
+        <p>It may have been deleted or the link is incorrect.</p>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.Quizzes.Index">Back to Quizzes</a>
+        </div>
     </section>
 }
 else

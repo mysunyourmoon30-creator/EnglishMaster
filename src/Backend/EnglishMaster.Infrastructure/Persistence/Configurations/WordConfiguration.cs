@@ -81,6 +81,8 @@ internal sealed class WordConfiguration : IEntityTypeConfiguration<Word>
         builder.HasIndex(word => word.Text);
         builder.HasIndex(word => word.Slug)
             .IsUnique();
+        builder.HasIndex(word => new { word.IsActive, word.Text });
+        builder.HasIndex(word => new { word.IsActive, word.Slug });
         builder.HasIndex(word => word.CefrLevel);
         builder.HasIndex(word => word.IsActive);
         builder.HasIndex(word => word.CategoryId);

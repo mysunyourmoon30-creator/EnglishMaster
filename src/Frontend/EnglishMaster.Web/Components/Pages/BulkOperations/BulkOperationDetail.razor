@@ -6,10 +6,11 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Admin</p>
-        <h1>Bulk Operation</h1>
+        <p class="eyebrow">Bulk Operations</p>
+        <h1>@(operation is null ? "Bulk Operation" : operation.OperationType)</h1>
+        <p class="page-subtitle">Review item-level results and control this bulk operation.</p>
     </div>
-    <a class="button secondary" href="@AdminRoutes.BulkOperations.Index">Back</a>
+    <a class="button" href="@AdminRoutes.BulkOperations.Index">Back to Bulk Operations</a>
 </section>
 
 @if (isLoading)
@@ -31,6 +32,10 @@ else if (operation is not null)
             <div class="detail-item"><span class="muted">Failed</span><strong>@operation.FailedItems</strong></div>
             <div class="detail-item full"><span class="muted">Error</span><strong>@(string.IsNullOrWhiteSpace(operation.ErrorMessage) ? "-" : operation.ErrorMessage)</strong></div>
         </div>
+        <div class="detail-item full">
+            <span class="muted">Progress</span>
+            <div class="study-progress"><span style="width: @(operation.TotalItems > 0 ? (operation.SucceededItems * 100.0 / operation.TotalItems).ToString("0") : "0")%"></span></div>
+        </div>
         <div class="form-actions">
             @if (operation.Status == "Pending")
             {
@@ -42,7 +47,11 @@ else if (operation is not null)
 
     @if (items.Count == 0)
     {
-        <div class="panel">No item results yet.</div>
+        <section class="panel empty-state">
+            <span class="empty-state-icon"><Icon Name="bulk-ops" Size="22" /></span>
+            <strong>No item results yet</strong>
+            <p>Item-level results will appear here once the operation runs.</p>
+        </section>
     }
     else
     {

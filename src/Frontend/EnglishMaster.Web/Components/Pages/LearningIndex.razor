@@ -1,31 +1,57 @@
 @page "/learn"
 
-<PageTitle>Learn</PageTitle>
+<PageTitle>Learn / เรียน</PageTitle>
 
 <section class="page-header">
     <div>
-        <h1>Learn</h1>
-        <p class="muted">Open learner tools and public discovery pages.</p>
+        <p class="eyebrow">Learning Hub / ศูนย์การเรียน</p>
+        <h1>Learn / เริ่มเรียน</h1>
+        <p class="page-subtitle">เลือกทางที่ง่ายที่สุดสำหรับวันนี้: ดูแผนเรียน ฝึกทบทวน หรือค้นหาคำศัพท์และบทเรียน.</p>
     </div>
-    <a class="button" href="/learn/dashboard">Dashboard</a>
-</section>
-
-<section class="content-section">
-    <h2>Learning Tools</h2>
-    <div class="card-grid">
-        <a class="list-card" href="/learn/recommendations"><h3>Recommendations</h3><p class="muted">Continue learning and review suggested content.</p></a>
-        <a class="list-card" href="/learn/practice"><h3>Practice</h3><p class="muted">Review due practice items.</p></a>
-        <a class="list-card" href="/learn/goals"><h3>Goals</h3><p class="muted">Track learning goals.</p></a>
-        <a class="list-card" href="/learn/reports"><h3>Reports</h3><p class="muted">Review weekly learning reports.</p></a>
+    <div class="actions">
+        <a class="button primary" href="/learn/study-plan"><Icon Name="revision" Size="16" /> Study Plan / แผนวันนี้</a>
+        <a class="button secondary" href="/learn/practice"><Icon Name="quiz" Size="16" /> Practice / ฝึกทันที</a>
     </div>
 </section>
 
 <section class="content-section">
-    <h2>Browse</h2>
+    <div class="section-header-row">
+        <div>
+            <h2>Start Here / เริ่มตรงนี้</h2>
+            <p class="muted">ถ้าไม่แน่ใจว่าจะทำอะไร ให้เริ่มจากแผนเรียนหรือฝึกทบทวนก่อน.</p>
+        </div>
+    </div>
     <div class="card-grid">
-        <a class="list-card" href="/search?type=course"><h3>Courses</h3><p class="muted">Find published courses.</p></a>
-        <a class="list-card" href="/search?type=lesson"><h3>Lessons</h3><p class="muted">Find published lessons.</p></a>
-        <a class="list-card" href="/search?type=word"><h3>Dictionary</h3><p class="muted">Find vocabulary entries.</p></a>
-        <a class="list-card" href="/search?type=grammar"><h3>Grammar</h3><p class="muted">Find grammar topics.</p></a>
+        <a class="list-card" href="/learn/study-plan">
+            <h3><Icon Name="revision" Size="17" /> Study Plan / แผนเรียน</h3>
+            <p class="muted">ระบบจัดงานวันนี้ให้เป็นข้อ ๆ เหมาะกับการเรียนแบบไม่ต้องคิดเยอะ.</p>
+        </a>
+        <a class="list-card" href="/learn/practice">
+            <h3><Icon Name="quiz" Size="17" /> Practice / ฝึกทบทวน</h3>
+            <p class="muted">ฝึกคำที่ควรทบทวน แล้วบอกระบบว่าจำได้แค่ไหน.</p>
+        </a>
+        <a class="list-card" href="/learn/dashboard">
+            <h3><Icon Name="dashboard" Size="17" /> Dashboard / ภาพรวม</h3>
+            <p class="muted">ดูแผนวันนี้ เป้าหมาย นาทีเรียน และคำแนะนำในหน้าเดียว.</p>
+        </a>
+        <a class="list-card" href="/learn/recommendations">
+            <h3><Icon Name="lesson" Size="17" /> Recommendations / คำแนะนำ</h3>
+            <p class="muted">ดูเนื้อหาที่ระบบแนะนำจากกิจกรรมการเรียนของคุณ.</p>
+        </a>
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="section-header-row">
+        <div>
+            <h2>Browse Content / ค้นหาเนื้อหา</h2>
+            <p class="muted">ใช้เมื่ออยากเลือกบทเรียนหรือคำศัพท์เอง.</p>
+        </div>
+    </div>
+    <div class="card-grid">
+        <a class="list-card" href="/search?type=lesson"><h3><Icon Name="lesson" Size="17" /> Lessons / บทเรียน</h3><p class="muted">เปิดบทเรียนที่เผยแพร่แล้ว.</p></a>
+        <a class="list-card" href="/search?type=word"><h3><Icon Name="word" Size="17" /> Dictionary / คำศัพท์</h3><p class="muted">ค้นหาคำศัพท์ ความหมาย และตัวอย่าง.</p></a>
+        <a class="list-card" href="/search?type=quiz"><h3><Icon Name="quiz" Size="17" /> Quizzes / แบบฝึกหัด</h3><p class="muted">เลือกแบบฝึกหัดเพื่อทดสอบความเข้าใจ.</p></a>
+        <a class="list-card" href="/learn/reports"><h3><Icon Name="report" Size="17" /> Reports / ผลเรียน</h3><p class="muted">ดูผลการเรียนและความคืบหน้า.</p></a>
     </div>
 </section>

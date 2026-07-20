@@ -8,22 +8,31 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Books</p>
+        <p class="eyebrow">BOOKS / หนังสือ</p>
         <h1>Books</h1>
+        <p class="page-subtitle">Optional reading resources with chapters and linked lessons. / หนังสือเป็นสื่ออ่านเสริม มี chapters และผูกบทเรียนได้</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.Books.Create">New Book</a>
+    <a class="button primary" href="@AdminRoutes.Books.Create"><Icon Name="plus" Size="16" /> New Book / เพิ่มหนังสือ</a>
+</section>
+
+<section class="panel release-note">
+    <div>
+        <strong>Current role / บทบาทตอนนี้</strong>
+        <p class="muted">Books are optional reading material. Keep the 2,500 words, lessons, and practice as the core learning flow.</p>
+        <p class="muted">หนังสือเป็นสื่ออ่านเสริม โดย flow หลักยังเป็นคำศัพท์ 2,500 คำ บทเรียน และแบบฝึก</p>
+    </div>
 </section>
 
 <section class="panel">
     <form class="filters-grid" @onsubmit="SearchAsync" @onsubmit:preventDefault>
         <label>
-            <span>Search</span>
+            <span>Search / ค้นหา</span>
             <input class="input" @bind="search" @bind:event="oninput" />
         </label>
         <label>
             <span>CEFR</span>
             <select class="input" @bind="cefrLevel">
-                <option value="">All</option>
+                <option value="">All / ทุกระดับ</option>
                 @foreach (var level in CefrLevels)
                 {
                     <option value="@level">@level</option>
@@ -31,9 +40,9 @@
             </select>
         </label>
         <label>
-            <span>Category</span>
+            <span>Category / หมวดหมู่</span>
             <select class="input" @bind="categoryId">
-                <option value="">All</option>
+                <option value="">All / ทั้งหมด</option>
                 @foreach (var category in categories)
                 {
                     <option value="@category.Id">@category.Name</option>
@@ -41,9 +50,9 @@
             </select>
         </label>
         <label>
-            <span>Course</span>
+            <span>Course / คอร์ส</span>
             <select class="input" @bind="courseId">
-                <option value="">All</option>
+                <option value="">All / ทั้งหมด</option>
                 @foreach (var course in courses)
                 {
                     <option value="@course.Id">@course.Title</option>
@@ -51,37 +60,37 @@
             </select>
         </label>
         <label>
-            <span>Published</span>
+            <span>Published / เผยแพร่</span>
             <select class="input" @bind="publishedFilter">
-                <option value="">All</option>
-                <option value="true">Published</option>
-                <option value="false">Draft</option>
+                <option value="">All / ทั้งหมด</option>
+                <option value="true">Published / เผยแพร่แล้ว</option>
+                <option value="false">Draft / ร่าง</option>
             </select>
         </label>
         <label>
-            <span>Status</span>
+            <span>Status / สถานะ</span>
             <select class="input" @bind="activeFilter">
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-                <option value="">All</option>
+                <option value="true">Active / ใช้งาน</option>
+                <option value="false">Inactive / ปิด</option>
+                <option value="">All / ทั้งหมด</option>
             </select>
         </label>
         <label>
-            <span>Sort</span>
+            <span>Sort / เรียงตาม</span>
             <select class="input" @bind="sortBy">
-                <option value="Title">Title</option>
-                <option value="CreatedAt">Created</option>
+                <option value="Title">Title / ชื่อ</option>
+                <option value="CreatedAt">Created / วันที่สร้าง</option>
             </select>
         </label>
         <label>
-            <span>Page Size</span>
+            <span>Page Size / จำนวนต่อหน้า</span>
             <select class="input" @bind="pageSize">
                 <option value="10">10</option>
                 <option value="20">20</option>
                 <option value="50">50</option>
             </select>
         </label>
-        <button class="button" type="submit">Search</button>
+        <button class="button" type="submit">Search / ค้นหา</button>
     </form>
 </section>
 
@@ -92,60 +101,61 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading books...</p>
+    <p class="muted">Loading books... / กำลังโหลดหนังสือ</p>
 }
 else if (books.Count == 0)
 {
-    <section class="panel">
-        <p class="muted">No books found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="book" Size="22" /></span>
+        <strong>No books found / ยังไม่พบหนังสือ</strong>
+        <p>Books are optional. You can keep using lessons and practice first. / หนังสือเป็นส่วนเสริม ใช้บทเรียนและแบบฝึกก่อนได้</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.Books.Create"><Icon Name="plus" Size="16" /> New Book / เพิ่มหนังสือ</a>
+        </div>
     </section>
 }
 else
 {
     <section class="table-wrap">
         <div class="pagination-summary">
-            <span class="muted">Showing page @searchResult.PageNumber of @searchResult.TotalPages (@searchResult.TotalCount books)</span>
+            <span class="muted">Page @searchResult.PageNumber of @searchResult.TotalPages / หน้า @searchResult.PageNumber จาก @searchResult.TotalPages</span>
+            <span class="status-badge neutral">@searchResult.TotalCount books / @searchResult.TotalCount หนังสือ</span>
         </div>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>CEFR</th>
-                    <th>Category</th>
-                    <th>Course</th>
-                    <th>Chapters</th>
-                    <th>Published</th>
-                    <th>Status</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var book in books)
-                {
-                    <tr>
-                        <td>
-                            <strong>@book.Title</strong>
-                            <span class="muted">@book.Subtitle</span>
-                        </td>
-                        <td>@(book.CefrLevel ?? "-")</td>
-                        <td>@(book.Category?.Name ?? "-")</td>
-                        <td>@(book.Course?.Title ?? "-")</td>
-                        <td>@book.Chapters.Count</td>
-                        <td>@(book.IsPublished ? "Published" : "Draft")</td>
-                        <td>@(book.IsActive ? "Active" : "Inactive")</td>
-                        <td class="row-actions">
-                            <a class="button small" href="@AdminRoutes.Books.Detail(book.Id)">View</a>
-                            <a class="button small" href="@AdminRoutes.Books.Edit(book.Id)">Edit</a>
-                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(book.Id)">Delete</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <div class="card-grid">
+            @foreach (var book in books)
+            {
+                <div class="entity-card">
+                    <a class="entity-card-link" href="@AdminRoutes.Books.Detail(book.Id)">
+                        <div class="entity-card-media">
+                            @if (book.CoverMedia is not null && !string.IsNullOrWhiteSpace(book.CoverMedia.PublicUrl))
+                            {
+                                <img src="@book.CoverMedia.PublicUrl" alt="@book.CoverMedia.AltText" />
+                            }
+                            else
+                            {
+                                <Icon Name="book" Size="28" />
+                            }
+                        </div>
+                        <div class="entity-card-body">
+                            <h3>@book.Title</h3>
+                            <span class="muted">@(book.CefrLevel ?? "-") &middot; @book.Chapters.Count chapters / @book.Chapters.Count ตอน</span>
+                        </div>
+                    </a>
+                    <div class="entity-card-footer">
+                        <span class="status-badge @(book.IsPublished ? "success" : "warning")">@(book.IsPublished ? "Published / เผยแพร่แล้ว" : "Draft / ร่าง")</span>
+                        <span class="row-actions">
+                            <a class="button small" href="@AdminRoutes.Books.Detail(book.Id)" aria-label="View @book.Title" title="View"><Icon Name="eye" Size="15" /></a>
+                            <a class="button small" href="@AdminRoutes.Books.Edit(book.Id)" aria-label="Edit @book.Title" title="Edit"><Icon Name="edit" Size="15" /></a>
+                            <button class="button small danger" type="button" @onclick="() => DeleteAsync(book.Id)" aria-label="Delete @book.Title" title="Delete"><Icon Name="trash" Size="15" /></button>
+                        </span>
+                    </div>
+                </div>
+            }
+        </div>
         <div class="pagination-row">
-            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous</button>
-            <span class="muted">Page @searchResult.PageNumber</span>
-            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next</button>
+            <button class="button small" type="button" disabled="@(!searchResult.HasPreviousPage)" @onclick="PreviousPageAsync">Previous / ก่อนหน้า</button>
+            <span class="muted">Page @searchResult.PageNumber / หน้า @searchResult.PageNumber</span>
+            <button class="button small" type="button" disabled="@(!searchResult.HasNextPage)" @onclick="NextPageAsync">Next / ถัดไป</button>
         </div>
     </section>
 }

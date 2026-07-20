@@ -6,15 +6,20 @@
 
 <section class="page-header">
     <div>
-        <p class="eyebrow">Vocabulary</p>
+        <p class="eyebrow">VOCABULARY / คำศัพท์</p>
         <h1>@(word is null ? "Word" : word.Text)</h1>
-    </div>
-    <div class="actions">
-        <a class="button" href="@AdminRoutes.Words.Index">Back</a>
         @if (word is not null)
         {
-            <a class="button" href="@AdminRoutes.ContentRevisions.Timeline("Word", word.Id)">Revision History</a>
-            <a class="button primary" href="@AdminRoutes.Words.Edit(word.Id)">Edit</a>
+            <p class="page-subtitle">Check meaning, examples, pronunciation, media, category, and tags before learners use this word. / ตรวจความหมาย ตัวอย่าง การออกเสียง สื่อ หมวดหมู่ และป้ายกำกับก่อนให้ผู้เรียนใช้งาน</p>
+        }
+    </div>
+    <div class="actions">
+        <a class="button" href="@AdminRoutes.Words.Index">Back / กลับ</a>
+        @if (word is not null)
+        {
+            <a class="button" href="@PublicWordUrl(word.Slug)">Learner page / หน้าผู้เรียน</a>
+            <a class="button" href="@AdminRoutes.ContentRevisions.Timeline("Word", word.Id)"><Icon Name="revision" Size="15" /> History / ประวัติ</a>
+            <a class="button primary" href="@AdminRoutes.Words.Edit(word.Id)"><Icon Name="edit" Size="15" /> Edit / แก้ไข</a>
         }
     </div>
 </section>
@@ -26,16 +31,28 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading word...</p>
+    <p class="muted">Loading word... / กำลังโหลดคำศัพท์</p>
 }
 else if (notFound)
 {
-    <section class="panel">
-        <p class="muted">Word was not found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="word" Size="22" /></span>
+        <strong>Word was not found / ไม่พบคำศัพท์</strong>
+        <p>It may have been deleted or the link is incorrect. / อาจถูกลบแล้ว หรือลิงก์ไม่ถูกต้อง</p>
+        <div class="actions">
+            <a class="button" href="@AdminRoutes.Words.Index">Back to Words / กลับรายการคำศัพท์</a>
+        </div>
     </section>
 }
 else if (word is not null)
 {
+    <section class="panel release-note">
+        <div>
+            <strong>@(word.IsActive ? "Active for learners / เปิดให้ใช้งานแล้ว" : "Inactive / ปิดใช้งาน")</strong>
+            <p class="muted">Learner page: <a href="@PublicWordUrl(word.Slug)">@PublicWordUrl(word.Slug)</a></p>
+        </div>
+    </section>
+
     <section class="panel">
         @if (word.ImageMedia is not null && !string.IsNullOrWhiteSpace(word.ImageMedia.PublicUrl))
         {
@@ -47,14 +64,47 @@ else if (word is not null)
             <audio class="media-player" controls src="@word.AudioMedia.PublicUrl"></audio>
         }
 
+        <h3 class="detail-section-heading">Identity / ข้อมูลหลัก</h3>
         <div class="detail-grid">
             <div class="detail-item">
-                <span class="muted">Text</span>
+                <span class="muted">Text / คำ</span>
                 <strong>@word.Text</strong>
             </div>
             <div class="detail-item">
                 <span class="muted">Slug</span>
                 <strong>@word.Slug</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Status / สถานะ</span>
+                <strong>@(word.IsActive ? "Active / ใช้งาน" : "Inactive / ปิด")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Category / หมวดหมู่</span>
+                <strong>@(word.Category?.Name ?? "-")</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Tags / ป้ายกำกับ</span>
+                <strong>@FormatTags(word.Tags)</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Created / สร้างเมื่อ</span>
+                <strong>@FormatDate(word.CreatedAt)</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">Updated / แก้ไขเมื่อ</span>
+                <strong>@FormatDate(word.UpdatedAt)</strong>
+            </div>
+        </div>
+
+        <h3 class="detail-section-heading">Linguistics / ข้อมูลภาษา</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="muted">Part of Speech / ชนิดคำ</span>
+                <strong>@word.PartOfSpeech</strong>
+            </div>
+            <div class="detail-item">
+                <span class="muted">CEFR Level / ระดับ</span>
+                <strong>@word.CefrLevel</strong>
             </div>
             <div class="detail-item">
                 <span class="muted">IPA UK</span>
@@ -65,60 +115,40 @@ else if (word is not null)
                 <strong>@word.IpaUs</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Thai Reading</span>
+                <span class="muted">Thai Reading / คำอ่านไทย</span>
                 <strong>@word.ThaiReading</strong>
             </div>
+        </div>
+
+        <h3 class="detail-section-heading">Media / สื่อประกอบ</h3>
+        <div class="detail-grid">
             <div class="detail-item">
-                <span class="muted">Status</span>
-                <strong>@(word.IsActive ? "Active" : "Inactive")</strong>
-            </div>
-            <div class="detail-item">
-                <span class="muted">Category</span>
-                <strong>@(word.Category?.Name ?? "-")</strong>
-            </div>
-            <div class="detail-item">
-                <span class="muted">Tags</span>
-                <strong>@FormatTags(word.Tags)</strong>
-            </div>
-            <div class="detail-item">
-                <span class="muted">Image</span>
+                <span class="muted">Image / รูปภาพ</span>
                 <strong>@FormatMediaName(word.ImageMedia)</strong>
             </div>
             <div class="detail-item">
-                <span class="muted">Audio</span>
+                <span class="muted">Audio / เสียง</span>
                 <strong>@FormatMediaName(word.AudioMedia)</strong>
             </div>
-            <div class="detail-item">
-                <span class="muted">Part of Speech</span>
-                <strong>@word.PartOfSpeech</strong>
-            </div>
-            <div class="detail-item">
-                <span class="muted">CEFR Level</span>
-                <strong>@word.CefrLevel</strong>
-            </div>
+        </div>
+
+        <h3 class="detail-section-heading">Meanings &amp; Examples / ความหมายและตัวอย่าง</h3>
+        <div class="detail-grid">
             <div class="detail-item full">
-                <span class="muted">Meaning TH</span>
+                <span class="muted">Meaning TH / ความหมายไทย</span>
                 <strong>@word.MeaningTh</strong>
             </div>
             <div class="detail-item full">
-                <span class="muted">Meaning EN</span>
+                <span class="muted">Meaning EN / ความหมายอังกฤษ</span>
                 <strong>@word.MeaningEn</strong>
             </div>
             <div class="detail-item full">
-                <span class="muted">Example EN</span>
+                <span class="muted">Example EN / ตัวอย่างอังกฤษ</span>
                 <strong>@word.ExampleEn</strong>
             </div>
             <div class="detail-item full">
-                <span class="muted">Example TH</span>
+                <span class="muted">Example TH / ตัวอย่างไทย</span>
                 <strong>@word.ExampleTh</strong>
-            </div>
-            <div class="detail-item">
-                <span class="muted">Created</span>
-                <strong>@FormatDate(word.CreatedAt)</strong>
-            </div>
-            <div class="detail-item">
-                <span class="muted">Updated</span>
-                <strong>@FormatDate(word.UpdatedAt)</strong>
             </div>
         </div>
     </section>
@@ -126,22 +156,22 @@ else if (word is not null)
     <section class="panel pronunciation-panel">
         <div class="page-header compact-header">
             <div>
-                <p class="eyebrow">Pronunciation</p>
-                <h1>Pronunciation</h1>
+                <p class="eyebrow">PRONUNCIATION / การออกเสียง</p>
+                <h1>Pronunciation / การออกเสียง</h1>
             </div>
             @if (word.Pronunciation is null)
             {
-                <a class="button primary" href="@AdminRoutes.Pronunciations.CreateForWord(word.Id)">Create</a>
+                <a class="button primary" href="@AdminRoutes.Pronunciations.CreateForWord(word.Id)">Create / สร้าง</a>
             }
             else
             {
-                <a class="button primary" href="@AdminRoutes.Pronunciations.Edit(word.Pronunciation.Id)">Edit</a>
+                <a class="button primary" href="@AdminRoutes.Pronunciations.Edit(word.Pronunciation.Id)">Edit / แก้ไข</a>
             }
         </div>
 
         @if (word.Pronunciation is null)
         {
-            <p class="muted">No pronunciation record yet.</p>
+            <p class="muted">No pronunciation record yet. / ยังไม่มีข้อมูลการออกเสียง</p>
         }
         else
         {
@@ -261,6 +291,8 @@ else if (word is not null)
     private bool isLoading = true;
     private bool notFound;
 
+    private static string PublicWordUrl(string slug) => $"/dictionary/{slug}";
+
     protected override async Task OnParametersSetAsync()
     {
         isLoading = true;
@@ -284,7 +316,7 @@ else if (word is not null)
 
     private static string FormatDate(DateTimeOffset value)
     {
-        return value.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+        return value.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
     }
 
     private static string FormatTags(IReadOnlyCollection<WordTagDto> tags)

@@ -8,8 +8,9 @@
     <div>
         <p class="eyebrow">Certificates</p>
         <h1>Certificate Templates</h1>
+        <p class="page-subtitle">Manage the templates used to generate learner certificates.</p>
     </div>
-    <a class="button primary" href="@AdminRoutes.CertificateTemplates.Create">New Template</a>
+    <a class="button primary" href="@AdminRoutes.CertificateTemplates.Create"><Icon Name="plus" Size="16" /> New Template</a>
 </section>
 
 <section class="panel">
@@ -40,8 +41,13 @@
 }
 else if (templates.Count == 0)
 {
-    <section class="panel">
-        <p class="muted">No certificate templates found.</p>
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="certificate" Size="22" /></span>
+        <strong>No certificate templates found</strong>
+        <p>Try adjusting your filters, or create the first certificate template.</p>
+        <div class="actions">
+            <a class="button primary" href="@AdminRoutes.CertificateTemplates.Create"><Icon Name="plus" Size="16" /> New Template</a>
+        </div>
     </section>
 }
 else
@@ -66,8 +72,8 @@ else
                         <td>@template.Description</td>
                         <td>@(template.IsActive ? "Active" : "Inactive")</td>
                         <td class="row-actions">
-                            <a class="button small" href="@AdminRoutes.CertificateTemplates.Detail(template.Id)">View</a>
-                            <a class="button small" href="@AdminRoutes.CertificateTemplates.Edit(template.Id)">Edit</a>
+                            <a class="button small" href="@AdminRoutes.CertificateTemplates.Detail(template.Id)" aria-label="View @template.Name" title="View"><Icon Name="eye" Size="15" /></a>
+                            <a class="button small" href="@AdminRoutes.CertificateTemplates.Edit(template.Id)" aria-label="Edit @template.Name" title="Edit"><Icon Name="edit" Size="15" /></a>
                             @if (template.IsActive)
                             {
                                 <button class="button small" type="button" @onclick="() => DeactivateAsync(template.Id)">Deactivate</button>
