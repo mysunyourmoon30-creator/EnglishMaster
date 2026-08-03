@@ -1,5 +1,6 @@
 @implements IDisposable
 @inject NavigationManager Navigation
+@inject BreadcrumbState BreadcrumbState
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     @for (var i = 0; i < crumbs.Count; i++)
@@ -89,10 +90,17 @@
     protected override void OnInitialized()
     {
         Navigation.LocationChanged += OnLocationChanged;
+        BreadcrumbState.Changed += OnBreadcrumbStateChanged;
         BuildCrumbs();
     }
 
     private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs args)
+    {
+        BuildCrumbs();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnBreadcrumbStateChanged()
     {
         BuildCrumbs();
         InvokeAsync(StateHasChanged);
@@ -112,8 +120,9 @@
         }
 
         var path = "";
-        foreach (var segment in segments)
+        for (var i = 0; i < segments.Length; i++)
         {
+            var segment = segments[i];
             path += "/" + segment;
 
             if (segment.Equals("admin", StringComparison.OrdinalIgnoreCase) && path == "/admin")
@@ -121,9 +130,18 @@
                 continue;
             }
 
-            var label = Guid.TryParse(segment, out _)
-                ? "Detail"
-                : SegmentLabels.GetValueOrDefault(segment, ToTitleCase(segment));
+            string label;
+            if (Guid.TryParse(segment, out var entityId))
+            {
+                label = entityId == BreadcrumbState.CurrentEntityId &&
+                        !string.IsNullOrWhiteSpace(BreadcrumbState.CurrentLabel)
+                    ? BreadcrumbState.CurrentLabel
+                    : "Detail";
+            }
+            else
+            {
+                label = SegmentLabels.GetValueOrDefault(segment, ToTitleCase(segment));
+            }
 
             result.Add(new Crumb(label, path));
         }
@@ -142,6 +160,7 @@
     public void Dispose()
     {
         Navigation.LocationChanged -= OnLocationChanged;
+        BreadcrumbState.Changed -= OnBreadcrumbStateChanged;
     }
 
     private sealed record Crumb(string Label, string? Href);

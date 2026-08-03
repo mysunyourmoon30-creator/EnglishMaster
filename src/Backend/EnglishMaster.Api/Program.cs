@@ -1,8 +1,12 @@
+using System.Net;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+
 using EnglishMaster.Api.Endpoints;
 using EnglishMaster.Api.Health;
 using EnglishMaster.Api.Security;
+using EnglishMaster.Application.Features.Achievements.Commands;
+using EnglishMaster.Application.Features.Achievements.Queries;
 using EnglishMaster.Application.Features.Analytics;
 using EnglishMaster.Application.Features.BookChapters.Commands;
 using EnglishMaster.Application.Features.BookChapters.Queries;
@@ -21,6 +25,8 @@ using EnglishMaster.Application.Features.ContentRevisions.Commands;
 using EnglishMaster.Application.Features.ContentRevisions.Queries;
 using EnglishMaster.Application.Features.Courses.Commands;
 using EnglishMaster.Application.Features.Courses.Queries;
+using EnglishMaster.Application.Features.DailyStudyPlans.Commands;
+using EnglishMaster.Application.Features.DailyStudyPlans.Queries;
 using EnglishMaster.Application.Features.EmailMessages.Commands;
 using EnglishMaster.Application.Features.EmailMessages.Queries;
 using EnglishMaster.Application.Features.GrammarExamples.Commands;
@@ -31,37 +37,34 @@ using EnglishMaster.Application.Features.GrammarTopics.Commands;
 using EnglishMaster.Application.Features.GrammarTopics.Queries;
 using EnglishMaster.Application.Features.ImportJobs.Commands;
 using EnglishMaster.Application.Features.ImportJobs.Queries;
-using EnglishMaster.Application.Features.LessonSections.Commands;
-using EnglishMaster.Application.Features.LessonSections.Queries;
-using EnglishMaster.Application.Features.Lessons.Commands;
-using EnglishMaster.Application.Features.Lessons.Queries;
-using EnglishMaster.Application.Features.LearningRecommendations.Queries;
 using EnglishMaster.Application.Features.LearningGoals.Commands;
 using EnglishMaster.Application.Features.LearningGoals.Queries;
-using EnglishMaster.Application.Features.DailyStudyPlans.Commands;
-using EnglishMaster.Application.Features.DailyStudyPlans.Queries;
+using EnglishMaster.Application.Features.LearningRecommendations.Queries;
 using EnglishMaster.Application.Features.LearningReports.Commands;
 using EnglishMaster.Application.Features.LearningReports.Queries;
+using EnglishMaster.Application.Features.Lessons.Commands;
+using EnglishMaster.Application.Features.Lessons.Queries;
+using EnglishMaster.Application.Features.LessonSections.Commands;
+using EnglishMaster.Application.Features.LessonSections.Queries;
 using EnglishMaster.Application.Features.Media.Commands;
 using EnglishMaster.Application.Features.Media.Queries;
-using EnglishMaster.Application.Features.Motivation.Commands;
-using EnglishMaster.Application.Features.Motivation.Queries;
-using EnglishMaster.Application.Features.Achievements.Commands;
-using EnglishMaster.Application.Features.Achievements.Queries;
 using EnglishMaster.Application.Features.MinimalPairs.Commands;
 using EnglishMaster.Application.Features.MinimalPairs.Queries;
+using EnglishMaster.Application.Features.Motivation.Commands;
+using EnglishMaster.Application.Features.Motivation.Queries;
 using EnglishMaster.Application.Features.Notifications.Commands;
 using EnglishMaster.Application.Features.Notifications.Queries;
+using EnglishMaster.Application.Features.Practice.Commands;
+using EnglishMaster.Application.Features.Practice.Queries;
 using EnglishMaster.Application.Features.Pronunciations.Commands;
 using EnglishMaster.Application.Features.Pronunciations.Queries;
+using EnglishMaster.Application.Features.PublicGrammar.Queries;
+using EnglishMaster.Application.Features.PublicSearch.Queries;
 using EnglishMaster.Application.Features.PublishedArtifacts.Queries;
 using EnglishMaster.Application.Features.PublishJobs.Commands;
 using EnglishMaster.Application.Features.PublishJobs.Queries;
 using EnglishMaster.Application.Features.PublishTemplates.Commands;
 using EnglishMaster.Application.Features.PublishTemplates.Queries;
-using EnglishMaster.Application.Features.PublicSearch.Queries;
-using EnglishMaster.Application.Features.Practice.Commands;
-using EnglishMaster.Application.Features.Practice.Queries;
 using EnglishMaster.Application.Features.QuizChoices.Commands;
 using EnglishMaster.Application.Features.QuizChoices.Queries;
 using EnglishMaster.Application.Features.QuizQuestions.Commands;
@@ -77,14 +80,47 @@ using EnglishMaster.Application.Features.Words.Commands;
 using EnglishMaster.Application.Features.Words.Queries;
 using EnglishMaster.Infrastructure;
 using EnglishMaster.Infrastructure.Security;
+
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.FileProviders;
+
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+var allowInsecureLoopbackCookies =
+    builder.Configuration.GetValue<bool>("Auth:AllowInsecureLoopbackCookies");
+if (allowInsecureLoopbackCookies &&
+    !builder.Environment.IsStaging() &&
+    !builder.Environment.IsEnvironment("Testing"))
+{
+    throw new InvalidOperationException(
+        "Auth:AllowInsecureLoopbackCookies may only be enabled in Staging or Testing.");
+}
+
+var forwardedHeadersEnabled =
+    builder.Configuration.GetValue<bool>("ForwardedHeaders:Enabled");
+if (forwardedHeadersEnabled)
+{
+    var knownProxyValue = builder.Configuration["ForwardedHeaders:KnownProxy"];
+    if (!IPAddress.TryParse(knownProxyValue, out var knownProxy))
+    {
+        throw new InvalidOperationException(
+            "ForwardedHeaders:KnownProxy must be a valid IP address when forwarded headers are enabled.");
+    }
+
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders =
+            ForwardedHeaders.XForwardedFor |
+            ForwardedHeaders.XForwardedProto;
+        options.ForwardLimit = 1;
+        options.KnownProxies.Add(knownProxy);
+    });
+}
 
 builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)
@@ -115,6 +151,16 @@ builder.Services.AddAuthentication(SecurityEndpoints.CookieScheme)
         options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing")
             ? CookieSecurePolicy.SameAsRequest
             : CookieSecurePolicy.Always;
+        options.Events.OnSigningIn = context =>
+        {
+            if (allowInsecureLoopbackCookies &&
+                IsLoopbackHost(context.Request.Host.Host))
+            {
+                context.CookieOptions.Secure = false;
+            }
+
+            return Task.CompletedTask;
+        };
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         options.Events.OnRedirectToLogin = context =>
@@ -180,6 +226,7 @@ builder.Services.AddScoped<UpdateGrammarExampleCommandHandler>();
 builder.Services.AddScoped<DeleteGrammarExampleCommandHandler>();
 builder.Services.AddScoped<GetGrammarExampleByIdQueryHandler>();
 builder.Services.AddScoped<GetGrammarExamplesByRuleIdQueryHandler>();
+builder.Services.AddScoped<PublicGrammarQueryHandler>();
 builder.Services.AddScoped<CreateMediaCommandHandler>();
 builder.Services.AddScoped<UpdateMediaCommandHandler>();
 builder.Services.AddScoped<DeleteMediaCommandHandler>();
@@ -372,6 +419,11 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
+if (forwardedHeadersEnabled)
+{
+    app.UseForwardedHeaders();
+}
+
 if (!app.Environment.IsEnvironment("Testing"))
 {
     app.UseSerilogRequestLogging();
@@ -504,6 +556,7 @@ app.MapBulkOperationEndpoints();
 app.MapImportJobEndpoints();
 app.MapPublishingEndpoints();
 app.MapContentImportExportEndpoints();
+app.MapPublicGrammarEndpoints();
 app.MapPublicSearchEndpoints();
 app.MapPracticeEndpoints();
 app.MapMotivationEndpoints();
@@ -539,5 +592,9 @@ static bool IsNonSecurityApiRoute(PathString path)
         !value.StartsWith("/roles", StringComparison.OrdinalIgnoreCase) &&
         !value.StartsWith("/permissions", StringComparison.OrdinalIgnoreCase);
 }
+
+static bool IsLoopbackHost(string host) =>
+    string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) ||
+    IPAddress.TryParse(host, out var address) && IPAddress.IsLoopback(address);
 
 public partial class Program;

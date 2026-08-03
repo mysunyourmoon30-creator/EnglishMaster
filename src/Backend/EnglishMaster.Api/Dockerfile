@@ -25,7 +25,8 @@ RUN dotnet publish "src/Backend/EnglishMaster.Api/EnglishMaster.Api.csproj" \
     --no-restore
 
 FROM base AS final
-RUN mkdir -p /app/media /app/publishing && chown -R "$APP_UID":0 /app
+RUN mkdir -p /app/media /app/publishing /app/logs /app/data-protection-keys \
+    && chown -R "$APP_UID":0 /app
 USER $APP_UID
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "EnglishMaster.Api.dll"]

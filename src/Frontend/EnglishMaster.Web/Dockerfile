@@ -22,6 +22,8 @@ RUN dotnet publish "src/Frontend/EnglishMaster.Web/EnglishMaster.Web.csproj" \
     --no-restore
 
 FROM base AS final
+RUN mkdir -p /app/logs /app/data-protection-keys \
+    && chown -R "$APP_UID":0 /app
 USER $APP_UID
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "EnglishMaster.Web.dll"]

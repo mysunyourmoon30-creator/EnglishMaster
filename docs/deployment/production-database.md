@@ -6,13 +6,32 @@ Use separate databases for staging and production. Do not point staging, local C
 
 ## Applying Migrations
 
-Apply EF Core migrations from a reviewed release artifact or controlled operator machine:
+Production sets:
+
+```text
+Database__ApplyMigrationsOnStartup=false
+```
+
+Apply migrations before starting the API. The release workflow packages a
+self-contained Linux bundle at
+`artifacts/migrations/englishmaster-migrate`. It reads
+`ConnectionStrings__DefaultConnection` from the process environment:
+
+```bash
+chmod 0555 artifacts/migrations/englishmaster-migrate
+./artifacts/migrations/englishmaster-migrate
+```
+
+For a controlled operator machine with the source and .NET SDK, the equivalent
+fallback is:
 
 ```powershell
 dotnet ef database update --project src/Backend/EnglishMaster.Infrastructure --startup-project src/Backend/EnglishMaster.Api
 ```
 
-Use production connection strings from secrets, not committed settings.
+Use production connection strings from secrets, not committed settings or
+command-line arguments. A migration failure stops the release; do not enable
+startup migration to bypass it.
 
 ## Backup
 

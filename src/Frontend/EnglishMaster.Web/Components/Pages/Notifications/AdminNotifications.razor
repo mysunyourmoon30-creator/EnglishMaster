@@ -20,7 +20,7 @@
 
 @if (isLoading)
 {
-    <div class="panel">Loading notifications...</div>
+    <div class="panel loading-indicator"><Icon Name="spinner" Class="spin" Size="16" /><span>Loading notifications...</span></div>
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))
 {

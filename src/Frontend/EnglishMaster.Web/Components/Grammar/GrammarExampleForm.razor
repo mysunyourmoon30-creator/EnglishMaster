@@ -18,20 +18,23 @@
 
     <div class="form-grid">
         <label class="span-2">
-            <span>Example / ตัวอย่างประโยค</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.ExampleEn" />
+            <span>Example / ตัวอย่างประโยค<span class="required-marker" aria-hidden="true">*</span></span>
+            <InputTextArea class="input textarea" @bind-Value="Model.ExampleEn" maxlength="1000" aria-required="true" />
+            <span class="muted hint">Max 1000 characters / สูงสุด 1000 ตัวอักษร</span>
             <ValidationMessage For="@(() => Model.ExampleEn)" />
         </label>
 
         <label class="span-2">
             <span>Thai Translation / คำแปลภาษาไทย</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.TranslationTh" />
+            <InputTextArea class="input textarea" @bind-Value="Model.TranslationTh" maxlength="1000" />
+            <span class="muted hint">Max 1000 characters / สูงสุด 1000 ตัวอักษร</span>
             <ValidationMessage For="@(() => Model.TranslationTh)" />
         </label>
 
         <label class="span-2">
             <span>Thai Explanation / คำอธิบายภาษาไทย</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.ExplanationTh" />
+            <InputTextArea class="input textarea" @bind-Value="Model.ExplanationTh" maxlength="2000" />
+            <span class="muted hint">Max 2000 characters / สูงสุด 2000 ตัวอักษร</span>
             <ValidationMessage For="@(() => Model.ExplanationTh)" />
         </label>
 

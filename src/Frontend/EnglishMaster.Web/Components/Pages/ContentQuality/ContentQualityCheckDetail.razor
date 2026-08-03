@@ -17,7 +17,7 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading quality check...</p>
+    <LoadingIndicator Text="Loading quality check..." />
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))
 {

@@ -15,7 +15,7 @@
 
 @if (isLoading)
 {
-    <div class="panel">Loading import jobs...</div>
+    <div class="panel loading-indicator"><Icon Name="spinner" Class="spin" Size="16" /><span>Loading import jobs...</span></div>
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))
 {

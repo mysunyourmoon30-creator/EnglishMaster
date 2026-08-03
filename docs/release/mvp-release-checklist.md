@@ -8,6 +8,19 @@ Review date: 2026-07-14
 
 Suggested release tag: `v0.1.0-mvp-rc1`
 
+## Phase A Release Automation Update
+
+Update date: 2026-07-29
+
+| Check | Status | Evidence |
+| --- | --- | --- |
+| Migration ownership is explicit | Passed | Development defaults to startup migration; Staging and Production set `Database__ApplyMigrationsOnStartup=false`. |
+| Reviewed migration artifact exists | Passed | `.github/workflows/release-build.yml` packages a self-contained Linux EF migration bundle. Local bundle generation completed successfully. |
+| Release smoke automation exists | Passed | `scripts/Invoke-EnglishMasterReleaseSmoke.ps1` passed health, anonymous grammar, redirect, `401`, login, dashboard, and logout checks against local API/Web hosts. |
+| Compose configuration validates | Passed with environment note | Staging and Production `docker compose ... config --quiet` passed. Local container startup is unavailable, so the tagged release workflow now owns Linux image build, migration, readiness, and full-stack smoke execution. Its first run remains pending evidence. |
+| Release build | Passed | `dotnet build EnglishMaster.sln --configuration Release --no-restore` completed with 0 warnings and 0 errors. |
+| Automated tests | Passed with environment note | 210 unit, 7 architecture, and 199 non-LocalDB integration tests passed. `FreshDatabaseMigrationTests` could not run because this machine cannot create a LocalDB automatic instance; migration-bundle generation passed separately. |
+
 ## Build And Test
 
 | Check | Status | Evidence |

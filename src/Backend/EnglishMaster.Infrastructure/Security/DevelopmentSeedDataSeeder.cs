@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using System.Text;
+
 using EnglishMaster.Domain.Books;
 using EnglishMaster.Domain.Categories;
 using EnglishMaster.Domain.Courses;
@@ -9,7 +12,9 @@ using EnglishMaster.Domain.Quizzes;
 using EnglishMaster.Domain.Tags;
 using EnglishMaster.Domain.Words;
 using EnglishMaster.Infrastructure.Persistence;
+
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace EnglishMaster.Infrastructure.Security;
 
@@ -225,47 +230,7 @@ internal sealed class DevelopmentSeedDataSeeder(EnglishMasterDbContext dbContext
             now,
             cancellationToken);
 
-        var presentSimple = await GetOrCreateGrammarTopicAsync(
-            "Present Simple",
-            "Use present simple for routines, facts, and habits.",
-            CefrLevel.A1,
-            10,
-            now,
-            cancellationToken);
-        var articles = await GetOrCreateGrammarTopicAsync(
-            "Articles",
-            "Use a, an, and the with nouns.",
-            CefrLevel.A1,
-            20,
-            now,
-            cancellationToken);
-
-        var habitRule = await GetOrCreateGrammarRuleAsync(
-            presentSimple.Id,
-            "Present simple for habits",
-            "Use the base verb for I, you, we, and they. Add s or es for he, she, and it.",
-            "ใช้กับกิจวัตร นิสัย และความจริงทั่วไป",
-            "Use present simple for routines and facts.",
-            "Subject + base verb",
-            "Do not add s after I, you, we, or they.",
-            "Use does with he, she, and it in questions.",
-            10,
-            [learn.Id, daily.Id],
-            now,
-            cancellationToken);
-        var articleRule = await GetOrCreateGrammarRuleAsync(
-            articles.Id,
-            "A and an with singular nouns",
-            "Use a before a consonant sound and an before a vowel sound.",
-            "ใช้ a/an กับคำนามเอกพจน์ตามเสียงขึ้นต้น",
-            "Choose a or an by sound, not only spelling.",
-            "a/an + singular noun",
-            "Do not use a or an with plural nouns.",
-            "Say an apple, but a book.",
-            10,
-            [book.Id],
-            now,
-            cancellationToken);
+        var (habitRule, articleRule) = await SeedGrammarCurriculumAsync(now, cancellationToken);
 
         var greetingsLesson = await GetOrCreateLessonAsync(
             "Daily Greetings",
@@ -382,6 +347,386 @@ internal sealed class DevelopmentSeedDataSeeder(EnglishMasterDbContext dbContext
             cancellationToken);
 
         await DeactivateLegacySeedContentAsync(now, cancellationToken);
+    }
+
+    public async Task<(GrammarRule HabitRule, GrammarRule ArticleRule)> SeedGrammarCurriculumAsync(
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        IDbContextTransaction? transaction = null;
+        if (dbContext.Database.IsRelational() &&
+            dbContext.Database.CurrentTransaction is null)
+        {
+            transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        }
+
+        try
+        {
+            var result = await SeedGrammarCurriculumCoreAsync(now, cancellationToken);
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+
+            return result;
+        }
+        catch
+        {
+            if (transaction is not null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+
+            throw;
+        }
+        finally
+        {
+            if (transaction is not null)
+            {
+                await transaction.DisposeAsync();
+            }
+        }
+    }
+
+    private async Task<(GrammarRule HabitRule, GrammarRule ArticleRule)> SeedGrammarCurriculumCoreAsync(
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var learnWord = await dbContext.Words.FirstOrDefaultAsync(word => word.Text == "learn", cancellationToken);
+        var dailyWord = await dbContext.Words.FirstOrDefaultAsync(word => word.Text == "daily", cancellationToken);
+        var bookWord = await dbContext.Words.FirstOrDefaultAsync(word => word.Text == "book", cancellationToken);
+
+        List<Guid> habitRuleWordIds = [];
+        if (learnWord is not null)
+        {
+            habitRuleWordIds.Add(learnWord.Id);
+        }
+
+        if (dailyWord is not null)
+        {
+            habitRuleWordIds.Add(dailyWord.Id);
+        }
+
+        List<Guid> articleRuleWordIds = [];
+        if (bookWord is not null)
+        {
+            articleRuleWordIds.Add(bookWord.Id);
+        }
+
+        var presentSimple = await GetOrCreateGrammarTopicAsync(
+            "Present Simple",
+            "Use present simple for routines, facts, and habits.",
+            CefrLevel.A1,
+            10,
+            now,
+            cancellationToken);
+        var presentContinuous = await GetOrCreateGrammarTopicAsync(
+            "Present Continuous",
+            "Use present continuous for actions happening now or temporary situations.",
+            CefrLevel.A1,
+            20,
+            now,
+            cancellationToken);
+        var pastSimple = await GetOrCreateGrammarTopicAsync(
+            "Past Simple",
+            "Use past simple for completed actions in the past.",
+            CefrLevel.A1,
+            30,
+            now,
+            cancellationToken);
+        var pastContinuous = await GetOrCreateGrammarTopicAsync(
+            "Past Continuous",
+            "Use past continuous for actions in progress at a specific past time.",
+            CefrLevel.A1,
+            40,
+            now,
+            cancellationToken);
+        var presentPerfect = await GetOrCreateGrammarTopicAsync(
+            "Present Perfect",
+            "Use present perfect for past actions connected to now.",
+            CefrLevel.A2,
+            50,
+            now,
+            cancellationToken);
+        var future = await GetOrCreateGrammarTopicAsync(
+            "Future: Will and Going To",
+            "Choose will for quick decisions and predictions, and going to for plans already decided.",
+            CefrLevel.A2,
+            60,
+            now,
+            cancellationToken);
+        var articles = await GetOrCreateGrammarTopicAsync(
+            "Articles",
+            "Use a, an, and the with nouns.",
+            CefrLevel.A1,
+            70,
+            now,
+            cancellationToken);
+        var prepositionsOfPlace = await GetOrCreateGrammarTopicAsync(
+            "Prepositions of Place",
+            "Use in, on, and at correctly to describe location.",
+            CefrLevel.A1,
+            80,
+            now,
+            cancellationToken);
+        var prepositionsOfTime = await GetOrCreateGrammarTopicAsync(
+            "Prepositions of Time",
+            "Use in, on, and at correctly to describe time.",
+            CefrLevel.A1,
+            90,
+            now,
+            cancellationToken);
+        var modalsOfAbility = await GetOrCreateGrammarTopicAsync(
+            "Modals of Ability",
+            "Use can and could to talk about ability in the present and past.",
+            CefrLevel.A1,
+            100,
+            now,
+            cancellationToken);
+        var modalsOfAdvice = await GetOrCreateGrammarTopicAsync(
+            "Modals of Advice",
+            "Use should and must to give advice and express obligation.",
+            CefrLevel.A2,
+            110,
+            now,
+            cancellationToken);
+        var comparatives = await GetOrCreateGrammarTopicAsync(
+            "Comparatives and Superlatives",
+            "Use comparative and superlative adjective forms correctly.",
+            CefrLevel.A2,
+            120,
+            now,
+            cancellationToken);
+        var conditionals = await GetOrCreateGrammarTopicAsync(
+            "Zero and First Conditional",
+            "Use zero conditional for facts and first conditional for real future possibilities.",
+            CefrLevel.B1,
+            130,
+            now,
+            cancellationToken);
+
+        var habitRule = await GetOrCreateGrammarRuleAsync(
+            presentSimple.Id,
+            "Present simple for habits",
+            "Use the base verb for I, you, we, and they. Add s or es for he, she, and it.",
+            "ใช้กับกิจวัตร นิสัย และความจริงทั่วไป",
+            "Use present simple for routines and facts.",
+            "Subject + base verb",
+            "Do not add s after I, you, we, or they.",
+            "Use does with he, she, and it in questions.",
+            10,
+            habitRuleWordIds,
+            now,
+            cancellationToken);
+        await GetOrCreateGrammarExampleAsync(habitRule.Id, "She goes to school every day.", "เธอไปโรงเรียนทุกวัน", string.Empty, true, 10, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(habitRule.Id, "I goes to school every day.", "ฉันไปโรงเรียนทุกวัน", "Wrong: do not add s after I.", false, 20, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(habitRule.Id, "They study English on Mondays.", "พวกเขาเรียนภาษาอังกฤษทุกวันจันทร์", string.Empty, true, 30, now, cancellationToken);
+
+        var articleRule = await GetOrCreateGrammarRuleAsync(
+            articles.Id,
+            "A and an with singular nouns",
+            "Use a before a consonant sound and an before a vowel sound.",
+            "ใช้ a/an กับคำนามเอกพจน์ตามเสียงขึ้นต้น",
+            "Choose a or an by sound, not only spelling.",
+            "a/an + singular noun",
+            "Do not use a or an with plural nouns.",
+            "Say an apple, but a book.",
+            10,
+            articleRuleWordIds,
+            now,
+            cancellationToken);
+        await GetOrCreateGrammarExampleAsync(articleRule.Id, "I have an apple.", "ฉันมีแอปเปิ้ลหนึ่งลูก", string.Empty, true, 10, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(articleRule.Id, "She is reading a book.", "เธอกำลังอ่านหนังสือ", string.Empty, true, 20, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(articleRule.Id, "She is reading an book.", "เธอกำลังอ่านหนังสือ", "Wrong: book starts with a consonant sound, so use a.", false, 30, now, cancellationToken);
+
+        var continuousRule = await GetOrCreateGrammarRuleAsync(
+            presentContinuous.Id,
+            "Present continuous for actions happening now",
+            "Use am, is, or are plus verb-ing for actions happening at this moment.",
+            "ใช้บอกเหตุการณ์ที่กำลังเกิดขึ้นตอนนี้",
+            "Use present continuous for actions in progress right now.",
+            "Subject + am/is/are + verb-ing",
+            "Do not forget the correct form of be before the verb-ing.",
+            "Use is with he, she, and it; use are with you, we, and they.",
+            10,
+            [],
+            now,
+            cancellationToken);
+        await GetOrCreateGrammarExampleAsync(continuousRule.Id, "She is reading a book now.", "ตอนนี้เธอกำลังอ่านหนังสือ", string.Empty, true, 10, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(continuousRule.Id, "She reading a book now.", "ตอนนี้เธอกำลังอ่านหนังสือ", "Wrong: missing is before reading.", false, 20, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(continuousRule.Id, "They are studying English this week.", "สัปดาห์นี้พวกเขากำลังเรียนภาษาอังกฤษ", string.Empty, true, 30, now, cancellationToken);
+
+        var pastSimpleRule = await GetOrCreateGrammarRuleAsync(
+            pastSimple.Id,
+            "Past simple for finished actions",
+            "Use the past form of the verb for actions that finished in the past.",
+            "ใช้กับเหตุการณ์ที่จบไปแล้วในอดีต",
+            "Use past simple for completed past actions with a specific time.",
+            "Subject + past verb",
+            "Do not use did together with the past form of the verb.",
+            "Use did not plus the base verb for negatives, not the past form.",
+            10,
+            [],
+            now,
+            cancellationToken);
+        await GetOrCreateGrammarExampleAsync(pastSimpleRule.Id, "I studied English yesterday.", "เมื่อวานฉันเรียนภาษาอังกฤษ", string.Empty, true, 10, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(pastSimpleRule.Id, "I didn't studied English yesterday.", "เมื่อวานฉันไม่ได้เรียนภาษาอังกฤษ", "Wrong: use did not study, not did not studied.", false, 20, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(pastSimpleRule.Id, "She went to the market last week.", "สัปดาห์ที่แล้วเธอไปตลาด", string.Empty, true, 30, now, cancellationToken);
+
+        var pastContinuousRule = await GetOrCreateGrammarRuleAsync(
+            pastContinuous.Id,
+            "Past continuous for ongoing past actions",
+            "Use was or were plus verb-ing for an action in progress at a specific time in the past.",
+            "ใช้บอกเหตุการณ์ที่กำลังดำเนินอยู่ ณ ช่วงเวลาหนึ่งในอดีต",
+            "Use past continuous to describe an action interrupted by another event.",
+            "Subject + was/were + verb-ing",
+            "Do not use was with plural subjects like they or we.",
+            "Use were with you, we, and they; use was with I, he, she, and it.",
+            10,
+            [],
+            now,
+            cancellationToken);
+        await GetOrCreateGrammarExampleAsync(pastContinuousRule.Id, "I was cooking dinner when you called.", "ฉันกำลังทำอาหารเย็นตอนที่คุณโทรมา", string.Empty, true, 10, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(pastContinuousRule.Id, "I was cook dinner when you called.", "ฉันกำลังทำอาหารเย็นตอนที่คุณโทรมา", "Wrong: missing -ing on cook.", false, 20, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(pastContinuousRule.Id, "They were watching TV at 8pm.", "พวกเขากำลังดูทีวีตอนสองทุ่ม", string.Empty, true, 30, now, cancellationToken);
+
+        var presentPerfectRule = await GetOrCreateGrammarRuleAsync(
+            presentPerfect.Id,
+            "Present perfect for experience and recent results",
+            "Use have or has plus the past participle for actions with a result or relevance now.",
+            "ใช้กับเหตุการณ์ในอดีตที่ยังมีผลหรือเกี่ยวข้องกับปัจจุบัน",
+            "Use present perfect for life experience or an unfinished time period.",
+            "Subject + have/has + past participle",
+            "Do not use a specific past time word like yesterday with present perfect.",
+            "Use already, just, ever, never, and yet with present perfect, not a specific date.",
+            10,
+            [],
+            now,
+            cancellationToken);
+        await GetOrCreateGrammarExampleAsync(presentPerfectRule.Id, "I have visited Japan twice.", "ฉันไปญี่ปุ่นมาแล้วสองครั้ง", string.Empty, true, 10, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(presentPerfectRule.Id, "I have visited Japan yesterday.", "ฉันไปญี่ปุ่นเมื่อวาน", "Wrong: do not use yesterday with present perfect.", false, 20, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(presentPerfectRule.Id, "She has just finished her homework.", "เธอเพิ่งทำการบ้านเสร็จ", string.Empty, true, 30, now, cancellationToken);
+
+        var futureRule = await GetOrCreateGrammarRuleAsync(
+            future.Id,
+            "Will vs. going to",
+            "Use will for a decision made now or a prediction; use going to for a plan already decided.",
+            "ใช้ will สำหรับการตัดสินใจทันทีหรือการคาดเดา ใช้ going to สำหรับแผนที่ตัดสินใจไว้แล้ว",
+            "Will is for a spontaneous decision or prediction; going to is for a pre-existing plan.",
+            "Subject + will + base verb, or Subject + am/is/are + going to + base verb",
+            "Do not use will for a plan you already made before speaking.",
+            "If you decided before now, use going to, not will.",
+            10,
+            [],
+            now,
+            cancellationToken);
+        await GetOrCreateGrammarExampleAsync(futureRule.Id, "I think it will rain later.", "ฉันคิดว่าฝนจะตกทีหลัง", string.Empty, true, 10, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(futureRule.Id, "We are going to visit our grandparents this weekend.", "สุดสัปดาห์นี้เราจะไปเยี่ยมปู่ย่าตายาย", string.Empty, true, 20, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(futureRule.Id, "I will visit my grandparents this weekend, I decided last month.", "สุดสัปดาห์นี้ฉันจะไปเยี่ยมปู่ย่าตายาย ฉันตัดสินใจไว้ตั้งแต่เดือนที่แล้ว", "Wrong: the plan was already decided, so use going to instead of will.", false, 30, now, cancellationToken);
+
+        var prepositionsOfPlaceRule = await GetOrCreateGrammarRuleAsync(
+            prepositionsOfPlace.Id,
+            "In, on, at for location",
+            "Use in for enclosed spaces, on for surfaces, and at for specific points.",
+            "ใช้ in กับพื้นที่ปิด on กับพื้นผิว และ at กับจุดที่เจาะจง",
+            "Choose the preposition based on whether the location is an area, a surface, or a point.",
+            "in/on/at + place",
+            "Do not use at for large areas like a city or country.",
+            "Use in with cities and countries, on with streets, and at with exact addresses.",
+            10,
+            [],
+            now,
+            cancellationToken);
+        await GetOrCreateGrammarExampleAsync(prepositionsOfPlaceRule.Id, "The book is on the table.", "หนังสืออยู่บนโต๊ะ", string.Empty, true, 10, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(prepositionsOfPlaceRule.Id, "I live in Bangkok.", "ฉันอาศัยอยู่ในกรุงเทพ", string.Empty, true, 20, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(prepositionsOfPlaceRule.Id, "I live at Bangkok.", "ฉันอาศัยอยู่ในกรุงเทพ", "Wrong: use in with a city, not at.", false, 30, now, cancellationToken);
+
+        var prepositionsOfTimeRule = await GetOrCreateGrammarRuleAsync(
+            prepositionsOfTime.Id,
+            "In, on, at for time",
+            "Use in for months, years, and long periods; on for days and dates; at for exact times.",
+            "ใช้ in กับเดือน/ปี on กับวันที่ และ at กับเวลาที่เจาะจง",
+            "Choose the preposition based on whether the time is a period, a day, or a specific clock time.",
+            "in/on/at + time",
+            "Do not use on with a clock time such as at 7 o'clock.",
+            "Use at with clock times, on with days, and in with months and years.",
+            10,
+            [],
+            now,
+            cancellationToken);
+        await GetOrCreateGrammarExampleAsync(prepositionsOfTimeRule.Id, "I wake up at 6 o'clock.", "ฉันตื่นนอนตอนหกโมง", string.Empty, true, 10, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(prepositionsOfTimeRule.Id, "We have class on Monday.", "เรามีเรียนวันจันทร์", string.Empty, true, 20, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(prepositionsOfTimeRule.Id, "We have class at Monday.", "เรามีเรียนวันจันทร์", "Wrong: use on with a day, not at.", false, 30, now, cancellationToken);
+
+        var modalsOfAbilityRule = await GetOrCreateGrammarRuleAsync(
+            modalsOfAbility.Id,
+            "Can and could for ability",
+            "Use can for present ability and could for past ability.",
+            "ใช้ can สำหรับความสามารถในปัจจุบัน และ could สำหรับความสามารถในอดีต",
+            "Can shows ability now; could shows ability in the past.",
+            "Subject + can/could + base verb",
+            "Do not add to after can or could.",
+            "Use the base verb directly after can or could, with no to.",
+            10,
+            [],
+            now,
+            cancellationToken);
+        await GetOrCreateGrammarExampleAsync(modalsOfAbilityRule.Id, "I can swim very well.", "ฉันว่ายน้ำเก่งมาก", string.Empty, true, 10, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(modalsOfAbilityRule.Id, "I can to swim very well.", "ฉันว่ายน้ำเก่งมาก", "Wrong: do not add to after can.", false, 20, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(modalsOfAbilityRule.Id, "When I was young, I could run fast.", "ตอนเด็กๆ ฉันวิ่งเร็ว", string.Empty, true, 30, now, cancellationToken);
+
+        var modalsOfAdviceRule = await GetOrCreateGrammarRuleAsync(
+            modalsOfAdvice.Id,
+            "Should and must for advice and obligation",
+            "Use should for advice or recommendation and must for strong obligation or necessity.",
+            "ใช้ should สำหรับคำแนะนำ และ must สำหรับข้อบังคับหรือความจำเป็น",
+            "Should is a recommendation; must is a strong obligation or rule.",
+            "Subject + should/must + base verb",
+            "Do not use must for gentle suggestions; use should instead.",
+            "Use must for rules and strong necessity, should for friendly advice.",
+            10,
+            [],
+            now,
+            cancellationToken);
+        await GetOrCreateGrammarExampleAsync(modalsOfAdviceRule.Id, "You should drink more water.", "คุณควรดื่มน้ำให้มากขึ้น", string.Empty, true, 10, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(modalsOfAdviceRule.Id, "You must wear a seatbelt in the car.", "คุณต้องคาดเข็มขัดนิรภัยในรถ", string.Empty, true, 20, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(modalsOfAdviceRule.Id, "You must try the new restaurant, it's great!", "คุณต้องลองร้านอาหารใหม่นี้ดูนะ เยี่ยมมาก", "Wrong: this is a friendly suggestion, so should fits better than must.", false, 30, now, cancellationToken);
+
+        var comparativesRule = await GetOrCreateGrammarRuleAsync(
+            comparatives.Id,
+            "Comparative and superlative forms",
+            "Add -er or -est to short adjectives, or use more or most before long adjectives.",
+            "เติม -er/-est กับคำคุณศัพท์สั้น หรือใช้ more/most นำหน้าคำคุณศัพท์ยาว",
+            "Short one-syllable adjectives take -er/-est; longer adjectives take more/most.",
+            "Adjective+er/est, or more/most + adjective",
+            "Do not use both -er and more together.",
+            "Choose only one comparative form; never combine -er with more.",
+            10,
+            [],
+            now,
+            cancellationToken);
+        await GetOrCreateGrammarExampleAsync(comparativesRule.Id, "This book is more interesting than that one.", "หนังสือเล่มนี้น่าสนใจกว่าเล่มนั้น", string.Empty, true, 10, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(comparativesRule.Id, "This book is more interesting-er than that one.", "หนังสือเล่มนี้น่าสนใจกว่าเล่มนั้น", "Wrong: do not combine more with -er.", false, 20, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(comparativesRule.Id, "She is the tallest student in the class.", "เธอเป็นนักเรียนที่สูงที่สุดในห้อง", string.Empty, true, 30, now, cancellationToken);
+
+        var conditionalsRule = await GetOrCreateGrammarRuleAsync(
+            conditionals.Id,
+            "Zero and first conditional",
+            "Use if plus present simple, present simple for facts, or if plus present simple, will plus base verb for future possibilities.",
+            "ใช้ if + present simple, present simple สำหรับความจริงทั่วไป และ if + present simple, will + verb สำหรับความเป็นไปได้ในอนาคต",
+            "Zero conditional describes general truths; first conditional describes a real future possibility with a result.",
+            "If + present simple, present simple (zero); If + present simple, will + base verb (first)",
+            "Do not use will in both parts of a first conditional sentence.",
+            "Keep the if-clause in present simple even when talking about the future.",
+            10,
+            [],
+            now,
+            cancellationToken);
+        await GetOrCreateGrammarExampleAsync(conditionalsRule.Id, "If you heat ice, it melts.", "ถ้าให้ความร้อนกับน้ำแข็ง มันจะละลาย", string.Empty, true, 10, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(conditionalsRule.Id, "If it rains tomorrow, we will stay home.", "ถ้าพรุ่งนี้ฝนตก เราจะอยู่บ้าน", string.Empty, true, 20, now, cancellationToken);
+        await GetOrCreateGrammarExampleAsync(conditionalsRule.Id, "If it will rain tomorrow, we will stay home.", "ถ้าพรุ่งนี้ฝนตก เราจะอยู่บ้าน", "Wrong: do not use will in the if-clause.", false, 30, now, cancellationToken);
+
+        return (habitRule, articleRule);
     }
 
     private async Task<Category> GetOrCreateCategoryAsync(
@@ -650,7 +995,10 @@ internal sealed class DevelopmentSeedDataSeeder(EnglishMasterDbContext dbContext
         CancellationToken cancellationToken)
     {
         var slug = GrammarTopic.GenerateSlug(title);
-        var topic = await dbContext.GrammarTopics.SingleOrDefaultAsync(item => item.Slug == slug, cancellationToken);
+        var deterministicId = CreateGrammarSeedId($"topic:{slug}");
+        var topic = await dbContext.GrammarTopics.SingleOrDefaultAsync(
+            item => item.Id == deterministicId || item.Slug == slug,
+            cancellationToken);
         if (topic is not null)
         {
             topic.Update(title, summary, cefrLevel, sortOrder, isActive: true, now);
@@ -659,6 +1007,7 @@ internal sealed class DevelopmentSeedDataSeeder(EnglishMasterDbContext dbContext
         }
 
         topic = GrammarTopic.Create(title, summary, cefrLevel, sortOrder, now);
+        dbContext.Entry(topic).Property(item => item.Id).CurrentValue = deterministicId;
         dbContext.GrammarTopics.Add(topic);
         await dbContext.SaveChangesAsync(cancellationToken);
         return topic;
@@ -679,9 +1028,15 @@ internal sealed class DevelopmentSeedDataSeeder(EnglishMasterDbContext dbContext
         CancellationToken cancellationToken)
     {
         var slug = GrammarRule.GenerateSlug(title);
-        var rule = await dbContext.GrammarRules.SingleOrDefaultAsync(item => item.Slug == slug, cancellationToken);
+        var deterministicId = CreateGrammarSeedId($"rule:{slug}");
+        var rule = await dbContext.GrammarRules
+            .Include(item => item.RelatedWords)
+            .SingleOrDefaultAsync(
+                item => item.Id == deterministicId || item.Slug == slug,
+                cancellationToken);
         if (rule is not null)
         {
+            var desiredRelatedWordIds = relatedWordIds.Distinct().ToHashSet();
             rule.Update(
                 grammarTopicId,
                 title,
@@ -694,6 +1049,19 @@ internal sealed class DevelopmentSeedDataSeeder(EnglishMasterDbContext dbContext
                 sortOrder,
                 isActive: true,
                 now);
+            foreach (var existingWordId in rule.RelatedWords
+                         .Select(item => item.WordId)
+                         .Where(wordId => !desiredRelatedWordIds.Contains(wordId))
+                         .ToArray())
+            {
+                rule.RemoveRelatedWord(existingWordId, now);
+            }
+
+            foreach (var wordId in desiredRelatedWordIds)
+            {
+                rule.AddRelatedWord(wordId, now);
+            }
+
             await dbContext.SaveChangesAsync(cancellationToken);
             return rule;
         }
@@ -709,7 +1077,8 @@ internal sealed class DevelopmentSeedDataSeeder(EnglishMasterDbContext dbContext
             correctUsageNote,
             sortOrder,
             now);
-        foreach (var wordId in relatedWordIds)
+        dbContext.Entry(rule).Property(item => item.Id).CurrentValue = deterministicId;
+        foreach (var wordId in relatedWordIds.Distinct())
         {
             rule.AddRelatedWord(wordId, now);
         }
@@ -717,6 +1086,46 @@ internal sealed class DevelopmentSeedDataSeeder(EnglishMasterDbContext dbContext
         dbContext.GrammarRules.Add(rule);
         await dbContext.SaveChangesAsync(cancellationToken);
         return rule;
+    }
+
+    private async Task<GrammarExample> GetOrCreateGrammarExampleAsync(
+        Guid grammarRuleId,
+        string exampleEn,
+        string translationTh,
+        string explanationTh,
+        bool isCorrectExample,
+        int sortOrder,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var deterministicId = CreateGrammarSeedId($"example:{grammarRuleId:N}:{sortOrder}");
+        var example = await dbContext.GrammarExamples.SingleOrDefaultAsync(
+            item => item.Id == deterministicId,
+            cancellationToken);
+        example ??= await dbContext.GrammarExamples.FirstOrDefaultAsync(
+            item => item.GrammarRuleId == grammarRuleId && item.SortOrder == sortOrder,
+            cancellationToken);
+        if (example is not null)
+        {
+            example.Update(exampleEn, translationTh, explanationTh, isCorrectExample, sortOrder, isActive: true, now);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return example;
+        }
+
+        example = GrammarExample.Create(grammarRuleId, exampleEn, translationTh, explanationTh, isCorrectExample, sortOrder, now);
+        dbContext.Entry(example).Property(item => item.Id).CurrentValue = deterministicId;
+        dbContext.GrammarExamples.Add(example);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return example;
+    }
+
+    private static Guid CreateGrammarSeedId(string seedKey)
+    {
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes($"EnglishMaster:GrammarCurriculum:v1:{seedKey}"));
+        var guidBytes = hash[..16];
+        guidBytes[6] = (byte)((guidBytes[6] & 0x0f) | 0x50);
+        guidBytes[8] = (byte)((guidBytes[8] & 0x3f) | 0x80);
+        return new Guid(guidBytes);
     }
 
     private async Task<Lesson> GetOrCreateLessonAsync(

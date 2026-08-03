@@ -1,7 +1,9 @@
 @page "/admin/grammar-topics/{Id:guid}/edit"
 @rendermode InteractiveServer
+@implements IDisposable
 @inject IGrammarApiClient GrammarApiClient
 @inject NavigationManager Navigation
+@inject BreadcrumbState BreadcrumbState
 
 <PageTitle>Edit Grammar Topic</PageTitle>
 
@@ -15,7 +17,7 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading grammar topic...</p>
+    <LoadingIndicator Text="Loading grammar topic..." />
 }
 else if (notFound)
 {
@@ -67,6 +69,7 @@ else
                 return;
             }
 
+            BreadcrumbState.SetCurrentLabel(Id, topic.Title);
             model = GrammarTopicFormModel.FromDto(topic);
         }
         catch (ApiRequestException exception)
@@ -77,6 +80,11 @@ else
         {
             isLoading = false;
         }
+    }
+
+    public void Dispose()
+    {
+        BreadcrumbState.Clear(Id);
     }
 
     private async Task SaveAsync()

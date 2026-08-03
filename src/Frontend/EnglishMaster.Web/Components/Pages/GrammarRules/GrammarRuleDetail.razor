@@ -1,7 +1,10 @@
 @page "/admin/grammar-rules/{Id:guid}"
 @rendermode InteractiveServer
+@implements IDisposable
 @inject IGrammarApiClient GrammarApiClient
 @inject IWordsApiClient WordsApiClient
+@inject IJSRuntime JsRuntime
+@inject BreadcrumbState BreadcrumbState
 
 <PageTitle>@(rule is null ? "Grammar Rule" : rule.Title)</PageTitle>
 
@@ -31,7 +34,7 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading grammar rule... / กำลังโหลดกฎไวยากรณ์</p>
+    <LoadingIndicator Text="Loading grammar rule... / กำลังโหลดกฎไวยากรณ์" />
 }
 else if (notFound)
 {
@@ -166,7 +169,7 @@ else if (rule is not null)
                             <td>@word.MeaningTh</td>
                             <td class="row-actions">
                                 <a class="button small" href="@AdminRoutes.Words.Detail(word.Id)" aria-label="View @word.Text" title="View"><Icon Name="eye" Size="15" /></a>
-                                <button class="button small danger" type="button" @onclick="() => RemoveRelatedWordAsync(word.Id)" aria-label="Remove @word.Text" title="Remove"><Icon Name="trash" Size="15" /></button>
+                                <button class="button small danger" type="button" @onclick="() => RemoveRelatedWordAsync(word.Id, word.Text)" aria-label="Remove @word.Text" title="Remove"><Icon Name="trash" Size="15" /></button>
                             </td>
                         </tr>
                     }
@@ -206,7 +209,7 @@ else if (rule is not null)
                         <span class="repeater-item-title">@example.ExampleEn</span>
                         <div class="row-actions">
                             <button class="button small" type="button" @onclick="() => EditExample(example)" aria-label="Edit example @displayIndex" title="Edit"><Icon Name="edit" Size="15" /></button>
-                            <button class="button small danger" type="button" @onclick="() => DeleteExampleAsync(example.Id)" aria-label="Delete example @displayIndex" title="Delete"><Icon Name="trash" Size="15" /></button>
+                            <button class="button small danger" type="button" @onclick="() => DeleteExampleAsync(example.Id, example.ExampleEn)" aria-label="Delete example @displayIndex" title="Delete"><Icon Name="trash" Size="15" /></button>
                         </div>
                     </div>
                     <div class="detail-grid">
@@ -289,6 +292,7 @@ else if (rule is not null)
                 return;
             }
 
+            BreadcrumbState.SetCurrentLabel(Id, rule.Title);
             examples = await GrammarApiClient.GetExamplesByRuleIdAsync(Id, CancellationToken.None);
             if (!editingExampleId.HasValue)
             {
@@ -332,9 +336,14 @@ else if (rule is not null)
         }
     }
 
-    private async Task RemoveRelatedWordAsync(Guid wordId)
+    private async Task RemoveRelatedWordAsync(Guid wordId, string wordText)
     {
         if (rule is null)
+        {
+            return;
+        }
+
+        if (!await JsRuntime.InvokeAsync<bool>("confirm", $"Remove \"{wordText}\"? / นำ \"{wordText}\" ออก?"))
         {
             return;
         }
@@ -402,8 +411,13 @@ else if (rule is not null)
         exampleValidationErrors = new Dictionary<string, string[]>();
     }
 
-    private async Task DeleteExampleAsync(Guid id)
+    private async Task DeleteExampleAsync(Guid id, string exampleEn)
     {
+        if (!await JsRuntime.InvokeAsync<bool>("confirm", $"Delete example \"{exampleEn}\"? / ลบตัวอย่าง \"{exampleEn}\"?"))
+        {
+            return;
+        }
+
         exampleErrorMessage = null;
 
         try
@@ -432,5 +446,10 @@ else if (rule is not null)
         };
         exampleErrorMessage = null;
         exampleValidationErrors = new Dictionary<string, string[]>();
+    }
+
+    public void Dispose()
+    {
+        BreadcrumbState.Clear(Id);
     }
 }

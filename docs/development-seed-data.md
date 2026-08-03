@@ -16,6 +16,7 @@ Startup calls `SecuritySeeder.SeedSecurityAsync`. That flow:
 4. Seeds role-permission mappings.
 5. Creates the initial SuperAdmin only when safe credentials are supplied through configuration.
 6. Seeds demo MVP content only when `DevelopmentSeed:Enabled` is `true`.
+7. When the full development seed is disabled, seeds only the grammar curriculum when `SeedGrammarCurriculum:Enabled` is `true`.
 
 The content seed uses the domain factories and EF Core through Infrastructure. It does not bypass domain invariants.
 
@@ -42,6 +43,21 @@ To disable demo content locally, set:
 ```
 
 Production configuration should leave `DevelopmentSeed:Enabled` unset or set to `false`.
+
+To install only the standard grammar curriculum without the rest of the demo data, use:
+
+```json
+{
+  "DevelopmentSeed": {
+    "Enabled": false
+  },
+  "SeedGrammarCurriculum": {
+    "Enabled": true
+  }
+}
+```
+
+`SeedGrammarCurriculum:Enabled` is a one-time operational switch. It activates and refreshes the managed curriculum during startup, so set it back to `false` after a successful seed.
 
 ## Development SuperAdmin
 
@@ -91,10 +107,7 @@ The content seed creates:
 - Tags: Beginner, Daily English, A1
 - Words: hello, book, learn, speak, daily
 - Pronunciations for hello, book, and speak
-- Grammar Topics: Present Simple, Articles
-- Grammar Rules:
-  - Present simple for habits
-  - A and an with singular nouns
+- Grammar curriculum: 13 topics, 13 rules, and 39 active examples from A1 through B1
 - Lessons:
   - Daily Greetings
   - Using A and An
@@ -109,13 +122,14 @@ The seeded text uses simple English and romanized Thai helper text so the data r
 
 ## Idempotency
 
-The seed checks stable slugs and relationship keys before creating records. Running the API repeatedly should not create duplicate seed records.
+The grammar curriculum uses deterministic IDs for new topics, rules, and example slots, while retaining slug and sort-order fallbacks for databases seeded by older versions. Existing rule-word links are synchronized to the configured seed set when their vocabulary exists. The curriculum write is transactional on relational databases, and running it repeatedly should not create duplicate seed records.
 
 ## Security Warning
 
 Never use development seed data as a production bootstrap process. Before production deployment:
 
 - Disable `DevelopmentSeed:Enabled`.
+- Disable `SeedGrammarCurriculum:Enabled` after any intentional one-time curriculum seed.
 - Configure real admin setup through a controlled operational process.
 - Do not commit passwords, tokens, or production connection strings.
 - Rotate any temporary local credentials that were shared during development.

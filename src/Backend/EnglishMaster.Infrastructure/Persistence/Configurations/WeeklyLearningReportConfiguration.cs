@@ -1,4 +1,5 @@
 using EnglishMaster.Domain.LearningReports;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,6 +11,7 @@ public sealed class WeeklyLearningReportConfiguration : IEntityTypeConfiguration
     {
         builder.HasKey(report => report.Id);
         builder.Property(report => report.Status).HasConversion<string>().HasMaxLength(32).IsRequired();
+        builder.Property(report => report.AverageQuizScore).HasPrecision(5, 2);
         builder.Property(report => report.SummaryText).HasMaxLength(1000);
         builder.HasMany(report => report.Insights).WithOne().HasForeignKey(insight => insight.WeeklyLearningReportId).OnDelete(DeleteBehavior.Cascade);
         builder.Metadata.FindNavigation(nameof(WeeklyLearningReport.Insights))?.SetPropertyAccessMode(PropertyAccessMode.Field);

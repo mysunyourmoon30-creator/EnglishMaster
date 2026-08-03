@@ -1,0 +1,146 @@
+@page "/grammar/topics/{Slug}"
+@rendermode InteractiveServer
+@layout PublicLayout
+@implements IDisposable
+@inject IPublicGrammarApiClient PublicGrammarApiClient
+
+<PageTitle>@(topic?.Title ?? "Grammar Topic")</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Grammar / ไวยากรณ์</p>
+        <h1>@(topic?.Title ?? "Grammar Topic / หัวข้อไวยากรณ์")</h1>
+        @if (topic is not null && !string.IsNullOrWhiteSpace(topic.Summary))
+        {
+            <p class="page-subtitle">@topic.Summary</p>
+        }
+    </div>
+    <div class="actions">
+        <a class="button secondary" href="/search?type=grammar"><Icon Name="search" Size="16" /> Search / ค้นหา</a>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <section class="panel empty-state">
+        <LoadingIndicator Text="Loading grammar topic... / กำลังโหลดหัวข้อไวยากรณ์" />
+    </section>
+}
+else if (notFound)
+{
+    <section class="panel empty-state">
+        <strong>Grammar topic not found / ไม่พบหัวข้อไวยากรณ์</strong>
+        <span class="muted">This topic may have moved or is not published. / หัวข้อนี้อาจถูกย้ายหรือยังไม่ได้เผยแพร่</span>
+        <a class="button primary" href="/search?type=grammar">Search grammar / ค้นหาไวยากรณ์</a>
+    </section>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error" role="alert">@errorMessage</div>
+}
+else if (topic is not null)
+{
+    <section class="panel">
+        <div class="list-card-badges">
+            <span class="pill">@topic.CefrLevel</span>
+        </div>
+
+        <h2 class="detail-section-heading">Rules in this topic / กฎในหัวข้อนี้</h2>
+        @if (topic.Rules.Count == 0)
+        {
+            <p class="muted">No rules published yet for this topic. / หัวข้อนี้ยังไม่มีกฎที่เผยแพร่</p>
+        }
+        else
+        {
+            <section class="table-wrap nested-table">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Rule / กฎ</th>
+                            <th><span class="sr-only">Actions / การทำงาน</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var rule in topic.Rules)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@rule.Title</strong>
+                                    <span class="muted">@FirstNonEmpty(rule.StructurePattern, rule.RuleText)</span>
+                                </td>
+                                <td class="row-actions">
+                                    <a class="button small" href="/grammar/rules/@rule.Slug">Open / เปิด</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </section>
+        }
+    </section>
+}
+
+@code {
+    [Parameter]
+    public string? Slug { get; set; }
+
+    private PublicGrammarTopicDetailDto? topic;
+    private CancellationTokenSource? loadCancellation;
+    private bool isLoading = true;
+    private bool notFound;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loadCancellation?.Cancel();
+        loadCancellation?.Dispose();
+        loadCancellation = new CancellationTokenSource();
+        var cancellationToken = loadCancellation.Token;
+
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+        topic = null;
+
+        if (string.IsNullOrWhiteSpace(Slug))
+        {
+            notFound = true;
+            isLoading = false;
+            return;
+        }
+
+        try
+        {
+            topic = await PublicGrammarApiClient.GetTopicBySlugAsync(Slug.Trim(), cancellationToken);
+            notFound = topic is null;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception exception) when (
+            exception is ApiRequestException or
+            HttpRequestException or
+            System.Text.Json.JsonException or
+            NotSupportedException or
+            OperationCanceledException)
+        {
+            errorMessage = "Grammar is unavailable right now. / ขณะนี้ยังเปิดเนื้อหาไวยากรณ์ไม่ได้";
+        }
+        finally
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                isLoading = false;
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        loadCancellation?.Cancel();
+        loadCancellation?.Dispose();
+    }
+
+    private static string FirstNonEmpty(params string?[] values) =>
+        values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
+}

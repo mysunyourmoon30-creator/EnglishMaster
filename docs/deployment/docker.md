@@ -52,7 +52,10 @@ http://localhost:7002
 
 ## Database And Migrations
 
-The API startup path calls the existing security seed flow. Outside the Testing environment, that flow applies EF Core migrations to the configured relational database and then seeds roles, permissions, optional SuperAdmin, and optional development content.
+The API startup path calls the existing security seed flow. Migration behavior
+is controlled by `Database__ApplyMigrationsOnStartup`. Local development keeps
+this enabled and then seeds roles, permissions, an optional SuperAdmin, and
+optional development content.
 
 For local Docker Compose, this means the API initializes the SQL Server database when it starts. No destructive migration was added as part of the Docker foundation.
 
@@ -62,7 +65,13 @@ Manual migration command for local development:
 dotnet ef database update --project src/Backend/EnglishMaster.Infrastructure --startup-project src/Backend/EnglishMaster.Api
 ```
 
-Before production deployment, review generated migrations and apply them through the chosen operational process. Do not rely on development seed data for production.
+Staging and production set `Database__ApplyMigrationsOnStartup=false`. Review
+generated migrations and apply the release bundle before starting the API. Do
+not rely on development seed data for production.
+
+Production Compose places Caddy on a private subnet with a fixed, configurable
+IP. API and Web accept one hop of forwarded client IP/scheme data only from
+that trusted address. The application ports remain unpublished.
 
 ## Storage
 
@@ -71,6 +80,8 @@ Compose creates named volumes for:
 - SQL Server data
 - Uploaded media
 - Publishing artifacts
+- API/Web Data Protection key rings
+- API/Web rolling logs
 
 The API uses `/app/media` and `/app/publishing` inside the container. The publishing path is configured through `Publishing__LocalStoragePath`.
 

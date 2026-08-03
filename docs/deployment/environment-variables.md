@@ -21,13 +21,19 @@ These variables are passed to containers by `docker-compose.yml`:
 | `ASPNETCORE_ENVIRONMENT` | API, Web | Uses `Development` for local Compose. |
 | `ASPNETCORE_URLS` | API, Web | Binds each app to `http://+:8080` inside the container. |
 | `ConnectionStrings__DefaultConnection` | API | SQL Server connection string. |
+| `Database__ApplyMigrationsOnStartup` | API | Local development defaults to `true`; staging and production set `false` and apply migrations explicitly before API startup. |
+| `DataProtection__KeysPath` | API, Web | Durable key-ring directory. Use separate restricted paths/volumes for API and Web outside local development. |
 | `DevelopmentSeed__Enabled` | API | Toggles demo content seed. |
+| `SeedGrammarCurriculum__Enabled` | API | One-time opt-in seed for the published grammar curriculum only. Disable it again after startup succeeds. |
+| `Auth__AllowInsecureLoopbackCookies` | API, Web | Defaults to `false`. Staging-only escape hatch for disposable HTTP loopback smoke tests; never enable for hosted staging or production. |
 | `Auth__InitialSuperAdmin__Email` | API | Optional initial SuperAdmin email. |
 | `Auth__InitialSuperAdmin__Password` | API | Optional initial SuperAdmin password. |
+| `ForwardedHeaders__Enabled` | API, Web | Enables one-hop `X-Forwarded-For` and `X-Forwarded-Proto` processing when the app is behind a trusted reverse proxy. |
+| `ForwardedHeaders__KnownProxy` | API, Web | Exact trusted reverse-proxy IP. Required when forwarded headers are enabled. |
 | `Publishing__LocalStoragePath` | API | Container path for generated publishing artifacts. |
 | `Media__LocalStoragePath` | API | Container path for uploaded media files. |
 | `Email__Provider` | API | Email provider selector. Use `Development` until a real adapter exists. |
-| `Email__FromAddress` | API | Placeholder from-address for future email provider integration. |
+| `Email__FromEmail` | API | Sender email address used by the configured email provider. |
 | `ApiBaseUrl` | Web | Internal API base URL used by Blazor server-side API clients. |
 
 ## Production Configuration
@@ -42,7 +48,11 @@ Production examples are provided as templates only:
 Production should set:
 
 - A real SQL Server connection string.
+- `Database__ApplyMigrationsOnStartup=false`.
 - `DevelopmentSeed__Enabled=false`.
+- `SeedGrammarCurriculum__Enabled=false` except during an intentional one-time curriculum seed.
+- `Auth__AllowInsecureLoopbackCookies=false`.
+- Forwarded headers enabled with the exact trusted reverse-proxy IP.
 - Durable `Media__LocalStoragePath` and `Publishing__LocalStoragePath` values.
 - Secure SuperAdmin bootstrap values only during controlled setup, then rotate or remove them.
 - A public HTTPS API URL for the Web app's `ApiBaseUrl`.
@@ -61,13 +71,17 @@ Required staging variables:
 | --- | --- | --- |
 | `ASPNETCORE_ENVIRONMENT` | API, Web | Set to `Staging`. |
 | `ConnectionStrings__DefaultConnection` | API | Staging SQL Server connection string. |
+| `Database__ApplyMigrationsOnStartup` | API | Set to `false`; migration is an explicit release step. |
+| `DataProtection__KeysPath` | API, Web | Durable staging key-ring path; API and Web must use separate volumes. |
 | `DevelopmentSeed__Enabled` | API | Set to `false` unless the environment is disposable demo staging. |
+| `SeedGrammarCurriculum__Enabled` | API | Leave `false`; enable for one controlled startup only when staging needs the standard grammar curriculum. |
+| `Auth__AllowInsecureLoopbackCookies` | API, Web | Keep `false` for hosted staging. |
 | `Auth__InitialSuperAdmin__Email` | API | Optional one-time bootstrap admin email. |
 | `Auth__InitialSuperAdmin__Password` | API | Optional one-time bootstrap admin password. Remove after setup. |
 | `Publishing__LocalStoragePath` | API | Durable staging path for publishing artifacts. |
 | `Media__LocalStoragePath` | API | Durable staging path for uploaded media. |
 | `Email__Provider` | API | Staging email provider selector. Prefer `Development` until real delivery is configured. |
-| `Email__FromAddress` | API | Placeholder sender address for future provider integration. |
+| `Email__FromEmail` | API | Sender email address used by the configured staging provider. |
 | `ApiBaseUrl` | Web | Staging API base URL. |
 | `AllowedHosts` | API, Web | Staging host names. |
 
@@ -80,8 +94,9 @@ Local-staging Compose variables:
 | `ENGLISHMASTER_STAGING_DATABASE` | Staging database name. |
 | `ENGLISHMASTER_STAGING_API_PORT` | Host API port. |
 | `ENGLISHMASTER_STAGING_WEB_PORT` | Host Web port. |
-| `ENGLISHMASTER_STAGING_ALLOWED_HOSTS` | Semicolon-separated host names. |
+| `ENGLISHMASTER_STAGING_ALLOWED_HOSTS` | Semicolon-separated external and internal host names. Include `englishmaster-staging-api` for server-side Web API calls. |
 | `ENGLISHMASTER_STAGING_API_BASE_URL` | API URL used by the Web app. |
 | `ENGLISHMASTER_STAGING_DEVELOPMENT_SEED_ENABLED` | Demo seed toggle. Prefer `false`. |
+| `ENGLISHMASTER_STAGING_ALLOW_INSECURE_LOOPBACK_COOKIES` | Keep `false`; set `true` only for disposable HTTP smoke tests reached through `localhost` or a loopback IP. |
 | `ENGLISHMASTER_STAGING_SUPERADMIN_EMAIL` | Optional bootstrap admin email. |
 | `ENGLISHMASTER_STAGING_SUPERADMIN_PASSWORD` | Optional bootstrap admin password. |

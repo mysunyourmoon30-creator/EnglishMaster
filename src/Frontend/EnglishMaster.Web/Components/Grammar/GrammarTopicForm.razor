@@ -19,14 +19,15 @@
     <h3 class="detail-section-heading">Identity / ข้อมูลหลัก</h3>
     <div class="form-grid">
         <label class="span-2">
-            <span>Title / ชื่อหัวข้อ</span>
-            <InputText class="input" @bind-Value="Model.Title" />
+            <span>Title / ชื่อหัวข้อ<span class="required-marker" aria-hidden="true">*</span></span>
+            <InputText class="input" @bind-Value="Model.Title" maxlength="200" aria-required="true" />
+            <span class="muted hint">Max 200 characters / สูงสุด 200 ตัวอักษร</span>
             <ValidationMessage For="@(() => Model.Title)" />
         </label>
 
         <label>
-            <span>CEFR</span>
-            <InputSelect class="input" @bind-Value="Model.CefrLevel">
+            <span>CEFR<span class="required-marker" aria-hidden="true">*</span></span>
+            <InputSelect class="input" @bind-Value="Model.CefrLevel" aria-required="true">
                 @foreach (var level in CefrLevels)
                 {
                     <option value="@level">@level</option>
@@ -54,7 +55,8 @@
     <div class="form-grid">
         <label class="span-2">
             <span>Summary / สรุปหัวข้อ</span>
-            <InputTextArea class="input textarea" @bind-Value="Model.Summary" />
+            <InputTextArea class="input textarea" @bind-Value="Model.Summary" maxlength="1000" />
+            <span class="muted hint">Max 1000 characters / สูงสุด 1000 ตัวอักษร</span>
             <ValidationMessage For="@(() => Model.Summary)" />
         </label>
     </div>

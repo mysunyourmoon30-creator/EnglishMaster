@@ -10,10 +10,16 @@ This guide prepares EnglishMaster for a safer production deployment. It does not
 - Set production host names in `AllowedHosts`.
 - Set `ASPNETCORE_ENVIRONMENT=Production` for API and Web.
 - Provide `ConnectionStrings__DefaultConnection` from deployment secrets.
+- Set `Database__ApplyMigrationsOnStartup=false`.
 - Set `DevelopmentSeed__Enabled=false`.
+- Set `SeedGrammarCurriculum__Enabled=false` except during a controlled one-time curriculum seed.
 - Configure durable paths for `Media__LocalStoragePath` and `Publishing__LocalStoragePath`.
+- Configure separate durable, access-restricted
+  `DataProtection__KeysPath` storage for API and Web.
+- Use a licensed SQL Server production edition; never deploy with Developer
+  edition.
 - Configure the Web app `ApiBaseUrl` to the production HTTPS API URL.
-- Keep email provider settings as placeholders until a production email adapter is added.
+- Configure and verify the SMTP adapter when real email delivery is required.
 
 ## Application Boundaries
 
@@ -36,15 +42,18 @@ The API readiness endpoint includes database connectivity. Do not expose detaile
 ## Deployment Flow
 
 1. Build and test from a clean source revision.
-2. Publish API and Web artifacts.
+2. Publish API, Web, the Linux migration bundle, and the release smoke tool.
 3. Provision a production SQL Server database.
-4. Apply EF Core migrations.
+4. Back up the database and apply the reviewed migration bundle as an explicit
+   release step.
 5. Configure environment variables and secrets.
 6. Mount durable media and publishing storage.
 7. Start API and Web behind HTTPS.
 8. Create the initial SuperAdmin through temporary bootstrap settings or a controlled operational process.
 9. Rotate or remove bootstrap credentials.
-10. Run smoke checks without exposing secrets in logs.
+10. Run `scripts/Invoke-EnglishMasterReleaseSmoke.ps1` with credentials supplied
+    only through `ENGLISHMASTER_SMOKE_ADMIN_EMAIL` and
+    `ENGLISHMASTER_SMOKE_ADMIN_PASSWORD`.
 
 ## Not Included
 

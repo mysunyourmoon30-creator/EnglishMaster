@@ -17,7 +17,7 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading timeline...</p>
+    <LoadingIndicator Text="Loading timeline..." />
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))
 {

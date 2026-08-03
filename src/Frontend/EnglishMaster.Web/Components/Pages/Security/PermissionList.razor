@@ -19,7 +19,7 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading permissions...</p>
+    <LoadingIndicator Text="Loading permissions..." />
 }
 else if (permissions.Count == 0)
 {

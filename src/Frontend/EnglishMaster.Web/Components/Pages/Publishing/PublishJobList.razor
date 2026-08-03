@@ -64,7 +64,7 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading publish jobs...</p>
+    <LoadingIndicator Text="Loading publish jobs..." />
 }
 else if (jobs.Count == 0)
 {

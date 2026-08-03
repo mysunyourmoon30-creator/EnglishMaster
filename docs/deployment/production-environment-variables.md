@@ -8,9 +8,15 @@
 | `ASPNETCORE_URLS` | Platform-specific | Bind address inside the host/container. |
 | `AllowedHosts` | Yes | Production API host names. Avoid `*` in production. |
 | `ConnectionStrings__DefaultConnection` | Yes | Production SQL Server connection string from secrets. |
+| `Database__ApplyMigrationsOnStartup` | Yes | Set to `false`. Apply the reviewed release migration bundle before starting the API. |
+| `DataProtection__KeysPath` | Yes | Durable, access-restricted API key-ring path. Keep it separate from the Web key ring. |
 | `DevelopmentSeed__Enabled` | Yes | Set to `false`. |
+| `SeedGrammarCurriculum__Enabled` | Yes | Normally `false`. Set to `true` for one controlled startup only when installing or refreshing the managed grammar curriculum, then restore `false`. |
+| `Auth__AllowInsecureLoopbackCookies` | Yes | Set to `false`. The loopback-only HTTP override is forbidden in Production. |
 | `Auth__InitialSuperAdmin__Email` | Temporary | Optional one-time bootstrap email. Remove after setup. |
 | `Auth__InitialSuperAdmin__Password` | Temporary | Optional one-time bootstrap password. Rotate/remove after setup. |
+| `ForwardedHeaders__Enabled` | Yes behind a proxy | Set to `true` when Caddy or another reverse proxy terminates TLS. |
+| `ForwardedHeaders__KnownProxy` | Yes behind a proxy | Exact IP of the trusted reverse proxy. Requests from other peers cannot set the effective client IP or scheme. |
 | `Media__LocalStoragePath` | Yes | Durable uploaded media storage path. |
 | `Publishing__LocalStoragePath` | Yes | Durable published artifact storage path. |
 | `Logging__FilePath` | No | Directory for rolling structured log files (Serilog, one file per day, 14-day retention). Defaults to a `logs` folder next to the app binary if unset — point this at durable storage in production so logs survive container restarts. Logs also always go to the console for platform-level log collection. |
@@ -52,7 +58,22 @@
 | `ASPNETCORE_URLS` | Platform-specific | Bind address inside the host/container. |
 | `AllowedHosts` | Yes | Production Web host names. Avoid `*` in production. |
 | `ApiBaseUrl` | Yes | Production HTTPS API base URL. |
+| `Auth__AllowInsecureLoopbackCookies` | Yes | Set to `false`. |
+| `ForwardedHeaders__Enabled` | Yes behind a proxy | Set to `true` when TLS terminates at the trusted proxy. |
+| `ForwardedHeaders__KnownProxy` | Yes behind a proxy | Exact trusted reverse-proxy IP. |
+| `DataProtection__KeysPath` | Yes | Durable, access-restricted Web key-ring path. Keep it separate from the API key ring. |
 | `Logging__FilePath` | No | Directory for rolling structured log files. Same behavior as the API's variable of the same name above. |
+
+## Compose Operator Variables
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `ENGLISHMASTER_PRODUCTION_SQL_EDITION` | Yes | Licensed SQL Server edition appropriate for production, such as `Standard`, or `Express` when its limits are acceptable. Never use `Developer` in production. |
+| `ENGLISHMASTER_PRODUCTION_SQL_PASSWORD` | Yes | Strong SQL Server `sa` password supplied from the deployment secret store. |
+| `ENGLISHMASTER_PRODUCTION_API_ALLOWED_HOSTS` | Yes | Public API host plus the internal Compose host `englishmaster-production-api`, separated by semicolons. The internal host is required for server-side Web API calls. |
+| `ENGLISHMASTER_PRODUCTION_WEB_ALLOWED_HOSTS` | Yes | Public Web host names, separated by semicolons when more than one is used. |
+| `ENGLISHMASTER_PRODUCTION_NETWORK_SUBNET` | No | Private Compose subnet. Defaults to `172.30.0.0/24`; change it if it conflicts with the VPS or VPN network. |
+| `ENGLISHMASTER_PRODUCTION_PROXY_IP` | No | Static Caddy IP inside the private subnet. Defaults to `172.30.0.10` and must belong to the configured subnet. API and Web trust only this address for forwarded headers. |
 
 ## Secret Rules
 

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+
 using EnglishMaster.Contracts.PublicSearch;
 using EnglishMaster.Domain.Categories;
 using EnglishMaster.Domain.Common;
@@ -9,6 +10,7 @@ using EnglishMaster.Domain.Quizzes;
 using EnglishMaster.Domain.Tags;
 using EnglishMaster.Domain.Words;
 using EnglishMaster.Infrastructure.Persistence;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EnglishMaster.IntegrationTests.PublicSearch;
@@ -62,7 +64,42 @@ public sealed class PublicSearchEndpointsTests(EnglishMasterApiFactory factory) 
 
         var result = await client.GetFromJsonAsync<PublicSearchResponse>($"/api/v1/public/search?q={Uri.EscapeDataString(marker)}");
 
-        Assert.Contains(result!.Items, item => item.ContentType == "grammar" && item.Title == marker);
+        Assert.Contains(
+            result!.Items,
+            item => item.ContentType == "grammar" &&
+                    item.Title == marker &&
+                    item.Url == $"/grammar/topics/{GrammarTopic.GenerateSlug(marker)}");
+    }
+
+    [Fact]
+    public async Task SearchPublicContent_UsesDistinctRoutesWhenTopicAndRuleSlugsMatch()
+    {
+        var marker = Unique("Shared Grammar Search");
+        var topic = GrammarTopic.Create(marker, "Topic summary", CefrLevel.B1, 1, DateTimeOffset.UtcNow);
+        var rule = GrammarRule.Create(
+            topic.Id,
+            marker,
+            "Rule body",
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            1,
+            DateTimeOffset.UtcNow);
+        await SeedAsync(dbContext =>
+        {
+            dbContext.GrammarTopics.Add(topic);
+            dbContext.GrammarRules.Add(rule);
+            return Task.CompletedTask;
+        });
+        using var client = factory.CreateClient();
+
+        var result = await client.GetFromJsonAsync<PublicSearchResponse>(
+            $"/api/v1/public/search?q={Uri.EscapeDataString(marker)}&contentType=grammar");
+
+        Assert.Contains(result!.Items, item => item.Url == $"/grammar/topics/{topic.Slug}");
+        Assert.Contains(result.Items, item => item.Url == $"/grammar/rules/{rule.Slug}");
     }
 
     [Fact]

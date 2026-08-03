@@ -17,7 +17,9 @@ This MVP is an admin-focused content management foundation for EnglishMaster. It
 - API and Web expose `/health`, `/health/live`, and `/health/ready`; hosted staging still needs environment-specific monitoring and alerting.
 - Production logging sinks, alerting, metrics, and tracing are not configured.
 - Docker Compose is for local development and staging preparation only. No cloud deployment workflow exists yet.
-- API startup currently applies migrations outside Testing through the security seed flow. Staging and production should review and control migration application deliberately.
+- Staging and production now disable startup migration and require the explicit
+  reviewed release migration step. Actual execution evidence still depends on
+  a deployed environment.
 
 ## Data And Seed
 

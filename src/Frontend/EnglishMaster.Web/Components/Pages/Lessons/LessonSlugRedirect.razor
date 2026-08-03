@@ -27,7 +27,7 @@
 else if (isLoading)
 {
     <section class="panel empty-state">
-        <strong>Loading lesson... / กำลังโหลดบทเรียน</strong>
+        <strong><Icon Name="spinner" Class="spin" Size="16" /> Loading lesson... / กำลังโหลดบทเรียน</strong>
         <span class="muted">Please wait while we find this lesson. / รอสักครู่ ระบบกำลังค้นหาบทเรียนนี้</span>
     </section>
 }
@@ -134,7 +134,7 @@ else if (lesson is not null)
             <div class="card-grid">
                 @foreach (var rule in lesson.GrammarRules)
                 {
-                    <a class="list-card" href="/grammar/@rule.Slug">
+                    <a class="list-card" href="/grammar/rules/@rule.Slug">
                         <h3>@rule.Title</h3>
                         <p class="muted">Open grammar / เปิดไวยากรณ์</p>
                     </a>

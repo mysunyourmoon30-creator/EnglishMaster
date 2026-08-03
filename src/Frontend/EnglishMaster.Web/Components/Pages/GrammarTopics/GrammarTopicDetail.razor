@@ -1,6 +1,8 @@
 @page "/admin/grammar-topics/{Id:guid}"
 @rendermode InteractiveServer
+@implements IDisposable
 @inject IGrammarApiClient GrammarApiClient
+@inject BreadcrumbState BreadcrumbState
 
 <PageTitle>@(topic is null ? "Grammar Topic" : topic.Title)</PageTitle>
 
@@ -30,7 +32,7 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading grammar topic... / กำลังโหลดหัวข้อไวยากรณ์</p>
+    <LoadingIndicator Text="Loading grammar topic... / กำลังโหลดหัวข้อไวยากรณ์" />
 }
 else if (notFound)
 {
@@ -163,6 +165,7 @@ else if (topic is not null)
                 return;
             }
 
+            BreadcrumbState.SetCurrentLabel(Id, topic.Title);
             rules = (await GrammarApiClient.GetRulesByTopicIdAsync(
                 Id,
                 isActive: null,
@@ -178,5 +181,10 @@ else if (topic is not null)
         {
             isLoading = false;
         }
+    }
+
+    public void Dispose()
+    {
+        BreadcrumbState.Clear(Id);
     }
 }

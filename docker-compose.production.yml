@@ -5,10 +5,12 @@ services:
     restart: unless-stopped
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_PID: Developer
+      MSSQL_PID: "${ENGLISHMASTER_PRODUCTION_SQL_EDITION:?Set ENGLISHMASTER_PRODUCTION_SQL_EDITION to a licensed production edition}"
       MSSQL_SA_PASSWORD: "${ENGLISHMASTER_PRODUCTION_SQL_PASSWORD:?Set ENGLISHMASTER_PRODUCTION_SQL_PASSWORD}"
     volumes:
       - englishmaster-production-sqlserver-data:/var/opt/mssql
+    networks:
+      - englishmaster-production-network
     healthcheck:
       test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/1433'"]
       interval: 10s
@@ -29,13 +31,17 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
-      AllowedHosts: "${ENGLISHMASTER_PRODUCTION_ALLOWED_HOSTS:?Set ENGLISHMASTER_PRODUCTION_ALLOWED_HOSTS to your API domain}"
+      AllowedHosts: "${ENGLISHMASTER_PRODUCTION_API_ALLOWED_HOSTS:?Set ENGLISHMASTER_PRODUCTION_API_ALLOWED_HOSTS to the public API host and englishmaster-production-api}"
       ConnectionStrings__DefaultConnection: "Server=englishmaster-production-sqlserver,1433;Database=EnglishMaster;User Id=sa;Password=${ENGLISHMASTER_PRODUCTION_SQL_PASSWORD:?Set ENGLISHMASTER_PRODUCTION_SQL_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true"
+      Database__ApplyMigrationsOnStartup: "false"
       DevelopmentSeed__Enabled: "false"
+      ForwardedHeaders__Enabled: "true"
+      ForwardedHeaders__KnownProxy: "${ENGLISHMASTER_PRODUCTION_PROXY_IP:-172.30.0.10}"
       Auth__InitialSuperAdmin__Email: "${ENGLISHMASTER_PRODUCTION_SUPERADMIN_EMAIL:-}"
       Auth__InitialSuperAdmin__Password: "${ENGLISHMASTER_PRODUCTION_SUPERADMIN_PASSWORD:-}"
       Media__LocalStoragePath: /app/media
       Publishing__LocalStoragePath: /app/publishing
+      DataProtection__KeysPath: /app/data-protection-keys
       Logging__FilePath: /app/logs
       Email__Provider: "${ENGLISHMASTER_PRODUCTION_EMAIL_PROVIDER:-Development}"
       Email__FromEmail: "${ENGLISHMASTER_PRODUCTION_EMAIL_FROM:-}"
@@ -47,7 +53,10 @@ services:
     volumes:
       - englishmaster-production-api-media:/app/media
       - englishmaster-production-api-publishing:/app/publishing
+      - englishmaster-production-api-data-protection:/app/data-protection-keys
       - englishmaster-production-api-logs:/app/logs
+    networks:
+      - englishmaster-production-network
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080; printf \"GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3; head -n 1 <&3 | grep \"200\"'"]
       interval: 15s
@@ -55,6 +64,21 @@ services:
       retries: 10
       start_period: 45s
     # No host port published — only reachable through the reverse proxy below.
+
+  englishmaster-production-migrations:
+    image: mcr.microsoft.com/dotnet/runtime-deps:9.0
+    profiles: ["operations"]
+    depends_on:
+      englishmaster-production-sqlserver:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=englishmaster-production-sqlserver,1433;Database=EnglishMaster;User Id=sa;Password=${ENGLISHMASTER_PRODUCTION_SQL_PASSWORD:?Set ENGLISHMASTER_PRODUCTION_SQL_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true"
+    user: app
+    volumes:
+      - ./artifacts/migrations/englishmaster-migrate:/app/englishmaster-migrate:ro
+    entrypoint: ["/app/englishmaster-migrate"]
+    networks:
+      - englishmaster-production-network
 
   englishmaster-production-web:
     build:
@@ -68,11 +92,17 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
-      AllowedHosts: "${ENGLISHMASTER_PRODUCTION_ALLOWED_HOSTS:?Set ENGLISHMASTER_PRODUCTION_ALLOWED_HOSTS to your Web domain}"
+      AllowedHosts: "${ENGLISHMASTER_PRODUCTION_WEB_ALLOWED_HOSTS:?Set ENGLISHMASTER_PRODUCTION_WEB_ALLOWED_HOSTS to the public Web host}"
       ApiBaseUrl: http://englishmaster-production-api:8080/
+      ForwardedHeaders__Enabled: "true"
+      ForwardedHeaders__KnownProxy: "${ENGLISHMASTER_PRODUCTION_PROXY_IP:-172.30.0.10}"
+      DataProtection__KeysPath: /app/data-protection-keys
       Logging__FilePath: /app/logs
     volumes:
+      - englishmaster-production-web-data-protection:/app/data-protection-keys
       - englishmaster-production-web-logs:/app/logs
+    networks:
+      - englishmaster-production-network
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080; printf \"GET /health/live HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3; head -n 1 <&3 | grep \"200\"'"]
       interval: 15s
@@ -95,12 +125,25 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - englishmaster-production-caddy-data:/data
       - englishmaster-production-caddy-config:/config
+    networks:
+      englishmaster-production-network:
+        ipv4_address: "${ENGLISHMASTER_PRODUCTION_PROXY_IP:-172.30.0.10}"
+
+networks:
+  englishmaster-production-network:
+    name: englishmaster-production-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "${ENGLISHMASTER_PRODUCTION_NETWORK_SUBNET:-172.30.0.0/24}"
 
 volumes:
   englishmaster-production-sqlserver-data:
   englishmaster-production-api-media:
   englishmaster-production-api-publishing:
+  englishmaster-production-api-data-protection:
   englishmaster-production-api-logs:
+  englishmaster-production-web-data-protection:
   englishmaster-production-web-logs:
   englishmaster-production-caddy-data:
   englishmaster-production-caddy-config:

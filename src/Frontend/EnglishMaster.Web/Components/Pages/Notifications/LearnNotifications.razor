@@ -18,7 +18,7 @@
 @if (isLoading)
 {
     <section class="panel empty-state">
-        <strong>Loading notifications...</strong>
+        <strong><Icon Name="spinner" Class="spin" Size="16" /> Loading notifications...</strong>
     </section>
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))

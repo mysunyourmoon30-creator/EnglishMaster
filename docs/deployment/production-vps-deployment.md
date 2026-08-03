@@ -49,7 +49,12 @@ Create a `.env` file next to `docker-compose.production.yml` (never commit this)
 
 ```bash
 ENGLISHMASTER_PRODUCTION_SQL_PASSWORD=<generate a strong password>
-ENGLISHMASTER_PRODUCTION_ALLOWED_HOSTS=app.your-domain.example;api.your-domain.example
+ENGLISHMASTER_PRODUCTION_SQL_EDITION=<licensed production edition, e.g. Standard>
+ENGLISHMASTER_PRODUCTION_API_ALLOWED_HOSTS=api.your-domain.example;englishmaster-production-api
+ENGLISHMASTER_PRODUCTION_WEB_ALLOWED_HOSTS=app.your-domain.example
+# Optional when the defaults conflict with the VPS/VPN network:
+# ENGLISHMASTER_PRODUCTION_NETWORK_SUBNET=172.30.0.0/24
+# ENGLISHMASTER_PRODUCTION_PROXY_IP=172.30.0.10
 ENGLISHMASTER_PRODUCTION_SUPERADMIN_EMAIL=<your admin email, temporary>
 ENGLISHMASTER_PRODUCTION_SUPERADMIN_PASSWORD=<a strong temporary password>
 # Email (optional at first launch — leave Email__Provider at Development if not ready):
@@ -73,44 +78,91 @@ cp Caddyfile.example Caddyfile
 
 Caddy requests and renews TLS certificates automatically via Let's Encrypt — no manual certbot step.
 
-### 6. Start everything
+Compose assigns Caddy the configured static private IP; API and Web trust only
+that address for `X-Forwarded-For` and `X-Forwarded-Proto`. Keep API and Web
+ports unpublished so untrusted clients cannot bypass Caddy.
+
+### 6. Place the reviewed release artifacts
+
+Download the `englishmaster-release-build` artifact produced by the tagged
+release workflow and place its `artifacts` directory next to
+`docker-compose.production.yml`. Verify the artifact provenance and checksum
+before use.
+
+### 7. Start SQL Server
+
+```bash
+docker compose -f docker-compose.production.yml up -d englishmaster-production-sqlserver
+docker compose -f docker-compose.production.yml ps
+```
+
+Wait until SQL Server reports healthy.
+
+### 8. Back up and apply database migrations
+
+For an existing database, complete the backup checklist first. The API does
+not auto-apply migrations in Production. Make the reviewed Linux bundle
+executable and run the one-shot migration service on the private Compose
+network:
+
+```bash
+chmod 0555 artifacts/migrations/englishmaster-migrate
+docker compose -f docker-compose.production.yml --profile operations run --rm \
+  englishmaster-production-migrations
+```
+
+The migration service receives the connection string from Compose secrets and
+does not expose SQL Server on a host port. Stop the release if it exits
+non-zero.
+
+### 9. Start the application
 
 ```bash
 docker compose -f docker-compose.production.yml up -d --build
-docker compose -f docker-compose.production.yml ps   # wait until all services show healthy
+docker compose -f docker-compose.production.yml ps
 ```
 
-### 7. Apply database migrations
+Wait until all application services report healthy.
 
-The API does not auto-apply migrations on startup in Production (by design — see `docs/deployment/production-database.md`). Apply them explicitly:
-
-```bash
-docker compose -f docker-compose.production.yml exec englishmaster-production-api \
-  dotnet ef database update --project /src/EnglishMaster.Infrastructure --startup-project /src/EnglishMaster.Api
-```
-
-If the container image doesn't include the `dotnet ef` tooling, run migrations from a machine with the repo and the .NET SDK instead, pointed at the production connection string via `ConnectionStrings__DefaultConnection`.
-
-### 8. Verify
+### 10. Verify
 
 ```bash
 curl https://api.your-domain.example/health/ready
 curl https://app.your-domain.example/health/live
 ```
 
-Both should return `Healthy`. Then open `https://app.your-domain.example` in a browser and log in with the bootstrap SuperAdmin credentials from step 4.
+Both should return `Healthy`. From a trusted machine with PowerShell, run the
+packaged automated gate:
 
-### 9. Rotate bootstrap credentials
+```powershell
+$env:ENGLISHMASTER_SMOKE_ADMIN_EMAIL = "<production-admin-email>"
+$env:ENGLISHMASTER_SMOKE_ADMIN_PASSWORD = "<production-admin-password>"
+./artifacts/release-tools/Invoke-EnglishMasterReleaseSmoke.ps1 `
+  -ApiBaseUrl "https://api.your-domain.example" `
+  -WebBaseUrl "https://app.your-domain.example" `
+  -RequireAuthenticatedChecks
+Remove-Item Env:ENGLISHMASTER_SMOKE_ADMIN_EMAIL
+Remove-Item Env:ENGLISHMASTER_SMOKE_ADMIN_PASSWORD
+```
+
+Then open the Web app in a browser and complete the manual UI checks.
+
+### 11. Rotate bootstrap credentials
 
 Once you've confirmed SuperAdmin login works, remove `ENGLISHMASTER_PRODUCTION_SUPERADMIN_EMAIL` / `ENGLISHMASTER_PRODUCTION_SUPERADMIN_PASSWORD` from `.env` and restart the API container, per `docs/deployment/production-database.md`'s bootstrap-credential-rotation guidance.
 
-### 10. Record the deployment
+### 12. Record the deployment
 
 Fill in `docs/release/v0.3.0-production-deployment-record.md`'s Environment table (Production URL, deployment revision, timestamps) and Deployment Steps table with what actually happened.
 
 ## Logs
 
 Structured logs (Serilog) go to both the container's console (`docker compose -f docker-compose.production.yml logs -f`) and a durable rolling file volume at `/app/logs` inside each container — one file per day, 14-day retention, mounted to `englishmaster-production-api-logs` / `englishmaster-production-web-logs` so they survive container restarts.
+
+API and Web Data Protection keys use separate durable named volumes. Restrict
+Docker volume access and include these volumes in protected operational
+backups; loss of a key volume invalidates that application's protected
+cookies/tokens. Do not copy the API key ring to the Web app or vice versa.
 
 ## Backups
 

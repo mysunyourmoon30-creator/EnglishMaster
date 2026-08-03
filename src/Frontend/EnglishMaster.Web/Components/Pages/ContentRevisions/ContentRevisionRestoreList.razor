@@ -17,7 +17,7 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading restore requests...</p>
+    <LoadingIndicator Text="Loading restore requests..." />
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))
 {

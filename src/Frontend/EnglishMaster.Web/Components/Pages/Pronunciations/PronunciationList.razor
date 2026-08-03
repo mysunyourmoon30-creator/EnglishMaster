@@ -46,7 +46,7 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading pronunciations...</p>
+    <LoadingIndicator Text="Loading pronunciations..." />
 }
 else if (pronunciations.Count == 0)
 {

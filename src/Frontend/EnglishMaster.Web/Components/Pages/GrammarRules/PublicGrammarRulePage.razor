@@ -1,0 +1,183 @@
+@page "/grammar/rules/{Slug}"
+@rendermode InteractiveServer
+@layout PublicLayout
+@implements IDisposable
+@inject IPublicGrammarApiClient PublicGrammarApiClient
+
+<PageTitle>@(rule?.Title ?? "Grammar Rule")</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Grammar / ไวยากรณ์</p>
+        <h1>@(rule?.Title ?? "Grammar Rule / กฎไวยากรณ์")</h1>
+        @if (rule is not null)
+        {
+            <p class="page-subtitle">@rule.RuleText</p>
+        }
+    </div>
+    <div class="actions">
+        <a class="button secondary" href="/search?type=grammar"><Icon Name="search" Size="16" /> Search / ค้นหา</a>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <section class="panel empty-state">
+        <LoadingIndicator Text="Loading grammar rule... / กำลังโหลดกฎไวยากรณ์" />
+    </section>
+}
+else if (notFound)
+{
+    <section class="panel empty-state">
+        <strong>Grammar rule not found / ไม่พบกฎไวยากรณ์</strong>
+        <span class="muted">This rule may have moved or is not published. / กฎนี้อาจถูกย้ายหรือยังไม่ได้เผยแพร่</span>
+        <a class="button primary" href="/search?type=grammar">Search grammar / ค้นหาไวยากรณ์</a>
+    </section>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error" role="alert">@errorMessage</div>
+}
+else if (rule is not null)
+{
+    <section class="panel">
+        <div class="list-card-badges">
+            <span class="pill">@rule.Topic.CefrLevel</span>
+            <a class="pill" href="/grammar/topics/@rule.Topic.Slug">@rule.Topic.Title</a>
+        </div>
+
+        <h2 class="detail-section-heading">Structure / โครงสร้าง</h2>
+        <div class="detail-grid">
+            <div class="detail-item full">
+                <span class="muted">Pattern / รูปแบบ</span>
+                <strong>@FirstNonEmpty(rule.StructurePattern, "-")</strong>
+            </div>
+        </div>
+
+        <h2 class="detail-section-heading">Explanation / คำอธิบาย</h2>
+        <div class="detail-grid">
+            <div class="detail-item full">
+                <span class="muted">English / ภาษาอังกฤษ</span>
+                <strong>@FirstNonEmpty(rule.ExplanationEn, "-")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Thai / ภาษาไทย</span>
+                <strong>@FirstNonEmpty(rule.ExplanationTh, "-")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Common mistake / จุดที่มักผิด</span>
+                <strong>@FirstNonEmpty(rule.CommonMistake, "-")</strong>
+            </div>
+            <div class="detail-item full">
+                <span class="muted">Correct usage / วิธีใช้ที่ถูกต้อง</span>
+                <strong>@FirstNonEmpty(rule.CorrectUsageNote, "-")</strong>
+            </div>
+        </div>
+
+        @if (rule.Examples.Count > 0)
+        {
+            <h2 class="detail-section-heading">Examples / ตัวอย่าง</h2>
+            <div class="repeater-list">
+                @foreach (var example in rule.Examples)
+                {
+                    <div class="repeater-item">
+                        <div class="repeater-item-header">
+                            <span class="status-badge @(example.IsCorrectExample ? "success" : "warning")">
+                                @(example.IsCorrectExample ? "Correct / ถูกต้อง" : "Avoid / หลีกเลี่ยง")
+                            </span>
+                        </div>
+                        <p><strong>@example.ExampleEn</strong></p>
+                        @if (!string.IsNullOrWhiteSpace(example.TranslationTh))
+                        {
+                            <p class="muted">@example.TranslationTh</p>
+                        }
+                        @if (!example.IsCorrectExample && !string.IsNullOrWhiteSpace(example.ExplanationTh))
+                        {
+                            <p class="muted">@example.ExplanationTh</p>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
+        @if (rule.RelatedWords.Count > 0)
+        {
+            <h2 class="detail-section-heading">Related words / คำศัพท์ที่เกี่ยวข้อง</h2>
+            <div class="list-card-badges">
+                @foreach (var word in rule.RelatedWords)
+                {
+                    <a class="pill" href="/dictionary/@word.Slug">@word.Text</a>
+                }
+            </div>
+        }
+
+        <div class="actions">
+            <a class="button secondary" href="/grammar/topics/@rule.Topic.Slug">Back to topic / กลับไปที่หัวข้อ</a>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public string? Slug { get; set; }
+
+    private PublicGrammarRuleDetailDto? rule;
+    private CancellationTokenSource? loadCancellation;
+    private bool isLoading = true;
+    private bool notFound;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loadCancellation?.Cancel();
+        loadCancellation?.Dispose();
+        loadCancellation = new CancellationTokenSource();
+        var cancellationToken = loadCancellation.Token;
+
+        isLoading = true;
+        notFound = false;
+        errorMessage = null;
+        rule = null;
+
+        if (string.IsNullOrWhiteSpace(Slug))
+        {
+            notFound = true;
+            isLoading = false;
+            return;
+        }
+
+        try
+        {
+            rule = await PublicGrammarApiClient.GetRuleBySlugAsync(Slug.Trim(), cancellationToken);
+            notFound = rule is null;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception exception) when (
+            exception is ApiRequestException or
+            HttpRequestException or
+            System.Text.Json.JsonException or
+            NotSupportedException or
+            OperationCanceledException)
+        {
+            errorMessage = "Grammar is unavailable right now. / ขณะนี้ยังเปิดเนื้อหาไวยากรณ์ไม่ได้";
+        }
+        finally
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                isLoading = false;
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        loadCancellation?.Cancel();
+        loadCancellation?.Dispose();
+    }
+
+    private static string FirstNonEmpty(params string?[] values) =>
+        values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
+}

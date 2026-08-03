@@ -2,6 +2,7 @@ using EnglishMaster.Application.Features.PublicSearch;
 using EnglishMaster.Application.Features.PublicSearch.Dtos;
 using EnglishMaster.Domain.Words;
 using EnglishMaster.Infrastructure.Persistence;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace EnglishMaster.Infrastructure.PublicSearch;
@@ -75,7 +76,7 @@ public sealed class EfPublicSearchRepository : IPublicSearchRepository
                 .Take(PerTypeLimit)
                 .Select(topic => new { topic.Title, topic.Slug, topic.Summary, topic.CefrLevel, topic.UpdatedAt })
                 .ToArrayAsync(cancellationToken);
-            results.AddRange(topics.Select(topic => new PublicSearchResultDto("grammar", topic.Title, topic.Slug, topic.Summary, topic.CefrLevel.ToString(), null, [], $"/grammar/{topic.Slug}", Highlight(query, topic.Title, topic.Summary), topic.UpdatedAt)));
+            results.AddRange(topics.Select(topic => new PublicSearchResultDto("grammar", topic.Title, topic.Slug, topic.Summary, topic.CefrLevel.ToString(), null, [], $"/grammar/topics/{topic.Slug}", Highlight(query, topic.Title, topic.Summary), topic.UpdatedAt)));
 
             var rules = await dbContext.GrammarRules.AsNoTracking()
                 .Where(rule => rule.IsActive)
@@ -84,7 +85,7 @@ public sealed class EfPublicSearchRepository : IPublicSearchRepository
                 .Take(PerTypeLimit)
                 .Select(rule => new { rule.Title, rule.Slug, rule.RuleText, rule.UpdatedAt })
                 .ToArrayAsync(cancellationToken);
-            results.AddRange(rules.Select(rule => new PublicSearchResultDto("grammar", rule.Title, rule.Slug, rule.RuleText, null, null, [], $"/grammar/{rule.Slug}", Highlight(query, rule.Title, rule.RuleText), rule.UpdatedAt)));
+            results.AddRange(rules.Select(rule => new PublicSearchResultDto("grammar", rule.Title, rule.Slug, rule.RuleText, null, null, [], $"/grammar/rules/{rule.Slug}", Highlight(query, rule.Title, rule.RuleText), rule.UpdatedAt)));
         }
 
         if (MatchesType(criteria.ContentType, "lesson"))

@@ -37,7 +37,7 @@
 
 @if (isLoading)
 {
-    <p class="muted">Loading certificate templates...</p>
+    <LoadingIndicator Text="Loading certificate templates..." />
 }
 else if (templates.Count == 0)
 {

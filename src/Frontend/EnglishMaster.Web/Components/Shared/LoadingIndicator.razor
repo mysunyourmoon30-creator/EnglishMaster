@@ -1,0 +1,9 @@
+<p class="muted loading-indicator" role="status" aria-live="polite" aria-atomic="true">
+    <Icon Name="spinner" Class="spin" Size="16" />
+    <span>@Text</span>
+</p>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Text { get; set; } = "";
+}

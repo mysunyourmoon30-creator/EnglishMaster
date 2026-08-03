@@ -35,8 +35,124 @@ jobs:
       - name: Publish Web
         run: dotnet publish src/Frontend/EnglishMaster.Web/EnglishMaster.Web.csproj --configuration Release --no-build --output artifacts/web
 
+      - name: Install EF migration tool
+        run: dotnet tool install --global dotnet-ef --version 9.0.0
+
+      - name: Build Linux migration bundle
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifacts/migrations
+          dotnet ef migrations bundle `
+            --project src/Backend/EnglishMaster.Infrastructure/EnglishMaster.Infrastructure.csproj `
+            --startup-project src/Backend/EnglishMaster.Api/EnglishMaster.Api.csproj `
+            --configuration Release `
+            --no-build `
+            --self-contained `
+            --target-runtime linux-x64 `
+            --output artifacts/migrations/englishmaster-migrate
+
+      - name: Package release smoke tool
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifacts/release-tools
+          Copy-Item scripts/Invoke-EnglishMasterReleaseSmoke.ps1 artifacts/release-tools/
+
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
         with:
           name: englishmaster-release-build
           path: artifacts
+
+  container-smoke:
+    name: Linux container and release smoke
+    needs: release-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ASPNETCORE_ENVIRONMENT: Staging
+      ENGLISHMASTER_STAGING_SQL_PORT: "14334"
+      ENGLISHMASTER_STAGING_API_PORT: "7101"
+      ENGLISHMASTER_STAGING_WEB_PORT: "7102"
+      ENGLISHMASTER_STAGING_ALLOWED_HOSTS: "localhost;127.0.0.1;englishmaster-staging-api;englishmaster-staging-web"
+      ENGLISHMASTER_STAGING_API_BASE_URL: "http://englishmaster-staging-api:8080/"
+      ENGLISHMASTER_STAGING_DEVELOPMENT_SEED_ENABLED: "true"
+      ENGLISHMASTER_STAGING_EMAIL_PROVIDER: Development
+      ENGLISHMASTER_STAGING_ALLOW_INSECURE_LOOPBACK_COOKIES: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download reviewed release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: englishmaster-release-build
+          path: artifacts
+
+      - name: Create disposable smoke credentials
+        shell: bash
+        run: |
+          sql_password="CiSql_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_Aa9!"
+          admin_password="CiAdmin_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_Aa9!"
+          echo "::add-mask::$sql_password"
+          echo "::add-mask::$admin_password"
+          echo "ENGLISHMASTER_STAGING_SQL_PASSWORD=$sql_password" >> "$GITHUB_ENV"
+          echo "ENGLISHMASTER_STAGING_SUPERADMIN_EMAIL=ci.admin@englishmaster.invalid" >> "$GITHUB_ENV"
+          echo "ENGLISHMASTER_STAGING_SUPERADMIN_PASSWORD=$admin_password" >> "$GITHUB_ENV"
+          echo "ENGLISHMASTER_SMOKE_ADMIN_EMAIL=ci.admin@englishmaster.invalid" >> "$GITHUB_ENV"
+          echo "ENGLISHMASTER_SMOKE_ADMIN_PASSWORD=$admin_password" >> "$GITHUB_ENV"
+
+      - name: Validate staging Compose
+        run: docker compose -f docker-compose.staging.yml config --quiet
+
+      - name: Start SQL Server
+        run: docker compose -f docker-compose.staging.yml up -d englishmaster-staging-sqlserver
+
+      - name: Wait for SQL Server readiness
+        shell: bash
+        run: |
+          timeout 180 bash -c \
+            'until [ "$(docker inspect --format="{{.State.Health.Status}}" englishmaster-staging-sqlserver)" = "healthy" ]; do sleep 5; done'
+
+      - name: Apply reviewed migration bundle
+        shell: bash
+        run: |
+          chmod 0555 artifacts/migrations/englishmaster-migrate
+          export ConnectionStrings__DefaultConnection="Server=127.0.0.1,${ENGLISHMASTER_STAGING_SQL_PORT};Database=EnglishMasterStaging;User Id=sa;Password=${ENGLISHMASTER_STAGING_SQL_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true"
+          migration_succeeded=false
+          for attempt in {1..12}; do
+            if ./artifacts/migrations/englishmaster-migrate; then
+              migration_succeeded=true
+              break
+            fi
+            echo "Migration bundle attempt $attempt failed; retrying after SQL Server warm-up."
+            sleep 5
+          done
+          unset ConnectionStrings__DefaultConnection
+          if [ "$migration_succeeded" != "true" ]; then
+            echo "Migration bundle did not succeed after 12 attempts."
+            exit 1
+          fi
+
+      - name: Build and start API and Web containers
+        run: >-
+          docker compose -f docker-compose.staging.yml up -d --build --wait
+          --wait-timeout 240
+          englishmaster-staging-api
+          englishmaster-staging-web
+
+      - name: Run release smoke gate
+        shell: pwsh
+        run: |
+          ./scripts/Invoke-EnglishMasterReleaseSmoke.ps1 `
+            -ApiBaseUrl "http://127.0.0.1:7101" `
+            -WebBaseUrl "http://127.0.0.1:7102" `
+            -RequireAuthenticatedChecks
+
+      - name: Capture container logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.staging.yml logs --no-color
+
+      - name: Remove disposable containers and volumes
+        if: always()
+        run: docker compose -f docker-compose.staging.yml down --volumes --remove-orphans

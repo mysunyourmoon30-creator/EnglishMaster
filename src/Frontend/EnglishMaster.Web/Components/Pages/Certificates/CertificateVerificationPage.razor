@@ -24,7 +24,7 @@
 
 @if (isLoading)
 {
-    <p class="muted">Checking certificate...</p>
+    <LoadingIndicator Text="Checking certificate..." />
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))
 {

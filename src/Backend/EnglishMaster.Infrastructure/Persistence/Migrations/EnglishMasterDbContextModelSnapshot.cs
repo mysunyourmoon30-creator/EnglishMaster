@@ -1663,7 +1663,8 @@ namespace EnglishMaster.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("AverageQuizScore")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
 
                     b.Property<int>("BooksCompleted")
                         .HasColumnType("int");

@@ -28,20 +28,26 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT:-Staging}"
       ASPNETCORE_URLS: "http://+:8080"
-      AllowedHosts: "${ENGLISHMASTER_STAGING_ALLOWED_HOSTS:-*}"
+      AllowedHosts: "${ENGLISHMASTER_STAGING_ALLOWED_HOSTS:-localhost;127.0.0.1;englishmaster-staging-api;englishmaster-staging-web}"
       ConnectionStrings__DefaultConnection: "Server=englishmaster-staging-sqlserver,1433;Database=${ENGLISHMASTER_STAGING_DATABASE:-EnglishMasterStaging};User Id=sa;Password=${ENGLISHMASTER_STAGING_SQL_PASSWORD:?Set ENGLISHMASTER_STAGING_SQL_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true"
+      Database__ApplyMigrationsOnStartup: "false"
       DevelopmentSeed__Enabled: "${ENGLISHMASTER_STAGING_DEVELOPMENT_SEED_ENABLED:-false}"
       Auth__InitialSuperAdmin__Email: "${ENGLISHMASTER_STAGING_SUPERADMIN_EMAIL:-}"
       Auth__InitialSuperAdmin__Password: "${ENGLISHMASTER_STAGING_SUPERADMIN_PASSWORD:-}"
+      Auth__AllowInsecureLoopbackCookies: "${ENGLISHMASTER_STAGING_ALLOW_INSECURE_LOOPBACK_COOKIES:-false}"
       Media__LocalStoragePath: "${ENGLISHMASTER_STAGING_MEDIA_PATH:-/app/media}"
       Publishing__LocalStoragePath: "${ENGLISHMASTER_STAGING_PUBLISHING_PATH:-/app/publishing}"
+      DataProtection__KeysPath: /app/data-protection-keys
+      Logging__FilePath: /app/logs
       Email__Provider: "${ENGLISHMASTER_STAGING_EMAIL_PROVIDER:-Development}"
-      Email__FromAddress: "${ENGLISHMASTER_STAGING_EMAIL_FROM:-}"
+      Email__FromEmail: "${ENGLISHMASTER_STAGING_EMAIL_FROM:-}"
     ports:
       - "${ENGLISHMASTER_STAGING_API_PORT:-7101}:8080"
     volumes:
       - englishmaster-staging-api-media:/app/media
       - englishmaster-staging-api-publishing:/app/publishing
+      - englishmaster-staging-api-data-protection:/app/data-protection-keys
+      - englishmaster-staging-api-logs:/app/logs
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080; printf \"GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3; head -n 1 <&3 | grep \"200\"'"]
       interval: 15s
@@ -60,10 +66,16 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT:-Staging}"
       ASPNETCORE_URLS: "http://+:8080"
-      AllowedHosts: "${ENGLISHMASTER_STAGING_ALLOWED_HOSTS:-*}"
+      AllowedHosts: "${ENGLISHMASTER_STAGING_ALLOWED_HOSTS:-localhost;127.0.0.1;englishmaster-staging-api;englishmaster-staging-web}"
       ApiBaseUrl: "${ENGLISHMASTER_STAGING_API_BASE_URL:-http://englishmaster-staging-api:8080/}"
+      Auth__AllowInsecureLoopbackCookies: "${ENGLISHMASTER_STAGING_ALLOW_INSECURE_LOOPBACK_COOKIES:-false}"
+      DataProtection__KeysPath: /app/data-protection-keys
+      Logging__FilePath: /app/logs
     ports:
       - "${ENGLISHMASTER_STAGING_WEB_PORT:-7102}:8080"
+    volumes:
+      - englishmaster-staging-web-data-protection:/app/data-protection-keys
+      - englishmaster-staging-web-logs:/app/logs
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080; printf \"GET /health/live HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3; head -n 1 <&3 | grep \"200\"'"]
       interval: 15s
@@ -75,3 +87,7 @@ volumes:
   englishmaster-staging-sqlserver-data:
   englishmaster-staging-api-media:
   englishmaster-staging-api-publishing:
+  englishmaster-staging-api-data-protection:
+  englishmaster-staging-api-logs:
+  englishmaster-staging-web-data-protection:
+  englishmaster-staging-web-logs:

@@ -1,44 +1,80 @@
+using System.Net;
 using System.Security.Claims;
+
 using EnglishMaster.Web.Components;
+using EnglishMaster.Web.Services;
 using EnglishMaster.Web.Services.Analytics;
 using EnglishMaster.Web.Services.Books;
 using EnglishMaster.Web.Services.BulkOperations;
 using EnglishMaster.Web.Services.Categories;
 using EnglishMaster.Web.Services.Certificates;
-using EnglishMaster.Web.Services.SystemHealth;
 using EnglishMaster.Web.Services.ContentQuality;
 using EnglishMaster.Web.Services.ContentRevisions;
 using EnglishMaster.Web.Services.Courses;
+using EnglishMaster.Web.Services.DailyStudyPlans;
+using EnglishMaster.Web.Services.EmailMessages;
 using EnglishMaster.Web.Services.Grammar;
 using EnglishMaster.Web.Services.ImportExport;
 using EnglishMaster.Web.Services.ImportJobs;
-using EnglishMaster.Web.Services.Lessons;
-using EnglishMaster.Web.Services.LearningRecommendations;
 using EnglishMaster.Web.Services.LearningGoals;
+using EnglishMaster.Web.Services.LearningRecommendations;
 using EnglishMaster.Web.Services.LearningReports;
-using EnglishMaster.Web.Services.DailyStudyPlans;
+using EnglishMaster.Web.Services.Lessons;
 using EnglishMaster.Web.Services.Media;
 using EnglishMaster.Web.Services.Motivation;
-using EnglishMaster.Web.Services.EmailMessages;
+using EnglishMaster.Web.Services.Navigation;
 using EnglishMaster.Web.Services.Notifications;
-using EnglishMaster.Web.Services.Pronunciations;
 using EnglishMaster.Web.Services.Practice;
-using EnglishMaster.Web.Services.Publishing;
+using EnglishMaster.Web.Services.Pronunciations;
 using EnglishMaster.Web.Services.PublicSearch;
+using EnglishMaster.Web.Services.Publishing;
 using EnglishMaster.Web.Services.Quizzes;
 using EnglishMaster.Web.Services.Reports;
-using EnglishMaster.Web.Services;
 using EnglishMaster.Web.Services.Security;
+using EnglishMaster.Web.Services.SystemHealth;
 using EnglishMaster.Web.Services.Tags;
 using EnglishMaster.Web.Services.Words;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+var allowInsecureLoopbackCookies =
+    builder.Configuration.GetValue<bool>("Auth:AllowInsecureLoopbackCookies");
+if (allowInsecureLoopbackCookies &&
+    !builder.Environment.IsStaging() &&
+    !builder.Environment.IsEnvironment("Testing"))
+{
+    throw new InvalidOperationException(
+        "Auth:AllowInsecureLoopbackCookies may only be enabled in Staging or Testing.");
+}
+
+var forwardedHeadersEnabled =
+    builder.Configuration.GetValue<bool>("ForwardedHeaders:Enabled");
+if (forwardedHeadersEnabled)
+{
+    var knownProxyValue = builder.Configuration["ForwardedHeaders:KnownProxy"];
+    if (!IPAddress.TryParse(knownProxyValue, out var knownProxy))
+    {
+        throw new InvalidOperationException(
+            "ForwardedHeaders:KnownProxy must be a valid IP address when forwarded headers are enabled.");
+    }
+
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders =
+            ForwardedHeaders.XForwardedFor |
+            ForwardedHeaders.XForwardedProto;
+        options.ForwardLimit = 1;
+        options.KnownProxies.Add(knownProxy);
+    });
+}
 
 builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)
@@ -73,6 +109,16 @@ builder.Services.AddAuthentication("EnglishMaster.Web")
         options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
             ? CookieSecurePolicy.SameAsRequest
             : CookieSecurePolicy.Always;
+        options.Events.OnSigningIn = context =>
+        {
+            if (allowInsecureLoopbackCookies &&
+                IsLoopbackHost(context.Request.Host.Host))
+            {
+                context.CookieOptions.Secure = false;
+            }
+
+            return Task.CompletedTask;
+        };
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.LoginPath = "/login";
         options.AccessDeniedPath = "/login";
@@ -103,6 +149,7 @@ builder.Services.AddScoped<IMotivationApiClient, MotivationApiClient>();
 builder.Services.AddScoped<IPronunciationsApiClient, PronunciationsApiClient>();
 builder.Services.AddScoped<IPracticeApiClient, PracticeApiClient>();
 builder.Services.AddScoped<IGrammarApiClient, GrammarApiClient>();
+builder.Services.AddScoped<IPublicGrammarApiClient, PublicGrammarApiClient>();
 builder.Services.AddScoped<IImportExportApiClient, ImportExportApiClient>();
 builder.Services.AddScoped<IImportJobApiClient, ImportJobApiClient>();
 builder.Services.AddScoped<ILessonApiClient, LessonApiClient>();
@@ -124,10 +171,16 @@ builder.Services.AddScoped<INotificationsApiClient, NotificationsApiClient>();
 builder.Services.AddScoped<IEmailMessagesApiClient, EmailMessagesApiClient>();
 builder.Services.AddScoped<IAuthApiClient, AuthApiClient>();
 builder.Services.AddScoped<ISecurityApiClient, SecurityApiClient>();
+builder.Services.AddScoped<BreadcrumbState>();
 builder.Services.AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live", "ready"]);
 
 var app = builder.Build();
+
+if (forwardedHeadersEnabled)
+{
+    app.UseForwardedHeaders();
+}
 
 app.UseSerilogRequestLogging();
 
@@ -247,3 +300,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
+static bool IsLoopbackHost(string host) =>
+    string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) ||
+    IPAddress.TryParse(host, out var address) && IPAddress.IsLoopback(address);
