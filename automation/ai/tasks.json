@@ -5,7 +5,7 @@
     {
       "id": "V1-F04",
       "feature": "Learner Diagnostic Test",
-      "status": "queued",
+      "status": "done",
       "provider": "codex",
       "previousProvider": null,
       "branch": "codex/v1-f04-diagnostic-test",
@@ -57,7 +57,7 @@
     {
       "id": "V1-F05",
       "feature": "Daily Vocabulary Review",
-      "status": "queued",
+      "status": "done",
       "provider": "claude",
       "previousProvider": null,
       "branch": "codex/v1-f05-daily-vocabulary",
