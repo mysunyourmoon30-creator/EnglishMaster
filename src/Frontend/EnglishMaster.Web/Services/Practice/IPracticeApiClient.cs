@@ -6,6 +6,7 @@ public interface IPracticeApiClient
 {
     Task<PracticeSummaryDto> GetSummaryAsync(CancellationToken cancellationToken);
     Task<IReadOnlyCollection<PracticeItemDto>> GetDueAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<DailyVocabularyItemDto>> GetDailyVocabularyAsync(int limit, CancellationToken cancellationToken);
     Task<GeneratePracticeItemsResponse> GenerateAsync(CancellationToken cancellationToken);
     Task<PracticeSessionDto> StartSessionAsync(CancellationToken cancellationToken);
     Task<PracticeSessionDto> GetSessionAsync(Guid id, CancellationToken cancellationToken);

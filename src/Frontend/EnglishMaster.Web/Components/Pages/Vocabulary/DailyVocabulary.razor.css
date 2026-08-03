@@ -1,0 +1,93 @@
+.daily-vocabulary {
+    display: grid;
+    gap: 1.5rem;
+    max-width: 76rem;
+    margin: 0 auto;
+    padding: clamp(1rem, 3vw, 2.5rem);
+}
+
+.hero {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: clamp(1.5rem, 4vw, 3rem);
+    border-radius: 1.5rem;
+    color: #f8fafc;
+    background: linear-gradient(135deg, #173b57, #176b68);
+}
+
+.hero h1 {
+    max-width: 18ch;
+    margin: .35rem 0 .65rem;
+    font-size: clamp(2rem, 5vw, 3.75rem);
+    line-height: 1.02;
+}
+
+.hero p { max-width: 58ch; margin: 0; }
+.eyebrow { font-size: .78rem; font-weight: 800; letter-spacing: .12em; }
+
+.primary-action,
+.state a,
+.state button {
+    display: inline-flex;
+    justify-content: center;
+    padding: .75rem 1rem;
+    border: 0;
+    border-radius: .75rem;
+    font: inherit;
+    font-weight: 750;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.primary-action { flex: 0 0 auto; color: #173b57; background: #f5c65c; }
+.count { margin: 0; color: #475569; font-weight: 700; }
+
+.word-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: 1rem;
+}
+
+.word-card,
+.state {
+    border: 1px solid #dbe5eb;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 10px 30px rgb(15 23 42 / 7%);
+}
+
+.word-card { display: grid; gap: 1rem; padding: 1.25rem; }
+.card-heading { display: flex; justify-content: space-between; gap: 1rem; }
+.card-heading h2 { margin: 0; color: #173b57; font-size: 1.7rem; }
+.thai-reading { margin: .25rem 0 0; color: #64748b; }
+.badges { display: flex; align-items: start; flex-wrap: wrap; justify-content: end; gap: .35rem; }
+.badges span { padding: .25rem .5rem; border-radius: 999px; color: #155e5b; background: #dff4ef; font-size: .75rem; font-weight: 800; }
+
+.pronunciation { display: flex; gap: 1.25rem; margin: 0; }
+.pronunciation div { display: flex; gap: .4rem; }
+.pronunciation dt { color: #64748b; font-size: .75rem; font-weight: 800; }
+.pronunciation dd { margin: 0; }
+.meanings p { margin: .3rem 0; }
+.meanings strong { display: inline-block; width: 2.25rem; color: #176b68; }
+
+blockquote { margin: 0; padding: .8rem 1rem; border-left: .25rem solid #f5c65c; background: #fffbeb; }
+blockquote p { margin: .2rem 0; }
+.word-card footer { display: flex; justify-content: space-between; gap: .75rem; color: #64748b; font-size: .78rem; }
+
+.state { display: grid; justify-items: start; gap: .55rem; padding: 2rem; }
+.state.error { border-color: #fecaca; color: #991b1b; background: #fff7f7; }
+.state-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .5rem; }
+.state button { color: #fff; background: #176b68; }
+.state a { color: #173b57; background: #e8eef2; }
+.state button:disabled { cursor: wait; opacity: .65; }
+
+@media (max-width: 42rem) {
+    .hero { align-items: stretch; flex-direction: column; }
+    .word-card footer { flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto; }
+}
