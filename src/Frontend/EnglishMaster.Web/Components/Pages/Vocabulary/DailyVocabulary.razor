@@ -1,0 +1,148 @@
+@page "/learn/vocabulary"
+@rendermode InteractiveServer
+@using EnglishMaster.Contracts.Practice
+@using EnglishMaster.Web.Services
+@using EnglishMaster.Web.Services.Practice
+@inject IPracticeApiClient PracticeApiClient
+
+<PageTitle>Daily Vocabulary | EnglishMaster</PageTitle>
+
+<main class="daily-vocabulary" aria-labelledby="daily-vocabulary-title">
+    <header class="hero">
+        <div>
+            <p class="eyebrow">DAILY VOCABULARY · คำศัพท์ประจำวัน</p>
+            <h1 id="daily-vocabulary-title">10 words worth reviewing today</h1>
+            <p>Review pronunciation, meaning, and examples before starting your spaced-repetition session.</p>
+        </div>
+        <a class="primary-action" href="/learn/practice">Start practice</a>
+    </header>
+
+    @if (isLoading)
+    {
+        <section class="state" role="status" aria-live="polite">
+            <strong>Loading today’s words…</strong>
+            <span>กำลังเตรียมคำศัพท์ที่ควรทบทวน</span>
+        </section>
+    }
+    else if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <section class="state error" role="alert">
+            <strong>@errorMessage</strong>
+            <button type="button" @onclick="LoadAsync">Try again</button>
+        </section>
+    }
+    else if (items.Count == 0)
+    {
+        <section class="state" role="status">
+            <strong>You have no vocabulary due right now.</strong>
+            <span>ยังไม่มีคำศัพท์ที่ถึงเวลาทบทวน ลองเตรียมรายการฝึกก่อน</span>
+            <div class="state-actions">
+                <button type="button" disabled="@isPreparing" @onclick="PrepareAsync">
+                    @(isPreparing ? "Preparing…" : "Prepare vocabulary")
+                </button>
+                <a href="/learn/practice">Open practice</a>
+            </div>
+        </section>
+    }
+    else
+    {
+        <p class="count" role="status">@items.Count word items due</p>
+        <section class="word-grid" aria-label="Vocabulary due today">
+            @foreach (var item in items)
+            {
+                <article class="word-card">
+                    <div class="card-heading">
+                        <div>
+                            <h2>@item.Text</h2>
+                            @if (!string.IsNullOrWhiteSpace(item.ThaiReading))
+                            {
+                                <p class="thai-reading">@item.ThaiReading</p>
+                            }
+                        </div>
+                        <div class="badges">
+                            <span>@item.PartOfSpeech</span>
+                            <span>@item.CefrLevel</span>
+                        </div>
+                    </div>
+
+                    <dl class="pronunciation">
+                        <div><dt>UK</dt><dd>@Display(item.IpaUk)</dd></div>
+                        <div><dt>US</dt><dd>@Display(item.IpaUs)</dd></div>
+                    </dl>
+
+                    <div class="meanings">
+                        <p><strong>TH</strong> @item.MeaningTh</p>
+                        <p><strong>EN</strong> @item.MeaningEn</p>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(item.ExampleEn) || !string.IsNullOrWhiteSpace(item.ExampleTh))
+                    {
+                        <blockquote>
+                            @if (!string.IsNullOrWhiteSpace(item.ExampleEn))
+                            {
+                                <p>@item.ExampleEn</p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(item.ExampleTh))
+                            {
+                                <p lang="th">@item.ExampleTh</p>
+                            }
+                        </blockquote>
+                    }
+
+                    <footer>
+                        <span>@item.Status · @item.PracticeType</span>
+                        <time datetime="@item.NextReviewAt.ToString("O")">Due @item.NextReviewAt.ToLocalTime().ToString("d MMM, HH:mm")</time>
+                    </footer>
+                </article>
+            }
+        </section>
+    }
+</main>
+
+@code {
+    private IReadOnlyCollection<DailyVocabularyItemDto> items = [];
+    private bool isLoading = true;
+    private bool isPreparing;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            items = await PracticeApiClient.GetDailyVocabularyAsync(10, CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Daily vocabulary is unavailable right now. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task PrepareAsync()
+    {
+        isPreparing = true;
+        errorMessage = null;
+        try
+        {
+            await PracticeApiClient.GenerateAsync(CancellationToken.None);
+            await LoadAsync();
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "We could not prepare vocabulary. Please try again.";
+        }
+        finally
+        {
+            isPreparing = false;
+        }
+    }
+
+    private static string Display(string value) => string.IsNullOrWhiteSpace(value) ? "—" : value;
+}
