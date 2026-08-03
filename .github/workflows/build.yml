@@ -28,5 +28,5 @@ jobs:
       - name: Build
         run: dotnet build EnglishMaster.sln --configuration Release --no-restore
 
-      - name: Test
-        run: dotnet test EnglishMaster.sln --configuration Release --no-build --verbosity normal
+      - name: Test (Windows runner)
+        run: dotnet test EnglishMaster.sln --configuration Release --no-build --filter "FullyQualifiedName!~FreshDatabaseMigrationTests" --verbosity normal

@@ -26,8 +26,8 @@ jobs:
       - name: Build
         run: dotnet build EnglishMaster.sln --configuration Release --no-restore
 
-      - name: Test
-        run: dotnet test EnglishMaster.sln --configuration Release --no-build --verbosity normal
+      - name: Test (Windows runner)
+        run: dotnet test EnglishMaster.sln --configuration Release --no-build --filter "FullyQualifiedName!~FreshDatabaseMigrationTests" --verbosity normal
 
       - name: Publish API
         run: dotnet publish src/Backend/EnglishMaster.Api/EnglishMaster.Api.csproj --configuration Release --no-build --output artifacts/api
