@@ -2,24 +2,25 @@
 
 ## Status
 
-EnglishMaster MVP is ready to prepare a staging release candidate from the current codebase, with manual staging smoke testing still required after deployment.
+EnglishMaster MVP release automation has passed against disposable CI staging. Deployment to a persistent staging environment and live browser smoke testing remain required before the next product feature begins.
 
-Review date: 2026-07-14
+Review date: 2026-08-03
 
 Suggested release tag: `v0.1.0-mvp-rc1`
 
 ## Phase A Release Automation Update
 
-Update date: 2026-07-29
+Update date: 2026-08-03
 
 | Check | Status | Evidence |
 | --- | --- | --- |
 | Migration ownership is explicit | Passed | Development defaults to startup migration; Staging and Production set `Database__ApplyMigrationsOnStartup=false`. |
 | Reviewed migration artifact exists | Passed | `.github/workflows/release-build.yml` packages a self-contained Linux EF migration bundle. Local bundle generation completed successfully. |
 | Release smoke automation exists | Passed | `scripts/Invoke-EnglishMasterReleaseSmoke.ps1` passed health, anonymous grammar, redirect, `401`, login, dashboard, and logout checks against local API/Web hosts. |
-| Compose configuration validates | Passed with environment note | Staging and Production `docker compose ... config --quiet` passed. Local container startup is unavailable, so the tagged release workflow now owns Linux image build, migration, readiness, and full-stack smoke execution. Its first run remains pending evidence. |
-| Release build | Passed | `dotnet build EnglishMaster.sln --configuration Release --no-restore` completed with 0 warnings and 0 errors. |
-| Automated tests | Passed with environment note | 210 unit, 7 architecture, and 199 non-LocalDB integration tests passed. `FreshDatabaseMigrationTests` could not run because this machine cannot create a LocalDB automatic instance; migration-bundle generation passed separately. |
+| Compose and disposable CI staging | Passed | Release Build run [30828858339](https://github.com/mysunyourmoon30-creator/EnglishMaster/actions/runs/30828858339) built the custom SQL Server Full-Text image, applied the reviewed migration bundle to a fresh database, started API/Web containers, passed readiness, and completed authenticated release smoke testing. |
+| Release build | Passed | Build run [30828846655](https://github.com/mysunyourmoon30-creator/EnglishMaster/actions/runs/30828846655) and Release Build run [30828858339](https://github.com/mysunyourmoon30-creator/EnglishMaster/actions/runs/30828858339) passed for revision `2784568`. |
+| Automated tests | Passed | Release configuration passed 220 unit, 7 architecture, and 208 integration tests on the Windows job. The Full-Text fresh-database migration is intentionally executed by the Linux container job, where SQL Server Full-Text is installed. |
+| Persistent staging deployment | Blocked by environment configuration | No staging URL, host, deployment credentials, GitHub Environment, repository secret, or deployment workflow is configured. Do not begin the next product feature until deployment and browser smoke testing are complete. |
 
 ## Build And Test
 

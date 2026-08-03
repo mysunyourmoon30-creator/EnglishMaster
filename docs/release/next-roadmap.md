@@ -59,7 +59,7 @@ they do not create an AI feature by themselves.
 
 Use Modules 22, 23, and 24. Apply Modules 5 and 8 only as design guardrails.
 
-Status updated 2026-07-29:
+Status updated 2026-08-03:
 
 1. Complete in code — API and Web expose `/health`, `/health/live`, and
    `/health/ready`; API readiness checks database connectivity.
@@ -69,15 +69,16 @@ Status updated 2026-07-29:
 3. Complete — Development may migrate on startup; Staging and Production set
    `Database__ApplyMigrationsOnStartup=false` and use the reviewed release
    migration bundle before API startup.
-4. Automated with execution pending — Staging and Production Compose
-   configuration validates. The tagged release workflow now builds Linux
-   containers, runs the reviewed migration bundle against SQL Server, waits for
-   readiness, and executes the release smoke gate on an Ubuntu runner. The
-   first workflow run remains the execution evidence.
+4. Complete in disposable CI staging — Release Build run
+   [30828858339](https://github.com/mysunyourmoon30-creator/EnglishMaster/actions/runs/30828858339)
+   built Linux containers, installed SQL Server Full-Text, applied the reviewed
+   migration bundle to a fresh database, waited for readiness, and passed the
+   release smoke gate for revision `2784568`.
 5. Complete in automation — `scripts/Invoke-EnglishMasterReleaseSmoke.ps1`
-   covers login, admin dashboard API, anonymous public grammar content,
-   protected API rejection, and health endpoints. Manual browser workflows
-   remain a staging gate.
+   passed login, admin dashboard API, anonymous public grammar content,
+   protected API rejection, health, redirect, and logout checks. Persistent
+   staging deployment and live browser workflows remain blocked until a target
+   environment and secure deployment access are configured.
 
 ### Phase A Review Record
 
