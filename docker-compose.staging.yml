@@ -1,6 +1,8 @@
 services:
   englishmaster-staging-sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    build:
+      context: .
+      dockerfile: docker/sqlserver/Dockerfile
     container_name: englishmaster-staging-sqlserver
     environment:
       ACCEPT_EULA: "Y"

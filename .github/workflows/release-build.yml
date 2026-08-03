@@ -106,7 +106,7 @@ jobs:
         run: docker compose -f docker-compose.staging.yml config --quiet
 
       - name: Start SQL Server
-        run: docker compose -f docker-compose.staging.yml up -d englishmaster-staging-sqlserver
+        run: docker compose -f docker-compose.staging.yml up -d --build englishmaster-staging-sqlserver
 
       - name: Wait for SQL Server readiness
         shell: bash
