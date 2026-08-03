@@ -495,3 +495,7 @@ $RECYCLE.BIN/
 
 .tools/
 .codex-cli-test/
+
+# Local AI worker worktrees and runtime coordination state
+/.worktrees/
+/.ai-orchestrator/
