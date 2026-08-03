@@ -1,0 +1,61 @@
+{
+  "version": "1.0.0",
+  "providers": [
+    {
+      "name": "codex",
+      "priority": 1,
+      "enabled": true,
+      "paid": false,
+      "command": "codex",
+      "fallbackCommands": [".tools/codex/codex.exe"],
+      "arguments": ["exec", "-"],
+      "versionArguments": ["--version"],
+      "retryAfterMinutes": 60
+    },
+    {
+      "name": "claude",
+      "priority": 2,
+      "enabled": true,
+      "paid": false,
+      "command": "claude",
+      "fallbackCommands": [],
+      "arguments": ["-p", "--output-format", "text"],
+      "versionArguments": ["--version"],
+      "retryAfterMinutes": 60
+    },
+    {
+      "name": "openai-api",
+      "priority": 3,
+      "enabled": false,
+      "paid": true,
+      "command": "",
+      "fallbackCommands": [],
+      "arguments": [],
+      "versionArguments": [],
+      "retryAfterMinutes": 60,
+      "budgetUsd": 0
+    },
+    {
+      "name": "anthropic-api",
+      "priority": 4,
+      "enabled": false,
+      "paid": true,
+      "command": "",
+      "fallbackCommands": [],
+      "arguments": [],
+      "versionArguments": [],
+      "retryAfterMinutes": 60,
+      "budgetUsd": 0
+    }
+  ],
+  "rateLimitPatterns": [
+    "usage limit",
+    "rate limit",
+    "rate_limit",
+    "429 too many requests",
+    "quota exceeded",
+    "quota depleted",
+    "credit balance is too low",
+    "overloaded_error"
+  ]
+}

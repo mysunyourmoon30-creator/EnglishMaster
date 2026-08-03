@@ -18,6 +18,9 @@ public sealed class PracticeApiClient : IPracticeApiClient
     public async Task<IReadOnlyCollection<PracticeItemDto>> GetDueAsync(CancellationToken cancellationToken) =>
         await GetAsync<IReadOnlyCollection<PracticeItemDto>>("api/v1/me/practice/due", cancellationToken) ?? [];
 
+    public async Task<IReadOnlyCollection<DailyVocabularyItemDto>> GetDailyVocabularyAsync(int limit, CancellationToken cancellationToken) =>
+        await GetAsync<IReadOnlyCollection<DailyVocabularyItemDto>>($"api/v1/me/practice/vocabulary/today?limit={Math.Clamp(limit, 1, 20)}", cancellationToken) ?? [];
+
     public async Task<GeneratePracticeItemsResponse> GenerateAsync(CancellationToken cancellationToken) =>
         await PostAsync<GeneratePracticeItemsResponse>("api/v1/me/practice/generate", null, cancellationToken) ?? new(0);
 

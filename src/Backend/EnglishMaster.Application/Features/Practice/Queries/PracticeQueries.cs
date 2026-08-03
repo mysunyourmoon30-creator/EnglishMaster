@@ -4,6 +4,7 @@ using EnglishMaster.Shared.Results;
 namespace EnglishMaster.Application.Features.Practice.Queries;
 
 public sealed record GetDuePracticeItemsQuery(Guid UserId, int? Limit);
+public sealed record GetDailyVocabularyQuery(Guid UserId, int? Limit);
 public sealed record GetPracticeSessionByIdQuery(Guid UserId, Guid SessionId);
 public sealed record GetPracticeHistoryQuery(Guid UserId, int? Limit);
 public sealed record GetPracticeSummaryQuery(Guid UserId);
@@ -19,6 +20,9 @@ public sealed class PracticeQueryHandler
 
     public async Task<Result<IReadOnlyCollection<PracticeItemDto>>> GetDueAsync(GetDuePracticeItemsQuery query, CancellationToken cancellationToken) =>
         Result<IReadOnlyCollection<PracticeItemDto>>.Success(await repository.GetDuePracticeItemsAsync(query.UserId, Math.Clamp(query.Limit ?? 20, 1, 50), cancellationToken));
+
+    public async Task<Result<IReadOnlyCollection<DailyVocabularyItemDto>>> GetDailyVocabularyAsync(GetDailyVocabularyQuery query, CancellationToken cancellationToken) =>
+        Result<IReadOnlyCollection<DailyVocabularyItemDto>>.Success(await repository.GetDailyVocabularyAsync(query.UserId, Math.Clamp(query.Limit ?? 10, 1, 20), cancellationToken));
 
     public async Task<Result<PracticeSessionDto>> GetSessionAsync(GetPracticeSessionByIdQuery query, CancellationToken cancellationToken)
     {

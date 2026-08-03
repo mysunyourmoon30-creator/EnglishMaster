@@ -1,0 +1,109 @@
+{
+  "version": "1.0.0",
+  "project": "EnglishMaster",
+  "tasks": [
+    {
+      "id": "V1-F04",
+      "feature": "Learner Diagnostic Test",
+      "status": "done",
+      "provider": "codex",
+      "previousProvider": null,
+      "branch": "codex/v1-f04-diagnostic-test",
+      "worktree": "../diagnostic",
+      "dependencies": [],
+      "allowedPaths": [
+        "src/Backend/EnglishMaster.Contracts/Diagnostics/**",
+        "src/Backend/EnglishMaster.Application/Features/Diagnostics/**",
+        "src/Backend/EnglishMaster.Api/Endpoints/DiagnosticEndpoints.cs",
+        "src/Backend/EnglishMaster.Api/Program.cs",
+        "src/Frontend/EnglishMaster.Web/Components/Pages/Diagnostics/**",
+        "src/Frontend/EnglishMaster.Web/Services/Diagnostics/**",
+        "src/Frontend/EnglishMaster.Web/Program.cs",
+        "tests/EnglishMaster.UnitTests/Diagnostics/**",
+        "tests/EnglishMaster.IntegrationTests/Diagnostics/**"
+      ],
+      "forbiddenPaths": [
+        "src/Backend/EnglishMaster.Domain/**",
+        "src/Backend/EnglishMaster.Infrastructure/**",
+        "src/Backend/EnglishMaster.Api/Endpoints/QuizEndpoints.cs",
+        "src/Backend/EnglishMaster.Contracts/Quizzes/**",
+        "src/Frontend/EnglishMaster.Web/Services/Quizzes/**",
+        "src/Frontend/EnglishMaster.Web/Components/Pages/Quizzes/**",
+        "**/*.csproj",
+        "**/Migrations/**",
+        "automation/**",
+        "AI_RULES.md",
+        "docs/**"
+      ],
+      "promptFile": "automation/ai/prompts/V1-F04.md",
+      "checks": [
+        {
+          "name": "build",
+          "command": "dotnet",
+          "arguments": ["build", "EnglishMaster.sln", "--no-restore"]
+        },
+        {
+          "name": "diagnostic-unit-tests",
+          "command": "dotnet",
+          "arguments": ["test", "tests/EnglishMaster.UnitTests/EnglishMaster.UnitTests.csproj", "--no-build", "--filter", "FullyQualifiedName~Diagnostics"]
+        },
+        {
+          "name": "diagnostic-integration-tests",
+          "command": "dotnet",
+          "arguments": ["test", "tests/EnglishMaster.IntegrationTests/EnglishMaster.IntegrationTests.csproj", "--no-build", "--filter", "FullyQualifiedName~Diagnostics"]
+        }
+      ]
+    },
+    {
+      "id": "V1-F05",
+      "feature": "Daily Vocabulary Review",
+      "status": "done",
+      "provider": "claude",
+      "previousProvider": null,
+      "branch": "codex/v1-f05-daily-vocabulary",
+      "worktree": "../vocabulary",
+      "dependencies": [],
+      "allowedPaths": [
+        "src/Backend/EnglishMaster.Contracts/Practice/**",
+        "src/Backend/EnglishMaster.Application/Features/Practice/**",
+        "src/Backend/EnglishMaster.Infrastructure/Practice/**",
+        "src/Backend/EnglishMaster.Api/Endpoints/PracticeEndpoints.cs",
+        "src/Frontend/EnglishMaster.Web/Services/Practice/**",
+        "src/Frontend/EnglishMaster.Web/Components/Pages/Vocabulary/**",
+        "tests/EnglishMaster.IntegrationTests/Practice/**",
+        "tests/EnglishMaster.UnitTests/Practice/**"
+      ],
+      "forbiddenPaths": [
+        "src/Backend/EnglishMaster.Api/Program.cs",
+        "src/Backend/EnglishMaster.Infrastructure/DependencyInjection.cs",
+        "src/Backend/EnglishMaster.Infrastructure/Persistence/EnglishMasterDbContext.cs",
+        "src/Frontend/EnglishMaster.Web/Program.cs",
+        "src/Frontend/EnglishMaster.Web/Components/_Imports.razor",
+        "src/Frontend/EnglishMaster.Web/wwwroot/**",
+        "**/*.csproj",
+        "**/Migrations/**",
+        "automation/**",
+        "AI_RULES.md",
+        "docs/**"
+      ],
+      "promptFile": "automation/ai/prompts/V1-F05.md",
+      "checks": [
+        {
+          "name": "build",
+          "command": "dotnet",
+          "arguments": ["build", "EnglishMaster.sln", "--no-restore"]
+        },
+        {
+          "name": "practice-unit-tests",
+          "command": "dotnet",
+          "arguments": ["test", "tests/EnglishMaster.UnitTests/EnglishMaster.UnitTests.csproj", "--no-build", "--filter", "FullyQualifiedName~Practice"]
+        },
+        {
+          "name": "practice-integration-tests",
+          "command": "dotnet",
+          "arguments": ["test", "tests/EnglishMaster.IntegrationTests/EnglishMaster.IntegrationTests.csproj", "--no-build", "--filter", "FullyQualifiedName~Practice"]
+        }
+      ]
+    }
+  ]
+}

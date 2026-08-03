@@ -90,6 +90,68 @@ public sealed class EfPracticeRepository : IPracticeRepository
         return items.Select(ToDto).ToArray();
     }
 
+    public async Task<IReadOnlyCollection<DailyVocabularyItemDto>> GetDailyVocabularyAsync(Guid userId, int limit, CancellationToken cancellationToken)
+    {
+        var profileId = await dbContext.StudentProfiles.AsNoTracking()
+            .Where(profile => profile.UserId == userId)
+            .Select(profile => (Guid?)profile.Id)
+            .SingleOrDefaultAsync(cancellationToken);
+        if (!profileId.HasValue)
+        {
+            return [];
+        }
+
+        var now = timeProvider.GetUtcNow();
+        var rows = await (
+            from item in dbContext.PracticeItems.AsNoTracking()
+            join word in dbContext.Words.AsNoTracking() on item.ContentId equals word.Id
+            where item.StudentProfileId == profileId.Value &&
+                item.ContentType == "word" &&
+                item.Status != PracticeItemStatus.Suspended &&
+                item.NextReviewAt <= now &&
+                word.IsActive
+            orderby item.NextReviewAt, item.Id
+            select new
+            {
+                item.Id,
+                item.PracticeType,
+                item.Status,
+                item.DueAt,
+                item.NextReviewAt,
+                WordId = word.Id,
+                word.Text,
+                word.IpaUk,
+                word.IpaUs,
+                word.ThaiReading,
+                word.MeaningTh,
+                word.MeaningEn,
+                word.PartOfSpeech,
+                word.CefrLevel,
+                word.ExampleEn,
+                word.ExampleTh
+            })
+            .Take(limit)
+            .ToArrayAsync(cancellationToken);
+
+        return rows.Select(row => new DailyVocabularyItemDto(
+            row.Id,
+            row.WordId,
+            row.PracticeType,
+            row.Status.ToString(),
+            row.DueAt,
+            row.NextReviewAt,
+            row.Text,
+            row.IpaUk,
+            row.IpaUs,
+            row.ThaiReading,
+            row.MeaningTh,
+            row.MeaningEn,
+            row.PartOfSpeech.ToString(),
+            row.CefrLevel.ToString(),
+            row.ExampleEn,
+            row.ExampleTh)).ToArray();
+    }
+
     public async Task<PracticeSessionDto> StartPracticeSessionAsync(Guid userId, int limit, CancellationToken cancellationToken)
     {
         var profile = await GetOrCreateProfileAsync(userId, cancellationToken);

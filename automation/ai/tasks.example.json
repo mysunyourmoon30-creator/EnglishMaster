@@ -1,0 +1,47 @@
+{
+  "version": "1.0.0",
+  "project": "EnglishMaster",
+  "tasks": [
+    {
+      "id": "V1-F04",
+      "feature": "Diagnostic Test",
+      "status": "queued",
+      "provider": null,
+      "previousProvider": null,
+      "branch": "codex/v1-f04-diagnostic-test",
+      "worktree": "../EnglishMaster-codex-diagnostic",
+      "dependencies": [],
+      "allowedPaths": [
+        "src/Backend/EnglishMaster.Domain/Diagnostics/**",
+        "src/Backend/EnglishMaster.Application/Features/Diagnostics/**",
+        "src/Backend/EnglishMaster.Infrastructure/Diagnostics/**",
+        "src/Backend/EnglishMaster.Api/Endpoints/DiagnosticEndpoints.cs",
+        "src/Frontend/EnglishMaster.Web/Components/Pages/Diagnostics/**",
+        "src/Frontend/EnglishMaster.Web/Services/Diagnostics/**",
+        "tests/EnglishMaster.UnitTests/Diagnostics/**",
+        "tests/EnglishMaster.IntegrationTests/Diagnostics/**"
+      ],
+      "forbiddenPaths": [
+        "src/Backend/EnglishMaster.Api/Program.cs",
+        "src/Backend/EnglishMaster.Infrastructure/Persistence/EnglishMasterDbContext.cs",
+        "src/Backend/EnglishMaster.Infrastructure/Persistence/Migrations/**",
+        "src/Frontend/EnglishMaster.Web/Program.cs",
+        "**/*.csproj",
+        "docs/PROJECT_CONTROL.md"
+      ],
+      "promptFile": "automation/ai/prompts/V1-F04.md",
+      "checks": [
+        {
+          "name": "build",
+          "command": "dotnet",
+          "arguments": ["build", "--no-restore"]
+        },
+        {
+          "name": "unit-tests",
+          "command": "dotnet",
+          "arguments": ["test", "tests/EnglishMaster.UnitTests/EnglishMaster.UnitTests.csproj", "--no-build"]
+        }
+      ]
+    }
+  ]
+}

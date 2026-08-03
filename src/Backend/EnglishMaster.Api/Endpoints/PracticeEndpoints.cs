@@ -7,6 +7,7 @@ using AppPracticeItemDto = EnglishMaster.Application.Features.Practice.Dtos.Prac
 using AppPracticeSessionDto = EnglishMaster.Application.Features.Practice.Dtos.PracticeSessionDto;
 using AppPracticeSessionItemDto = EnglishMaster.Application.Features.Practice.Dtos.PracticeSessionItemDto;
 using AppPracticeSummaryDto = EnglishMaster.Application.Features.Practice.Dtos.PracticeSummaryDto;
+using AppDailyVocabularyItemDto = EnglishMaster.Application.Features.Practice.Dtos.DailyVocabularyItemDto;
 
 namespace EnglishMaster.Api.Endpoints;
 
@@ -17,6 +18,7 @@ public static class PracticeEndpoints
         var group = endpoints.MapGroup("/api/v1/me/practice").WithTags("Practice").RequireAuthorization();
         group.MapGet("/summary", SummaryAsync);
         group.MapGet("/due", DueAsync);
+        group.MapGet("/vocabulary/today", DailyVocabularyAsync);
         group.MapPost("/generate", GenerateAsync);
         group.MapPost("/sessions/start", StartSessionAsync);
         group.MapGet("/sessions/{id:guid}", GetSessionAsync);
@@ -33,6 +35,9 @@ public static class PracticeEndpoints
 
     private static async Task<IResult> DueAsync(ClaimsPrincipal user, PracticeQueryHandler handler, int? limit, CancellationToken cancellationToken) =>
         TryUserId(user, out var userId) ? ToHttpResult(await handler.GetDueAsync(new GetDuePracticeItemsQuery(userId, limit), cancellationToken)) : Results.Unauthorized();
+
+    private static async Task<IResult> DailyVocabularyAsync(ClaimsPrincipal user, PracticeQueryHandler handler, int? limit, CancellationToken cancellationToken) =>
+        TryUserId(user, out var userId) ? ToHttpResult(await handler.GetDailyVocabularyAsync(new GetDailyVocabularyQuery(userId, limit), cancellationToken)) : Results.Unauthorized();
 
     private static async Task<IResult> GenerateAsync(ClaimsPrincipal user, PracticeCommandHandler handler, CancellationToken cancellationToken)
     {
@@ -113,6 +118,9 @@ public static class PracticeEndpoints
     private static IResult ToHttpResult(Result<IReadOnlyCollection<AppPracticeItemDto>> result) =>
         result.Status == ResultStatus.Success ? Results.Ok(result.Value!.Select(ToContract).ToArray()) : Results.Problem();
 
+    private static IResult ToHttpResult(Result<IReadOnlyCollection<AppDailyVocabularyItemDto>> result) =>
+        result.Status == ResultStatus.Success ? Results.Ok(result.Value!.Select(ToContract).ToArray()) : Results.Problem();
+
     private static IResult ToHttpResult(Result<IReadOnlyCollection<AppPracticeSessionDto>> result) =>
         result.Status == ResultStatus.Success ? Results.Ok(result.Value!.Select(ToContract).ToArray()) : Results.Problem();
 
@@ -124,6 +132,9 @@ public static class PracticeEndpoints
 
     private static PracticeItemDto ToContract(AppPracticeItemDto item) =>
         new(item.Id, item.ContentType, item.ContentId, item.PracticeType, item.Status, item.DueAt, item.LastPracticedAt, item.NextReviewAt, item.ReviewCount, item.CorrectCount, item.IncorrectCount, item.CurrentIntervalDays);
+
+    private static DailyVocabularyItemDto ToContract(AppDailyVocabularyItemDto item) =>
+        new(item.PracticeItemId, item.WordId, item.PracticeType, item.Status, item.DueAt, item.NextReviewAt, item.Text, item.IpaUk, item.IpaUs, item.ThaiReading, item.MeaningTh, item.MeaningEn, item.PartOfSpeech, item.CefrLevel, item.ExampleEn, item.ExampleTh);
 
     private static PracticeSessionDto ToContract(AppPracticeSessionDto session) =>
         new(session.Id, session.StartedAt, session.CompletedAt, session.Status, session.TotalItems, session.CompletedItems, session.CorrectItems, session.IncorrectItems, session.Items.Select(ToContract).ToArray());

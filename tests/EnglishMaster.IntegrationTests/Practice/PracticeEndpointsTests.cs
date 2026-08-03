@@ -185,6 +185,135 @@ public sealed class PracticeEndpointsTests(EnglishMasterApiFactory factory) : IC
         Assert.NotEqual(Guid.Empty, userId);
     }
 
+    [Fact]
+    public async Task DailyVocabulary_ReturnsRichWordDataAndClampsLimit()
+    {
+        var seededItems = new List<(PracticeItem Item, Word Word)>();
+        await SeedAsync(async dbContext =>
+        {
+            var profile = await GetOrCreateSuperAdminProfileAsync(dbContext);
+            var dueAt = DateTimeOffset.UtcNow.AddYears(-2);
+            for (var index = 0; index < 12; index++)
+            {
+                var word = Word.Create(
+                    Unique($"daily-rich-{index}"),
+                    "/wɜːd/",
+                    "/wɝːd/",
+                    "เวิร์ด",
+                    "คำศัพท์",
+                    "a unit of language",
+                    PartOfSpeech.Noun,
+                    CefrLevel.A1,
+                    "This is an example word.",
+                    "นี่คือคำตัวอย่าง",
+                    dueAt);
+                var item = PracticeItem.Create(profile.Id, "word", word.Id, "WordFlashcard", dueAt, dueAt);
+                dbContext.Words.Add(word);
+                dbContext.PracticeItems.Add(item);
+                seededItems.Add((item, word));
+            }
+        });
+        using var client = factory.CreateClient(new() { HandleCookies = true });
+        await LoginAsync(client);
+
+        var defaultItems = await client.GetFromJsonAsync<IReadOnlyCollection<DailyVocabularyItemDto>>("/api/v1/me/practice/vocabulary/today");
+        var minimumItems = await client.GetFromJsonAsync<IReadOnlyCollection<DailyVocabularyItemDto>>("/api/v1/me/practice/vocabulary/today?limit=0");
+        var maximumItems = await client.GetFromJsonAsync<IReadOnlyCollection<DailyVocabularyItemDto>>("/api/v1/me/practice/vocabulary/today?limit=100");
+
+        Assert.NotNull(defaultItems);
+        Assert.Equal(10, defaultItems.Count);
+        Assert.Single(minimumItems!);
+        Assert.InRange(maximumItems!.Count, 1, 20);
+        var rich = maximumItems.Single(item => item.WordId == seededItems[0].Word.Id);
+        Assert.Equal(seededItems[0].Item.Id, rich.PracticeItemId);
+        Assert.Equal("/wɜːd/", rich.IpaUk);
+        Assert.Equal("/wɝːd/", rich.IpaUs);
+        Assert.Equal("เวิร์ด", rich.ThaiReading);
+        Assert.Equal("คำศัพท์", rich.MeaningTh);
+        Assert.Equal("a unit of language", rich.MeaningEn);
+        Assert.Equal("Noun", rich.PartOfSpeech);
+        Assert.Equal("A1", rich.CefrLevel);
+        Assert.Equal("This is an example word.", rich.ExampleEn);
+        Assert.Equal("นี่คือคำตัวอย่าง", rich.ExampleTh);
+
+        var seededItemIds = seededItems.Select(tuple => tuple.Item.Id).ToArray();
+        var seededWordIds = seededItems.Select(tuple => tuple.Word.Id).ToArray();
+        await SeedAsync(async dbContext =>
+        {
+            var itemsToSuspend = await dbContext.PracticeItems
+                .Where(item => seededItemIds.Contains(item.Id))
+                .ToArrayAsync();
+            foreach (var item in itemsToSuspend)
+            {
+                item.Suspend(DateTimeOffset.UtcNow);
+            }
+
+            var wordsToDeactivate = await dbContext.Words
+                .Where(word => seededWordIds.Contains(word.Id))
+                .ToArrayAsync();
+            foreach (var word in wordsToDeactivate)
+            {
+                word.Deactivate(DateTimeOffset.UtcNow);
+            }
+        });
+    }
+
+    [Fact]
+    public async Task DailyVocabulary_FiltersOwnershipContentStateAndSchedule()
+    {
+        var excludedIds = new List<Guid>();
+        var seededWordIds = new List<Guid>();
+        await SeedAsync(async dbContext =>
+        {
+            var profile = await GetOrCreateSuperAdminProfileAsync(dbContext);
+            var otherProfile = StudentProfile.Create(Guid.NewGuid(), null, DateTimeOffset.UtcNow);
+            dbContext.StudentProfiles.Add(otherProfile);
+            var old = DateTimeOffset.UtcNow.AddYears(-3);
+
+            var inactiveWord = CreateDailyWord("inactive", old);
+            inactiveWord.Deactivate(DateTimeOffset.UtcNow);
+            var inactiveItem = PracticeItem.Create(profile.Id, "word", inactiveWord.Id, "WordFlashcard", old, old);
+
+            var futureWord = CreateDailyWord("future", old);
+            var futureItem = PracticeItem.Create(profile.Id, "word", futureWord.Id, "WordFlashcard", DateTimeOffset.UtcNow.AddDays(2), old);
+
+            var suspendedWord = CreateDailyWord("suspended", old);
+            var suspendedItem = PracticeItem.Create(profile.Id, "word", suspendedWord.Id, "WordFlashcard", old, old);
+            suspendedItem.Suspend(DateTimeOffset.UtcNow);
+
+            var otherWord = CreateDailyWord("other-user", old);
+            var otherItem = PracticeItem.Create(otherProfile.Id, "word", otherWord.Id, "WordFlashcard", old, old);
+
+            var nonWord = PracticeItem.Create(profile.Id, "grammar-rule", Guid.NewGuid(), "GrammarReview", old, old);
+
+            dbContext.Words.AddRange(inactiveWord, futureWord, suspendedWord, otherWord);
+            dbContext.PracticeItems.AddRange(inactiveItem, futureItem, suspendedItem, otherItem, nonWord);
+            excludedIds.AddRange([inactiveItem.Id, futureItem.Id, suspendedItem.Id, otherItem.Id, nonWord.Id]);
+            seededWordIds.AddRange([inactiveWord.Id, futureWord.Id, suspendedWord.Id, otherWord.Id]);
+        });
+        using var client = factory.CreateClient(new() { HandleCookies = true });
+        await LoginAsync(client);
+
+        var response = await client.GetAsync("/api/v1/me/practice/vocabulary/today?limit=20");
+        var items = await response.Content.ReadFromJsonAsync<IReadOnlyCollection<DailyVocabularyItemDto>>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(items);
+        Assert.DoesNotContain(items, item => excludedIds.Contains(item.PracticeItemId));
+        Assert.Equal(items.Select(item => item.PracticeItemId).Distinct().Count(), items.Count);
+
+        await SeedAsync(async dbContext =>
+        {
+            var wordsToDeactivate = await dbContext.Words
+                .Where(word => seededWordIds.Contains(word.Id))
+                .ToArrayAsync();
+            foreach (var word in wordsToDeactivate)
+            {
+                word.Deactivate(DateTimeOffset.UtcNow);
+            }
+        });
+    }
+
     private async Task<Word> SeedWordAsync(string prefix)
     {
         Word? word = null;
@@ -195,6 +324,26 @@ public sealed class PracticeEndpointsTests(EnglishMasterApiFactory factory) : IC
             return Task.CompletedTask;
         });
         return word!;
+    }
+
+    private static Word CreateDailyWord(string prefix, DateTimeOffset now) =>
+        Word.Create(Unique(prefix), string.Empty, string.Empty, string.Empty, "meaning", "meaning", PartOfSpeech.Noun, CefrLevel.A1, string.Empty, string.Empty, now);
+
+    private async Task<StudentProfile> GetOrCreateSuperAdminProfileAsync(EnglishMasterDbContext dbContext)
+    {
+        var userId = await dbContext.AppUsers
+            .Where(user => user.Email == "superadmin@englishmaster.test")
+            .Select(user => user.Id)
+            .SingleAsync();
+        var profile = await dbContext.StudentProfiles.SingleOrDefaultAsync(item => item.UserId == userId);
+        if (profile is not null)
+        {
+            return profile;
+        }
+
+        profile = StudentProfile.Create(userId, null, DateTimeOffset.UtcNow);
+        dbContext.StudentProfiles.Add(profile);
+        return profile;
     }
 
     private async Task AssertIntervalAsync(Guid practiceItemId, int expectedDays)
