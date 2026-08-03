@@ -47,6 +47,12 @@ installs a CLI, starts login, creates an account, or discovers new providers.
 Codex may use the project-local `.tools/codex/codex.exe` fallback when the
 WindowsApps executable is present but blocked by package permissions.
 
+A task may set its `provider` field to the name of a configured provider. That
+provider is tried first for the task, followed by the remaining permitted
+providers in configured priority order. Validation rejects unknown names; an
+explicit preference that is disabled or not permitted blocks execution instead
+of silently changing ownership.
+
 Paid providers are disabled by default. To use one, an integrator must configure
 its command, enable it, set a non-zero budget, and pass `-AllowPaidProviders`.
 Budget enforcement for provider-specific API wrappers remains required before

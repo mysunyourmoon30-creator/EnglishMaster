@@ -212,6 +212,14 @@ function Assert-Configuration {
             throw "Task '$id' has unsupported status '$($task.status)'."
         }
 
+        if (Test-Property $task "provider") {
+            $preferredProvider = [string]$task.provider
+            if (-not [string]::IsNullOrWhiteSpace($preferredProvider) -and
+                -not $providerNames.ContainsKey($preferredProvider.ToLowerInvariant())) {
+                throw "Task '$id' references unknown preferred provider '$preferredProvider'."
+            }
+        }
+
         foreach ($field in @("dependencies", "allowedPaths", "forbiddenPaths", "checks")) {
             if (-not (Test-Property $task $field)) {
                 throw "Task '$id' requires a '$field' array."
@@ -907,6 +915,24 @@ $providers = @($providerConfiguration.providers | Where-Object {
 } | Sort-Object priority)
 if ($providers.Count -eq 0) {
     throw "No enabled provider is permitted for this invocation."
+}
+
+$preferredProviderName = if (Test-Property $selectedTask "provider") {
+    [string]$selectedTask.provider
+}
+else {
+    $null
+}
+if (-not [string]::IsNullOrWhiteSpace($preferredProviderName)) {
+    $preferredProvider = @($providers | Where-Object {
+        [string]$_.name -ieq $preferredProviderName
+    }) | Select-Object -First 1
+    if ($null -eq $preferredProvider) {
+        throw "Preferred provider '$preferredProviderName' for task '$($selectedTask.id)' is not enabled or permitted."
+    }
+    $providers = @($preferredProvider) + @($providers | Where-Object {
+        [string]$_.name -ine $preferredProviderName
+    })
 }
 
 if ($DryRun) {

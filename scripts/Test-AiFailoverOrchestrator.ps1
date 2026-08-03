@@ -132,6 +132,18 @@ try {
 
     & $orchestrator -TaskFile $taskFile -ProviderFile $providerFile -ValidateOnly
 
+    $unknownProviderQueuePath = Join-Path $testRoot "unknown-provider.json"
+    $unknownProviderTask = New-RunnableTask "UNKNOWN_PROVIDER" "test/unknown-provider"
+    $unknownProviderTask.provider = "missing-provider"
+    Write-TestJson ([ordered]@{
+        version = "1.0.0"
+        project = "EnglishMaster"
+        tasks = @($unknownProviderTask)
+    }) $unknownProviderQueuePath
+    Assert-Throws {
+        & $orchestrator -TaskFile $unknownProviderQueuePath -ProviderFile $providerFile -ValidateOnly
+    } "unknown preferred provider"
+
     $invalidJsonPath = Join-Path $testRoot "invalid.json"
     [System.IO.File]::WriteAllText($invalidJsonPath, "{invalid", [System.Text.UTF8Encoding]::new($false))
     Assert-Throws {
@@ -275,6 +287,38 @@ try {
     }
     if (-not (Test-Path -LiteralPath (Join-Path $fakeRepository "runtime/happy/checkpoints/HAPPY.json"))) {
         throw "Happy-path checkpoint was not created."
+    }
+
+    $preferredQueuePath = Join-Path $fakeRepository "runtime/input/preferred-queue.json"
+    $preferredProviderPath = Join-Path $fakeRepository "runtime/input/preferred-providers.json"
+    $preferredTask = New-RunnableTask "PREFERRED" $fakeBranch
+    $preferredTask.provider = "fake-success"
+    Write-TestJson ([ordered]@{
+        version = "1.0.0"
+        project = "Fake"
+        tasks = @($preferredTask)
+    }) $preferredQueuePath
+    Write-TestJson (New-TestProviderConfiguration -IncludeLimitProvider) $preferredProviderPath
+
+    Push-Location $fakeRepository
+    try {
+        & $orchestrator `
+            -TaskFile $preferredQueuePath `
+            -ProviderFile $preferredProviderPath `
+            -RuntimeDirectory "runtime/preferred" `
+            -TaskId "PREFERRED" `
+            -ProviderTimeoutSeconds 30
+    }
+    finally {
+        Pop-Location
+    }
+
+    $preferredState = Get-Content -Raw -LiteralPath (Join-Path $fakeRepository "runtime/preferred/state.json") | ConvertFrom-Json
+    $limitedLogs = @(Get-ChildItem -Path (Join-Path $fakeRepository "runtime/preferred/logs/PREFERRED") -Filter "*-fake-limit.log" -ErrorAction SilentlyContinue)
+    if ($preferredState.tasks.PREFERRED.status -ne "ready_to_merge" -or
+        $preferredState.tasks.PREFERRED.provider -ne "fake-success" -or
+        $limitedLogs.Count -ne 0) {
+        throw "Task-level preferred provider was not attempted first."
     }
 
     $failoverQueuePath = Join-Path $fakeRepository "runtime/input/failover-queue.json"
