@@ -1,0 +1,187 @@
+@page "/learn/diagnostic/{QuizId:guid}"
+@rendermode InteractiveServer
+@using EnglishMaster.Contracts.Diagnostics
+@using EnglishMaster.Web.Services
+@using EnglishMaster.Web.Services.Diagnostics
+@inject IDiagnosticApiClient DiagnosticApiClient
+
+<PageTitle>Diagnostic Test | EnglishMaster</PageTitle>
+
+<main class="diagnostic" aria-labelledby="diagnostic-title">
+    @if (isLoading)
+    {
+        <section class="state" role="status" aria-live="polite">
+            <strong>Loading your diagnostic…</strong>
+            <span>กำลังโหลดแบบประเมิน</span>
+        </section>
+    }
+    else if (quiz is null)
+    {
+        <section class="state error" role="alert">
+            <strong>@errorMessage</strong>
+            <button type="button" @onclick="LoadAsync">Try again</button>
+        </section>
+    }
+    else if (result is not null)
+    {
+        <section class="result-card" aria-labelledby="diagnostic-result-title">
+            <p class="eyebrow">DIAGNOSTIC RESULT</p>
+            <h1 id="diagnostic-result-title">@(result.Passed ? "Threshold met" : "Keep building the foundation")</h1>
+            <p class="score">@result.PercentageScore<span>%</span></p>
+            <p>@result.CorrectCount of @result.TotalQuestions correct · pass mark @result.PassingScore%</p>
+            @if (!string.IsNullOrWhiteSpace(result.AssessedCefrLevel))
+            {
+                <p class="band">Performance on this quiz: <strong>@result.AssessedCefrLevel</strong></p>
+            }
+            <p class="recommendation">@result.Recommendation</p>
+            <div class="actions">
+                <button type="button" @onclick="Retry">Try this quiz again</button>
+                <a href="/learn/practice">Continue to practice</a>
+            </div>
+        </section>
+    }
+    else
+    {
+        <header class="hero">
+            <div>
+                <p class="eyebrow">LEARNER DIAGNOSTIC · แบบประเมินเบื้องต้น</p>
+                <h1 id="diagnostic-title">@quiz.Title</h1>
+                @if (!string.IsNullOrWhiteSpace(quiz.Summary))
+                {
+                    <p>@quiz.Summary</p>
+                }
+            </div>
+            <dl>
+                <div><dt>Questions</dt><dd>@quiz.Questions.Count</dd></div>
+                <div><dt>Pass mark</dt><dd>@quiz.PassingScore%</dd></div>
+                @if (quiz.TimeLimitMinutes > 0)
+                {
+                    <div><dt>Suggested time</dt><dd>@quiz.TimeLimitMinutes min</dd></div>
+                }
+            </dl>
+        </header>
+
+        <aside class="notice">
+            This short quiz measures performance on its own content. It is not a calibrated A1–C2 placement test.
+        </aside>
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="inline-error" role="alert">@errorMessage</div>
+        }
+
+        <form @onsubmit="SubmitAsync" @onsubmit:preventDefault>
+            @foreach (var question in quiz.Questions)
+            {
+                <fieldset class="question-card">
+                    <legend>
+                        <span>Question @(quiz.Questions.OrderBy(item => item.SortOrder).ToList().IndexOf(question) + 1)</span>
+                        @question.Text
+                    </legend>
+                    <div class="choices">
+                        @foreach (var choice in question.Choices)
+                        {
+                            var choiceId = $"choice-{question.Id:N}-{choice.Id:N}";
+                            <label for="@choiceId">
+                                <input id="@choiceId"
+                                       type="radio"
+                                       name="question-@question.Id"
+                                       value="@choice.Id"
+                                       checked="@IsSelected(question.Id, choice.Id)"
+                                       @onchange="() => SelectChoice(question.Id, choice.Id)" />
+                                <span>@choice.Text</span>
+                            </label>
+                        }
+                    </div>
+                </fieldset>
+            }
+
+            <div class="submit-row">
+                <span role="status">@selectedChoices.Count / @quiz.Questions.Count answered</span>
+                <button type="submit" disabled="@(isSubmitting || selectedChoices.Count != quiz.Questions.Count)">
+                    @(isSubmitting ? "Checking…" : "Submit diagnostic")
+                </button>
+            </div>
+        </form>
+    }
+</main>
+
+@code {
+    [Parameter] public Guid QuizId { get; set; }
+
+    private DiagnosticQuizDto? quiz;
+    private DiagnosticResultDto? result;
+    private readonly Dictionary<Guid, Guid> selectedChoices = [];
+    private bool isLoading = true;
+    private bool isSubmitting;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        result = null;
+        selectedChoices.Clear();
+        try
+        {
+            quiz = await DiagnosticApiClient.GetQuizAsync(QuizId, CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            quiz = null;
+            errorMessage = exception.StatusCode == System.Net.HttpStatusCode.NotFound
+                ? "This diagnostic is unavailable or not ready for learners."
+                : "The diagnostic could not be loaded. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void SelectChoice(Guid questionId, Guid choiceId)
+    {
+        selectedChoices[questionId] = choiceId;
+        errorMessage = null;
+    }
+
+    private bool IsSelected(Guid questionId, Guid choiceId) =>
+        selectedChoices.TryGetValue(questionId, out var selectedChoiceId) && selectedChoiceId == choiceId;
+
+    private async Task SubmitAsync()
+    {
+        if (quiz is null || selectedChoices.Count != quiz.Questions.Count)
+        {
+            errorMessage = "Answer every question before submitting.";
+            return;
+        }
+
+        isSubmitting = true;
+        errorMessage = null;
+        try
+        {
+            var answers = quiz.Questions
+                .Select(question => new DiagnosticAnswerRequest(question.Id, selectedChoices[question.Id]))
+                .ToArray();
+            result = await DiagnosticApiClient.SubmitAsync(QuizId, new SubmitDiagnosticRequest(answers), CancellationToken.None);
+        }
+        catch (ApiRequestException exception)
+        {
+            errorMessage = exception.ValidationErrors.Values.SelectMany(value => value).FirstOrDefault()
+                ?? "Your answers could not be checked. Refresh the quiz and try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void Retry()
+    {
+        result = null;
+        errorMessage = null;
+        selectedChoices.Clear();
+    }
+}
