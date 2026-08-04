@@ -17,8 +17,10 @@ mandatory EnglishMaster product modules.
 
 ## Recommended Next Step
 
-Deploy the current MVP to a staging environment and complete the staging smoke
-test from `docs/release/mvp-release-checklist.md`.
+Native no-Docker local browser UAT is complete. Deploy the current MVP to a
+persistent staging environment and repeat the smoke test from
+`docs/release/mvp-release-checklist.md`, or obtain an explicit release-owner
+decision accepting local UAT plus disposable CI staging as the MVP release gate.
 
 The current release path uses Modules 22-24 directly. Modules 5 and 8 are
 architecture guardrails for API contracts and structured import/export data;
@@ -59,7 +61,13 @@ they do not create an AI feature by themselves.
 
 Use Modules 22, 23, and 24. Apply Modules 5 and 8 only as design guardrails.
 
-Status updated 2026-08-03:
+Status updated 2026-08-04:
+
+Native local UAT passed public grammar, dashboard plus 28 admin list routes,
+Category create/detail/edit, media rejection/acceptance, import row errors, and
+logout. Persistent staging remains blocked until a target environment and
+secure deployment access are configured or the release owner explicitly
+accepts the combined local and disposable CI evidence.
 
 1. Complete in code — API and Web expose `/health`, `/health/live`, and
    `/health/ready`; API readiness checks database connectivity.

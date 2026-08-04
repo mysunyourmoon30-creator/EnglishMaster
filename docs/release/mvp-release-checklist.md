@@ -2,9 +2,9 @@
 
 ## Status
 
-EnglishMaster MVP release automation has passed against disposable CI staging. Deployment to a persistent staging environment and live browser smoke testing remain required before the next product feature begins.
+EnglishMaster MVP release automation has passed against disposable CI staging. Native no-Docker local browser UAT also passed. Deployment to a persistent staging environment remains required unless the release owner explicitly accepts the local UAT plus disposable CI evidence as the MVP release gate.
 
-Review date: 2026-08-03
+Review date: 2026-08-04
 
 Suggested release tag: `v0.1.0-mvp-rc1`
 
@@ -20,7 +20,8 @@ Update date: 2026-08-03
 | Compose and disposable CI staging | Passed | Release Build run [30828858339](https://github.com/mysunyourmoon30-creator/EnglishMaster/actions/runs/30828858339) built the custom SQL Server Full-Text image, applied the reviewed migration bundle to a fresh database, started API/Web containers, passed readiness, and completed authenticated release smoke testing. |
 | Release build | Passed | Build run [30828846655](https://github.com/mysunyourmoon30-creator/EnglishMaster/actions/runs/30828846655) and Release Build run [30828858339](https://github.com/mysunyourmoon30-creator/EnglishMaster/actions/runs/30828858339) passed for revision `2784568`. |
 | Automated tests | Passed | Release configuration passed 220 unit, 7 architecture, and 208 integration tests on the Windows job. The Full-Text fresh-database migration is intentionally executed by the Linux container job, where SQL Server Full-Text is installed. |
-| Persistent staging deployment | Blocked by environment configuration | No staging URL, host, deployment credentials, GitHub Environment, repository secret, or deployment workflow is configured. Do not begin the next product feature until deployment and browser smoke testing are complete. |
+| Native local browser UAT | Passed | `docs/testing/local-browser-uat-2026-08-04.md` records native .NET health, 12 authenticated smoke checks, public grammar pages, dashboard plus 28 admin list routes, Category create/detail/edit, media rejection/acceptance, import row errors, and logout. |
+| Persistent staging deployment | Blocked by environment configuration | No staging URL, host, deployment credentials, GitHub Environment, repository secret, or deployment workflow is configured. Do not begin the next product feature until persistent deployment is complete or the release owner explicitly accepts the combined local and disposable CI evidence. |
 
 ## Build And Test
 
@@ -76,7 +77,9 @@ The following admin areas have documented routes and Blazor pages:
 - Permissions
 - Import / Export
 
-Live browser smoke testing should be completed in staging after deployment.
+Native local browser smoke testing passed on 2026-08-04. Repeat the same checks
+after persistent staging deployment unless the release owner explicitly accepts
+the local UAT plus disposable CI staging as the MVP release gate.
 
 ## Routes
 
@@ -124,10 +127,24 @@ After deploying to staging, verify:
 9. Media upload rejects invalid files and accepts a valid small image.
 10. Import rejects invalid files and reports row errors.
 
+## Current Smoke Coverage
+
+| Check | Local no-Docker UAT | Disposable CI release | Persistent staging |
+| --- | --- | --- | --- |
+| API/Web start and health | Passed | Passed | Not configured |
+| SQL Server connection and reviewed migrations | Not applicable (in-memory) | Passed | Not configured |
+| Web-to-API connectivity | Passed | Passed | Not configured |
+| SuperAdmin login/logout and admin authorization | Passed | Passed | Not configured |
+| Public grammar and all documented admin list routes | Passed | Public grammar and core admin smoke passed | Not configured |
+| Representative create/detail/edit | Passed | Not exercised | Not configured |
+| Media invalid/valid upload | Passed | Not exercised | Not configured |
+| Import validation and row errors | Passed | Not exercised | Not configured |
+
 ## Related Docs
 
 - `docs/release/known-limitations.md`
 - `docs/release/next-roadmap.md`
+- `docs/testing/local-browser-uat-2026-08-04.md`
 - `docs/security/authorization.md`
 - `docs/deployment/docker.md`
 - `docs/deployment/environment-variables.md`
