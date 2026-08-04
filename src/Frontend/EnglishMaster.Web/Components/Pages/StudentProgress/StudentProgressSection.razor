@@ -1,0 +1,64 @@
+<section class="content-section" aria-labelledby="@headingId">
+    <div class="section-header-row">
+        <div>
+            <h2 id="@headingId"><Icon Name="@IconName" Size="17" /> @Title</h2>
+            <p class="muted">@Items.Count item(s) / @Items.Count รายการ</p>
+        </div>
+    </div>
+
+    @if (Items.Count == 0)
+    {
+        <div class="panel empty-state">
+            <strong>No progress here yet / ยังไม่มีความคืบหน้าในหมวดนี้</strong>
+        </div>
+    }
+    else
+    {
+        <div class="card-grid">
+            @foreach (var item in Items)
+            {
+                <article class="list-card">
+                    <div class="section-header-row">
+                        <div>
+                            <span class="pill">@StatusLabel(item.Status)</span>
+                            <h3>@item.Title</h3>
+                        </div>
+                        <strong>@item.ProgressPercent%</strong>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(item.Summary))
+                    {
+                        <p>@item.Summary</p>
+                    }
+                    <div class="study-progress" role="progressbar" aria-label="@($"{item.Title} progress")" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@item.ProgressPercent">
+                        <span style="width: @item.ProgressPercent%"></span>
+                    </div>
+                    <p class="muted">Last opened / เปิดล่าสุด @FormatDate(item.LastAccessedAt)</p>
+                    <a class="button secondary" href="@item.Url">@(item.ProgressPercent >= 100 ? "Open / เปิด" : "Continue / เรียนต่อ")</a>
+                </article>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string IconName { get; set; } = "lesson";
+
+    [Parameter, EditorRequired]
+    public IReadOnlyCollection<StudentProgressItemDto> Items { get; set; } = [];
+
+    private string headingId => $"progress-{IconName}";
+
+    private static string StatusLabel(string status) => status.ToLowerInvariant() switch
+    {
+        "completed" => "Completed / เสร็จแล้ว",
+        "inprogress" or "in_progress" => "In progress / กำลังเรียน",
+        _ => "Not started / ยังไม่เริ่ม"
+    };
+
+    private static string FormatDate(DateTimeOffset value) =>
+        value.ToLocalTime().ToString("dd MMM yyyy, HH:mm", CultureInfo.CurrentCulture);
+}
