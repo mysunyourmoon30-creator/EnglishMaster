@@ -36,9 +36,11 @@ or GitHub Environment is configured. The release owner chose a no-cost,
 no-Docker local verification path, so no paid VPS or Docker Desktop dependency
 was introduced.
 
-V1-F06 and later product work remain gated until the release owner either:
+On 2026-08-04, the release owner explicitly accepted this local UAT plus
+disposable CI staging as the release gate for the MVP. V1-F06 product planning
+is therefore unblocked. Persistent staging remains a deferred operations
+follow-up, and this UAT record must not be presented as evidence that a
+long-lived Internet-accessible environment was deployed or tested.
 
-1. provides an approved persistent staging target and completes the same smoke
-   checks there; or
-2. explicitly accepts this local UAT plus disposable CI staging as the release
-   gate for the MVP.
+See `docs/release/mvp-release-gate-decision-2026-08-04.md` for the recorded
+decision and its boundaries.

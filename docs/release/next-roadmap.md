@@ -17,10 +17,15 @@ mandatory EnglishMaster product modules.
 
 ## Recommended Next Step
 
-Native no-Docker local browser UAT is complete. Deploy the current MVP to a
-persistent staging environment and repeat the smoke test from
-`docs/release/mvp-release-checklist.md`, or obtain an explicit release-owner
-decision accepting local UAT plus disposable CI staging as the MVP release gate.
+Native no-Docker local browser UAT is complete. On 2026-08-04, the release owner
+accepted local UAT plus disposable CI staging as the MVP release gate; see
+`docs/release/mvp-release-gate-decision-2026-08-04.md`. Persistent staging is a
+deferred operations follow-up and must not be reported as complete.
+
+The next ordered product-planning step is to define the V1-F06 task contract.
+The roadmap identifies Student Progress as the next business module, while the
+current task queue ends at V1-F05. Do not begin implementation until V1-F06 has
+an explicit scope, dependencies, allowed paths, and verification checks.
 
 The current release path uses Modules 22-24 directly. Modules 5 and 8 are
 architecture guardrails for API contracts and structured import/export data;
@@ -65,9 +70,10 @@ Status updated 2026-08-04:
 
 Native local UAT passed public grammar, dashboard plus 28 admin list routes,
 Category create/detail/edit, media rejection/acceptance, import row errors, and
-logout. Persistent staging remains blocked until a target environment and
-secure deployment access are configured or the release owner explicitly
-accepts the combined local and disposable CI evidence.
+logout. The release owner accepted the combined local and disposable CI
+evidence as the MVP release gate on 2026-08-04. Persistent staging remains a
+deferred operations follow-up until a target environment and secure deployment
+access are configured.
 
 1. Complete in code — API and Web expose `/health`, `/health/live`, and
    `/health/ready`; API readiness checks database connectivity.
@@ -266,7 +272,7 @@ Review roles:
 
 ## Product Roadmap
 
-After staging stabilizes, the next business module should be Student Progress.
-Do not begin it until the MVP release candidate has passed staging smoke
-testing. AI Tutor, RAG, and multi-agent features still require a separate scope
-approval.
+The next business module should be Student Progress. The MVP release gate was
+accepted on 2026-08-04, but V1-F06 has not yet been defined in the task queue.
+Create and approve its task contract before implementation. AI Tutor, RAG, and
+multi-agent features still require separate scope approval.

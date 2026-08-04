@@ -2,7 +2,7 @@
 
 ## Status
 
-EnglishMaster MVP release automation has passed against disposable CI staging. Native no-Docker local browser UAT also passed. Deployment to a persistent staging environment remains required unless the release owner explicitly accepts the local UAT plus disposable CI evidence as the MVP release gate.
+EnglishMaster MVP release automation has passed against disposable CI staging. Native no-Docker local browser UAT also passed. On 2026-08-04, the release owner explicitly accepted the combined local UAT and disposable CI evidence as the MVP release gate. Persistent staging remains an operations follow-up and is not represented as complete.
 
 Review date: 2026-08-04
 
@@ -10,7 +10,7 @@ Suggested release tag: `v0.1.0-mvp-rc1`
 
 ## Phase A Release Automation Update
 
-Update date: 2026-08-03
+Update date: 2026-08-04
 
 | Check | Status | Evidence |
 | --- | --- | --- |
@@ -21,7 +21,8 @@ Update date: 2026-08-03
 | Release build | Passed | Build run [30828846655](https://github.com/mysunyourmoon30-creator/EnglishMaster/actions/runs/30828846655) and Release Build run [30828858339](https://github.com/mysunyourmoon30-creator/EnglishMaster/actions/runs/30828858339) passed for revision `2784568`. |
 | Automated tests | Passed | Release configuration passed 220 unit, 7 architecture, and 208 integration tests on the Windows job. The Full-Text fresh-database migration is intentionally executed by the Linux container job, where SQL Server Full-Text is installed. |
 | Native local browser UAT | Passed | `docs/testing/local-browser-uat-2026-08-04.md` records native .NET health, 12 authenticated smoke checks, public grammar pages, dashboard plus 28 admin list routes, Category create/detail/edit, media rejection/acceptance, import row errors, and logout. |
-| Persistent staging deployment | Blocked by environment configuration | No staging URL, host, deployment credentials, GitHub Environment, repository secret, or deployment workflow is configured. Do not begin the next product feature until persistent deployment is complete or the release owner explicitly accepts the combined local and disposable CI evidence. |
+| MVP release-owner decision | Passed | The release owner accepted local UAT plus disposable CI staging on 2026-08-04; see `docs/release/mvp-release-gate-decision-2026-08-04.md`. |
+| Persistent staging deployment | Deferred operations follow-up | No staging URL, host, deployment credentials, GitHub Environment, repository secret, or deployment workflow is configured. This is not claimed as completed by the accepted MVP gate. |
 
 ## Build And Test
 
@@ -77,9 +78,10 @@ The following admin areas have documented routes and Blazor pages:
 - Permissions
 - Import / Export
 
-Native local browser smoke testing passed on 2026-08-04. Repeat the same checks
-after persistent staging deployment unless the release owner explicitly accepts
-the local UAT plus disposable CI staging as the MVP release gate.
+Native local browser smoke testing passed on 2026-08-04. The release owner
+accepted this local UAT plus disposable CI staging as the MVP release gate on
+the same date. Repeat the checks after a future persistent staging deployment;
+that operational validation remains pending.
 
 ## Routes
 
@@ -143,6 +145,7 @@ After deploying to staging, verify:
 ## Related Docs
 
 - `docs/release/known-limitations.md`
+- `docs/release/mvp-release-gate-decision-2026-08-04.md`
 - `docs/release/next-roadmap.md`
 - `docs/testing/local-browser-uat-2026-08-04.md`
 - `docs/security/authorization.md`
