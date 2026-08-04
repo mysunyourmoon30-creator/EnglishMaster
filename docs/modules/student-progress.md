@@ -63,6 +63,11 @@ Review roles:
 - Non-LocalDB integration tests: 213/213 passed.
 - Native no-Docker browser check passed at 1280×720 and 390×844 with no
   horizontal overflow and no browser console warnings or errors.
+- PR Build run
+  [30912237941](https://github.com/mysunyourmoon30-creator/EnglishMaster/actions/runs/30912237941)
+  passed restore, Release build, and the configured Windows test suite.
 - The full local suite reached the existing fresh-database migration test, but
   this machine could not create a SQL Server LocalDB automatic instance. The
-  GitHub Actions Windows runner remains the final SQL/LocalDB verification gate.
+  current Build workflow intentionally excludes that migration-only test. This
+  task has no schema change; the existing disposable release run remains the
+  recorded fresh SQL Server migration evidence.

@@ -22,10 +22,16 @@ accepted local UAT plus disposable CI staging as the MVP release gate; see
 `docs/release/mvp-release-gate-decision-2026-08-04.md`. Persistent staging is a
 deferred operations follow-up and must not be reported as complete.
 
-The next ordered product-planning step is to define the V1-F06 task contract.
-The roadmap identifies Student Progress as the next business module, while the
-current task queue ends at V1-F05. Do not begin implementation until V1-F06 has
-an explicit scope, dependencies, allowed paths, and verification checks.
+V1-F06 Student Progress Overview is complete. It adds an authenticated,
+learner-owned `/api/v1/me/progress` summary and `/learn/progress` UI over the
+existing progress tables, without a migration or progress-write behavior. The
+task passed local build, focused tests, responsive browser verification, and
+PR Build run
+[30912237941](https://github.com/mysunyourmoon30-creator/EnglishMaster/actions/runs/30912237941).
+
+The next ordered product-planning step is to define and approve V1-F07. Do not
+begin implementation until its scope, dependencies, allowed paths, and
+verification checks are explicit.
 
 The current release path uses Modules 22-24 directly. Modules 5 and 8 are
 architecture guardrails for API contracts and structured import/export data;
@@ -272,7 +278,6 @@ Review roles:
 
 ## Product Roadmap
 
-The next business module should be Student Progress. The MVP release gate was
-accepted on 2026-08-04, but V1-F06 has not yet been defined in the task queue.
-Create and approve its task contract before implementation. AI Tutor, RAG, and
-multi-agent features still require separate scope approval.
+V1-F06 Student Progress Overview is complete. Define and approve V1-F07 before
+starting another product feature. AI Tutor, RAG, and multi-agent features still
+require separate scope approval.

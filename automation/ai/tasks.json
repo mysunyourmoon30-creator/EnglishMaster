@@ -108,7 +108,7 @@
     {
       "id": "V1-F06",
       "feature": "Student Progress Overview",
-      "status": "in_progress",
+      "status": "done",
       "provider": "codex",
       "previousProvider": null,
       "branch": "codex/v1-f06-student-progress",
