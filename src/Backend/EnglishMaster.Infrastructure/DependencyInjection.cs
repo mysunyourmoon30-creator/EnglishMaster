@@ -17,6 +17,7 @@ using EnglishMaster.Application.Features.ImportJobs;
 using EnglishMaster.Application.Features.LearningGoals;
 using EnglishMaster.Application.Features.LearningRecommendations;
 using EnglishMaster.Application.Features.LearningReports;
+using EnglishMaster.Application.Features.StudentProgress;
 using EnglishMaster.Application.Features.Lessons;
 using EnglishMaster.Application.Features.LessonSections;
 using EnglishMaster.Application.Features.Media;
@@ -53,6 +54,7 @@ using EnglishMaster.Infrastructure.ImportJobs;
 using EnglishMaster.Infrastructure.LearningGoals;
 using EnglishMaster.Infrastructure.LearningRecommendations;
 using EnglishMaster.Infrastructure.LearningReports;
+using EnglishMaster.Infrastructure.StudentProgress;
 using EnglishMaster.Infrastructure.Lessons;
 using EnglishMaster.Infrastructure.Media;
 using EnglishMaster.Infrastructure.Monitoring;
@@ -166,6 +168,7 @@ public static class DependencyInjection
         services.AddScoped<IPracticeRepository, EfPracticeRepository>();
         services.AddScoped<IMotivationRepository, EfMotivationRepository>();
         services.AddScoped<ILearningReportRepository, EfLearningReportRepository>();
+        services.AddScoped<IStudentProgressRepository, EfStudentProgressRepository>();
         services.AddScoped<ContentImportExportService>();
         services.AddScoped<IContentImportService>(provider =>
             provider.GetRequiredService<ContentImportExportService>());

@@ -104,6 +104,57 @@
           "arguments": ["test", "tests/EnglishMaster.IntegrationTests/EnglishMaster.IntegrationTests.csproj", "--no-build", "--filter", "FullyQualifiedName~Practice"]
         }
       ]
+    },
+    {
+      "id": "V1-F06",
+      "feature": "Student Progress Overview",
+      "status": "done",
+      "provider": "codex",
+      "previousProvider": null,
+      "branch": "codex/v1-f06-student-progress",
+      "worktree": ".",
+      "dependencies": [],
+      "allowedPaths": [
+        "src/Backend/EnglishMaster.Contracts/StudentProgress/**",
+        "src/Backend/EnglishMaster.Application/Features/StudentProgress/**",
+        "src/Backend/EnglishMaster.Infrastructure/StudentProgress/**",
+        "src/Backend/EnglishMaster.Infrastructure/DependencyInjection.cs",
+        "src/Backend/EnglishMaster.Api/Endpoints/StudentProgressEndpoints.cs",
+        "src/Backend/EnglishMaster.Api/Program.cs",
+        "src/Frontend/EnglishMaster.Web/Services/StudentProgress/**",
+        "src/Frontend/EnglishMaster.Web/Components/Pages/StudentProgress/**",
+        "src/Frontend/EnglishMaster.Web/Components/Pages/LearningIndex.razor",
+        "src/Frontend/EnglishMaster.Web/Components/Layout/MainLayout.razor",
+        "src/Frontend/EnglishMaster.Web/Components/_Imports.razor",
+        "src/Frontend/EnglishMaster.Web/Program.cs",
+        "tests/EnglishMaster.IntegrationTests/StudentProgress/**",
+        "automation/ai/tasks.json",
+        "automation/ai/prompts/V1-F06.md",
+        "docs/modules/student-progress.md",
+        "docs/release/next-roadmap.md"
+      ],
+      "forbiddenPaths": [
+        "src/Backend/EnglishMaster.Domain/**",
+        "src/Backend/EnglishMaster.Infrastructure/Persistence/EnglishMasterDbContext.cs",
+        "src/Backend/EnglishMaster.Infrastructure/Persistence/Configurations/**",
+        "src/Backend/EnglishMaster.Infrastructure/Persistence/Migrations/**",
+        "src/Frontend/EnglishMaster.Web/wwwroot/**",
+        "**/*.csproj",
+        "AI_RULES.md"
+      ],
+      "promptFile": "automation/ai/prompts/V1-F06.md",
+      "checks": [
+        {
+          "name": "build",
+          "command": "dotnet",
+          "arguments": ["build", "EnglishMaster.sln", "--no-restore"]
+        },
+        {
+          "name": "student-progress-integration-tests",
+          "command": "dotnet",
+          "arguments": ["test", "tests/EnglishMaster.IntegrationTests/EnglishMaster.IntegrationTests.csproj", "--no-build", "--filter", "FullyQualifiedName~StudentProgress"]
+        }
+      ]
     }
   ]
 }

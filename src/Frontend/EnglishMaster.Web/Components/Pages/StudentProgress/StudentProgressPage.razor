@@ -1,0 +1,79 @@
+@page "/learn/progress"
+@inject IStudentProgressApiClient StudentProgressApiClient
+
+<PageTitle>Student Progress / ความคืบหน้า</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Student Progress / ความคืบหน้า</p>
+        <h1>Your Learning Progress / ความคืบหน้าของคุณ</h1>
+        <p class="page-subtitle">ดูบทเรียน คอร์ส และหนังสือที่กำลังเรียนหรือเรียนจบแล้ว.</p>
+    </div>
+    <div class="actions">
+        <a class="button primary" href="/learn/dashboard"><Icon Name="dashboard" Size="15" /> Dashboard / ภาพรวม</a>
+        <a class="button secondary" href="/learn/recommendations"><Icon Name="lesson" Size="15" /> Find next / เรียนต่อ</a>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert error" role="alert">
+        <strong>Progress unavailable / โหลดความคืบหน้าไม่ได้</strong>
+        <p>@errorMessage</p>
+        <button class="button secondary" type="button" @onclick="LoadAsync">Try again / ลองใหม่</button>
+    </div>
+}
+else if (isLoading)
+{
+    <section class="panel empty-state" role="status">
+        <strong><Icon Name="spinner" Class="spin" Size="16" /> Loading progress... / กำลังโหลดความคืบหน้า</strong>
+    </section>
+}
+else if (summary.TotalTrackedItems == 0)
+{
+    <section class="panel empty-state">
+        <span class="empty-state-icon"><Icon Name="analytics" Size="20" /></span>
+        <strong>No learning progress yet / ยังไม่มีข้อมูลความคืบหน้า</strong>
+        <p>เริ่มจากบทเรียนหรือคำแนะนำ แล้วกลับมาดูภาพรวมได้ที่นี่.</p>
+        <div class="actions">
+            <a class="button primary" href="/learn/recommendations">Explore learning / เลือกเนื้อหา</a>
+        </div>
+    </section>
+}
+else
+{
+    <section class="stat-grid" aria-label="Progress summary / สรุปความคืบหน้า">
+        <article class="panel stat-card"><Icon Name="analytics" Size="18" /><span class="stat-label">Tracked / ทั้งหมด</span><span class="stat-value">@summary.TotalTrackedItems</span></article>
+        <article class="panel stat-card"><Icon Name="lesson" Size="18" /><span class="stat-label">In progress / กำลังเรียน</span><span class="stat-value">@summary.InProgressCount</span></article>
+        <article class="panel stat-card"><Icon Name="quality" Size="18" /><span class="stat-label">Completed / เรียนจบ</span><span class="stat-value">@summary.CompletedCount</span></article>
+    </section>
+
+    <StudentProgressSection Title="Lessons / บทเรียน" IconName="lesson" Items="summary.Lessons" />
+    <StudentProgressSection Title="Courses / คอร์ส" IconName="course" Items="summary.Courses" />
+    <StudentProgressSection Title="Books / หนังสือ" IconName="book" Items="summary.Books" />
+}
+@code {
+    private StudentProgressSummaryDto summary = new(0, 0, 0, [], [], []);
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        errorMessage = null;
+        isLoading = true;
+        try
+        {
+            summary = await StudentProgressApiClient.GetSummaryAsync(20, CancellationToken.None);
+        }
+        catch (ApiRequestException)
+        {
+            errorMessage = "Please sign in and try again. / กรุณาเข้าสู่ระบบแล้วลองอีกครั้ง";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
